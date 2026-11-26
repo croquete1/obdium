@@ -376,3 +376,7 @@ A auditoria foi estática, sobre árvore do repositório, ficheiros selecionados
 - Ordem: fechar regressões/integrações #4–#12 e contratos F03 antes de abrir novas frentes do motor; máximo três frentes independentes, serializar alterações partilhadas. Roadmap em PR própria, reconciliar mudanças da #11 sem perder os nove protocolos. Sem importar bases OEM, macros executáveis ou funções proibidas em F11/AGENTS.md.
 
 - Decisão do mantenedor: integração exclusivamente nativa Rust; removidos os sete módulos Python de referência da árvore proposta. Mantidos apenas os dados sintéticos, licença e documentação de proveniência. Nenhuma dependência Python ou do projeto de referência será introduzida no build, runtime, testes ou distribuição das novas funcionalidades. F14–F21 continuam TODO.
+
+### Auditoria preventiva de diagnóstico avançado — 26/11/2026
+
+- [18 critérios preventivos ADV-01–ADV-18](references/ADVANCED_DIAGNOSTICS_AUDIT.md) complementam F02/F03/F06–F21, com fontes, prioridades e regressões. Destacam-se inicialização K-line, estado pós-reset, baud vs bitrate, little-endian, cache por sessão/ECU, flow control, identificação ambígua, erro de layout/status DoIP e política de operações. Todos TODO; evidência estática e relatos externos não confirmam defeitos no OBDium. Não duplicar PRs #4–#12; implementação e testes Rust, sem hardware executado nesta auditoria.
