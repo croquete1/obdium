@@ -125,6 +125,73 @@ pub fn validate_selection_ack(reply: &str) -> Result<(), ProtocolError> {
     }
 }
 
+/// Conservative evidence for the standard Mode 01 PID 00 CAN reply.
+/// Requires ELM headers, spaces and the single-frame length byte.
+/// Other valid adapter layouts are deliberately unverified here.
+pub fn can_probe_identifier_width(reply: &str) -> Result<u8, ProtocolError> {
+    let mut width = None;
+    for line in reply.lines().map(str::trim_ascii) {
+        if line.is_empty() || line == "SEARCHING..." {
+            continue;
+        }
+        let mut tokens = line.split_ascii_whitespace();
+        let identifier = tokens.next().ok_or(ProtocolError::Malformed)?;
+        if !identifier.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+            return Err(ProtocolError::Malformed);
+        }
+        let id = u32::from_str_radix(identifier, 16).map_err(|_| ProtocolError::Malformed)?;
+        let current_width = match identifier.len() {
+            3 if (0x7E8..=0x7EF).contains(&id) => 11,
+            8 if id & 0x1FFF_FF00 == 0x18DA_F100 && id <= 0x1FFF_FFFF => 29,
+            _ => return Err(ProtocolError::Malformed),
+        };
+        if width.is_some_and(|previous| previous != current_width) {
+            return Err(ProtocolError::Malformed);
+        }
+
+        let mut bytes = [0; 8];
+        let mut count = 0;
+        for token in tokens {
+            if count == bytes.len()
+                || token.len() != 2
+                || !token.bytes().all(|byte| byte.is_ascii_hexdigit())
+            {
+                return Err(ProtocolError::Malformed);
+            }
+            bytes[count] = u8::from_str_radix(token, 16).map_err(|_| ProtocolError::Malformed)?;
+            count += 1;
+        }
+        // PCI 06 + 41 00 + exactly four bitmap bytes, optional single padding byte.
+        if !(7..=8).contains(&count) || bytes[..3] != [0x06, 0x41, 0x00] {
+            return Err(ProtocolError::Malformed);
+        }
+        width = Some(current_width);
+    }
+    width.ok_or(ProtocolError::Malformed)
+}
+
+/// Correlate a positive CAN probe with the adapter's reported configuration.
+/// The bus rate remains adapter-reported, not independently measured.
+pub fn confirm_can_probe(
+    selection: ProtocolSelection,
+    report: ReportedProtocol,
+    reply: &str,
+) -> Result<ObdProtocol, ProtocolError> {
+    let width = can_probe_identifier_width(reply)?;
+    let protocol = report.protocol.ok_or(ProtocolError::Malformed)?;
+    if protocol.can_parameters().map(|(bits, _)| bits) != Some(width) {
+        return Err(ProtocolError::Malformed);
+    }
+    if let ProtocolSelection::Manual(requested) = selection {
+        if requested != protocol || report.automatic {
+            return Err(ProtocolError::Unacknowledged);
+        }
+    } else if !report.automatic {
+        return Err(ProtocolError::Unacknowledged);
+    }
+    Ok(protocol)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -212,6 +279,76 @@ mod tests {
                 Some(parameters)
             );
         }
+    }
+
+    #[test]
+    fn standard_can_probes_preserve_identifier_width() {
+        assert_eq!(
+            can_probe_identifier_width("SEARCHING...\r7E8 06 41 00 00 00 00 00\r"),
+            Ok(11)
+        );
+        assert_eq!(
+            can_probe_identifier_width("18DAF110 06 41 00 FF FF FF FF 00"),
+            Ok(29)
+        );
+        assert_eq!(
+            can_probe_identifier_width(
+                "7E8 06 41 00 00 00 00 00\r7E9 06 41 00 FF FF FF FF"
+            ),
+            Ok(11)
+        );
+    }
+
+    #[test]
+    fn can_probes_reject_unrelated_incomplete_or_mixed_responses() {
+        for reply in [
+            "NO DATA",
+            "7E8 03 7F 01 11",
+            "7E8 06 41 00 00 00 00",
+            "7E8 06 41 20 00 00 00 00",
+            "7DF 06 41 00 00 00 00 00",
+            "7E8 06 41 00 GG 00 00 00",
+            "7E8 06 41 00 00 00 00 00 00 00",
+            "7E8 06 41 00 00 00 00 00\r18DAF110 06 41 00 00 00 00 00",
+            "7E8 06 41 00 00 00 00 00\rCAN ERROR",
+            "SEARCHING...",
+        ] {
+            assert!(can_probe_identifier_width(reply).is_err(), "{reply:?}");
+        }
+    }
+
+    #[test]
+    fn can_protocol_confirmation_requires_matching_report_and_selection() {
+        let reply = "7E8 06 41 00 00 00 00 00";
+        for id in [6, 8] {
+            let report = parse_reported_protocol(&format!("A{id}")).unwrap();
+            let expected = ObdProtocol::try_from(id).unwrap();
+            assert_eq!(
+                confirm_can_probe(ProtocolSelection::Automatic, report, reply),
+                Ok(expected)
+            );
+            let manual = parse_reported_protocol(&id.to_string()).unwrap();
+            assert_eq!(
+                confirm_can_probe(ProtocolSelection::Manual(expected), manual, reply),
+                Ok(expected)
+            );
+        }
+        for report in ["A0", "A3", "A7", "6"] {
+            assert!(
+                confirm_can_probe(
+                    ProtocolSelection::Automatic,
+                    parse_reported_protocol(report).unwrap(),
+                    reply
+                )
+                .is_err()
+            );
+        }
+        assert!(confirm_can_probe(
+            ProtocolSelection::Manual(ObdProtocol::Can11At500),
+            parse_reported_protocol("8").unwrap(),
+            reply
+        )
+        .is_err());
     }
 
     #[test]
