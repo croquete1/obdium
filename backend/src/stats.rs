@@ -559,7 +559,7 @@ pub fn custom_pid_calls(window: &Arc<WebviewWindow>, obd: &Arc<Mutex<OBD>>) {
             {
                 let mut obd = obd.lock().unwrap();
                 let pids = CUSTOM_PIDS_TRACKED.lock().unwrap();
-                for (_, pid) in pids.iter() {
+                for pid in pids.values() {
                     let response = obd.query(Command::new_arb(&pid.command));
                     if let Ok(scalar) =
                         obd.calculate_dynamic_equation(&pid.equation, &pid.unit, &response)
