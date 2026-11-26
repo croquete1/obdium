@@ -12,7 +12,8 @@ permissions:
 
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  # Retain active job evidence during bootstrap; a newer pending run may replace an older pending one.
+  cancel-in-progress: false
 
 jobs:
   rust:
@@ -48,16 +49,17 @@ jobs:
         id: metadata
         run: cargo metadata --locked --format-version 1 --no-deps
       - name: Rustfmt
+        id: rustfmt
         if: runner.os == 'Linux' && steps.metadata.outcome == 'success'
         run: cargo fmt --all -- --check
       - name: Capture official formatting patch on failure
-        if: ${{ failure() && runner.os == 'Linux' }}
+        if: ${{ failure() && runner.os == 'Linux' && steps.rustfmt.outcome == 'failure' }}
         run: |
           cargo fmt --all
           git diff --binary -- . > "$RUNNER_TEMP/rustfmt.patch"
           git restore --worktree -- .
       - name: Upload formatting patch
-        if: ${{ failure() && runner.os == 'Linux' }}
+        if: ${{ failure() && runner.os == 'Linux' && steps.rustfmt.outcome == 'failure' }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: rustfmt-patch
@@ -65,8 +67,20 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
       - name: Clippy
+        id: clippy
         if: ${{ !cancelled() && steps.metadata.outcome == 'success' }}
-        run: cargo clippy --locked --all-targets -- -D warnings
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo clippy --locked --all-targets -- -D warnings 2>&1 | tee "$RUNNER_TEMP/clippy.log"
+      - name: Upload Clippy diagnostics on failure
+        if: ${{ failure() && steps.clippy.outcome == 'failure' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: clippy-${{ matrix.os }}
+          path: ${{ runner.temp }}/clippy.log
+          if-no-files-found: error
+          retention-days: 7
       - name: Tests
         if: ${{ !cancelled() && steps.metadata.outcome == 'success' }}
         run: cargo test --locked

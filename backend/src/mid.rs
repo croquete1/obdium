@@ -230,13 +230,7 @@ mod tests {
 
     #[test]
     fn monitor_limits_are_inclusive() {
-        for (value, expected) in [
-            (9, false),
-            (10, true),
-            (15, true),
-            (20, true),
-            (21, false),
-        ] {
+        for (value, expected) in [(9, false), (10, true), (15, true), (20, true), (21, false)] {
             let result = MonitorTest {
                 min: 10,
                 max: 20,
