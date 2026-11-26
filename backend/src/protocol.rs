@@ -484,10 +484,7 @@ mod tests {
         assert!(
             parse_legacy_probe(ObdProtocol::J1850Vpw, "48 6B 10 41 00 00 00 00 00 04").is_err()
         );
-        assert!(
-            parse_legacy_probe(ObdProtocol::KwpFast, "85 F1 11 41 00 FF FF FF FF C4")
-                .is_err()
-        );
+        assert!(parse_legacy_probe(ObdProtocol::KwpFast, "85 F1 11 41 00 FF FF FF FF C4").is_err());
     }
 
     #[test]
