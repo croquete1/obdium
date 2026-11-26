@@ -388,3 +388,5 @@ A auditoria foi estática, sobre árvore do repositório, ficheiros selecionados
 ### Consolidação inicial de dados — 26/11/2026
 
 - F10/F15/F16/F20 **REVIEW (dados de referência apenas)**: [catálogo consolidado](../backend/data/catalogs/README.md), manifest e licenças. 19 DBC autónomos selecionados, uma fixture DBC, 198 registos de leitura OBD2 e 65 grupos NRC UDS. Hashes dos DBC comparados com a origem, chaves OBD2 únicas; catálogo não ligado ao motor. Bases SQLite/VIN/requests.json intactas; restante cobertura, dados OEM, licenças específicas, descodificadores e validação Rust pendentes. Sem dependências novas, CI/hardware não executados. Não marcar fases DONE.
+
+- Expansão do catálogo: 58/58 DBC autónomos da revisão fixada, todos com Git blob SHA idêntico; 2066 grupos DTC de referência normalizados, sem substituir SQLite. Fragmentos de geradores excluídos. Validação Rust de estrutura e invariantes proposta nesta PR; não é descodificador DBC completo nem integração de produção. Direitos de dados específicos e validação por veículo pendentes.

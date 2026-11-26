@@ -31,6 +31,20 @@
           "role": "passive_reference"
         },
         {
+          "path": "dbc/cadillac_ct6_chassis.dbc",
+          "source_path": "opendbc/dbc/cadillac_ct6_chassis.dbc",
+          "git_blob_sha": "9de969d762f9a255ec90a82bc21ff17cd4b417aa",
+          "bytes": 2495,
+          "role": "passive_reference"
+        },
+        {
+          "path": "dbc/cadillac_ct6_object.dbc",
+          "source_path": "opendbc/dbc/cadillac_ct6_object.dbc",
+          "git_blob_sha": "3f7cf64cdc131dc13a9c834d4a33c6f8d0318928",
+          "bytes": 232156,
+          "role": "passive_reference"
+        },
+        {
           "path": "dbc/cadillac_ct6_powertrain.dbc",
           "source_path": "opendbc/dbc/cadillac_ct6_powertrain.dbc",
           "git_blob_sha": "2d0bb1217424a6fd9ce10d696efc9ab1a00c37d3",
@@ -45,10 +59,52 @@
           "role": "passive_reference"
         },
         {
+          "path": "dbc/chrysler_pacifica_2017_hybrid_private_fusion.dbc",
+          "source_path": "opendbc/dbc/chrysler_pacifica_2017_hybrid_private_fusion.dbc",
+          "git_blob_sha": "07c37e1fa2899e064efa1be2a0513b084f8c83dd",
+          "bytes": 7263,
+          "role": "passive_reference"
+        },
+        {
+          "path": "dbc/comma_body.dbc",
+          "source_path": "opendbc/dbc/comma_body.dbc",
+          "git_blob_sha": "2b89f3a74aa6a5cb9a8f4b60c071a5713ccbd3ed",
+          "bytes": 3521,
+          "role": "passive_reference"
+        },
+        {
+          "path": "dbc/ESR.dbc",
+          "source_path": "opendbc/dbc/ESR.dbc",
+          "git_blob_sha": "8544a0c80d3708a66404983721bc0b2422a2055d",
+          "bytes": 64876,
+          "role": "passive_reference"
+        },
+        {
           "path": "dbc/fca_giorgio.dbc",
           "source_path": "opendbc/dbc/fca_giorgio.dbc",
           "git_blob_sha": "f3e22cf4179ca71b10ae8a56e15e5a02ff425b51",
           "bytes": 9471,
+          "role": "passive_reference"
+        },
+        {
+          "path": "dbc/FORD_CADS_64.dbc",
+          "source_path": "opendbc/dbc/FORD_CADS_64.dbc",
+          "git_blob_sha": "2ae927a6f2ecd951d592e658bcc12cad8bb06bf8",
+          "bytes": 484651,
+          "role": "passive_reference"
+        },
+        {
+          "path": "dbc/FORD_CADS.dbc",
+          "source_path": "opendbc/dbc/FORD_CADS.dbc",
+          "git_blob_sha": "569739c9c59a78aa699f17d8477ceff8860c8fc2",
+          "bytes": 215720,
+          "role": "passive_reference"
+        },
+        {
+          "path": "dbc/ford_cgea1_2_bodycan_2011.dbc",
+          "source_path": "opendbc/dbc/ford_cgea1_2_bodycan_2011.dbc",
+          "git_blob_sha": "49fcae19c2e4f865494f39934f37c54c191f7de4",
+          "bytes": 49588,
           "role": "passive_reference"
         },
         {
@@ -59,10 +115,24 @@
           "role": "passive_reference"
         },
         {
+          "path": "dbc/ford_fusion_2018_adas.dbc",
+          "source_path": "opendbc/dbc/ford_fusion_2018_adas.dbc",
+          "git_blob_sha": "2e1647b3d8dee5532a3937197d3d6afbb3b5d5ca",
+          "bytes": 14069,
+          "role": "passive_reference"
+        },
+        {
           "path": "dbc/ford_fusion_2018_pt.dbc",
           "source_path": "opendbc/dbc/ford_fusion_2018_pt.dbc",
           "git_blob_sha": "c4b706d0647039e84a0a89bd049963151a107bde",
           "bytes": 4914,
+          "role": "passive_reference"
+        },
+        {
+          "path": "dbc/ford_lincoln_base_pt.dbc",
+          "source_path": "opendbc/dbc/ford_lincoln_base_pt.dbc",
+          "git_blob_sha": "56c174be142d33d98fedd2df3113e6ad42da273f",
+          "bytes": 807422,
           "role": "passive_reference"
         },
         {
@@ -77,6 +147,27 @@
           "source_path": "opendbc/dbc/gm_global_a_high_voltage_management.dbc",
           "git_blob_sha": "60729e56921e6fb735a1dad2d1be038571a56719",
           "bytes": 9498,
+          "role": "passive_reference"
+        },
+        {
+          "path": "dbc/gm_global_a_lowspeed_1818125.dbc",
+          "source_path": "opendbc/dbc/gm_global_a_lowspeed_1818125.dbc",
+          "git_blob_sha": "3f5b15e6f29edf914ff9de7285749b7dde94f0ef",
+          "bytes": 187112,
+          "role": "passive_reference"
+        },
+        {
+          "path": "dbc/gm_global_a_lowspeed.dbc",
+          "source_path": "opendbc/dbc/gm_global_a_lowspeed.dbc",
+          "git_blob_sha": "524eeed8be5c43458a8ad18fb3186797efe5f818",
+          "bytes": 3420,
+          "role": "passive_reference"
+        },
+        {
+          "path": "dbc/gm_global_a_object.dbc",
+          "source_path": "opendbc/dbc/gm_global_a_object.dbc",
+          "git_blob_sha": "4643a640ac85f4121c5f1decde079fef9898586d",
+          "bytes": 45166,
           "role": "passive_reference"
         },
         {
@@ -98,6 +189,20 @@
           "source_path": "opendbc/dbc/hongqi_hs5.dbc",
           "git_blob_sha": "76b41d873cce9aaf9d6878bb055ad88347b72949",
           "bytes": 5171,
+          "role": "passive_reference"
+        },
+        {
+          "path": "dbc/hyundai_2015_ccan.dbc",
+          "source_path": "opendbc/dbc/hyundai_2015_ccan.dbc",
+          "git_blob_sha": "fc1e1739071f592eb0144a9896c2538f0303a59c",
+          "bytes": 81687,
+          "role": "passive_reference"
+        },
+        {
+          "path": "dbc/hyundai_2015_mcan.dbc",
+          "source_path": "opendbc/dbc/hyundai_2015_mcan.dbc",
+          "git_blob_sha": "6bcd771e51120508d9e3c8b248e8546d0f343bce",
+          "bytes": 77667,
           "role": "passive_reference"
         },
         {
@@ -136,10 +241,178 @@
           "role": "passive_reference"
         },
         {
+          "path": "dbc/mazda_radar.dbc",
+          "source_path": "opendbc/dbc/mazda_radar.dbc",
+          "git_blob_sha": "a4fe3b4b9e867fc1ca243d93f7c7c33c1358c5dd",
+          "bytes": 1586,
+          "role": "passive_reference"
+        },
+        {
           "path": "dbc/mazda_rx8.dbc",
           "source_path": "opendbc/dbc/mazda_rx8.dbc",
           "git_blob_sha": "b81e7c1d98315cf9276747ab4783e3b273be4d3c",
           "bytes": 2267,
+          "role": "passive_reference"
+        },
+        {
+          "path": "dbc/mercedes_benz_e350_2010.dbc",
+          "source_path": "opendbc/dbc/mercedes_benz_e350_2010.dbc",
+          "git_blob_sha": "da6ae4c15ee66bdb72051521d47b46eeeeee4693",
+          "bytes": 5972,
+          "role": "passive_reference"
+        },
+        {
+          "path": "dbc/mg.dbc",
+          "source_path": "opendbc/dbc/mg.dbc",
+          "git_blob_sha": "7e25729e161a3e28a61f245dffa6442747657b74",
+          "bytes": 19054,
+          "role": "passive_reference"
+        },
+        {
+          "path": "dbc/nissan_xterra_2011.dbc",
+          "source_path": "opendbc/dbc/nissan_xterra_2011.dbc",
+          "git_blob_sha": "1e7bd4c4ae12cfac68ed56b3bb433c5b13a948a5",
+          "bytes": 2276,
+          "role": "passive_reference"
+        },
+        {
+          "path": "dbc/opel_omega_2001.dbc",
+          "source_path": "opendbc/dbc/opel_omega_2001.dbc",
+          "git_blob_sha": "8f8e0cfdea17314d67a304376d6d32e332513e21",
+          "bytes": 3053,
+          "role": "passive_reference"
+        },
+        {
+          "path": "dbc/psa_aee2010_r3.dbc",
+          "source_path": "opendbc/dbc/psa_aee2010_r3.dbc",
+          "git_blob_sha": "6a50b0268bbeddc2a91f04e7f89ec5eb9f08bfeb",
+          "bytes": 56778,
+          "role": "passive_reference"
+        },
+        {
+          "path": "dbc/rivian_park_assist_can.dbc",
+          "source_path": "opendbc/dbc/rivian_park_assist_can.dbc",
+          "git_blob_sha": "b18f0a53d8b6fd143451c1386b6c7b770f021578",
+          "bytes": 1366,
+          "role": "passive_reference"
+        },
+        {
+          "path": "dbc/rivian_primary_actuator.dbc",
+          "source_path": "opendbc/dbc/rivian_primary_actuator.dbc",
+          "git_blob_sha": "cde1c00598a356f3a90602a3499c0eadf23018c5",
+          "bytes": 77464,
+          "role": "passive_reference"
+        },
+        {
+          "path": "dbc/tesla_can.dbc",
+          "source_path": "opendbc/dbc/tesla_can.dbc",
+          "git_blob_sha": "56624c3e546400b7a6ed0789cb6efe29740d1cf3",
+          "bytes": 54247,
+          "role": "passive_reference"
+        },
+        {
+          "path": "dbc/tesla_model3_party.dbc",
+          "source_path": "opendbc/dbc/tesla_model3_party.dbc",
+          "git_blob_sha": "1e4aa356dd5e890fe7ab1a74c5db44272ff42d31",
+          "bytes": 35263,
+          "role": "passive_reference"
+        },
+        {
+          "path": "dbc/tesla_model3_vehicle.dbc",
+          "source_path": "opendbc/dbc/tesla_model3_vehicle.dbc",
+          "git_blob_sha": "604db8fe27c277c8e52169dc869b38a9f458de63",
+          "bytes": 24328,
+          "role": "passive_reference"
+        },
+        {
+          "path": "dbc/tesla_powertrain.dbc",
+          "source_path": "opendbc/dbc/tesla_powertrain.dbc",
+          "git_blob_sha": "8572ee20f4fd3d1104d848f1fd065d8bca1f2c93",
+          "bytes": 7716,
+          "role": "passive_reference"
+        },
+        {
+          "path": "dbc/toyota_2017_ref_pt.dbc",
+          "source_path": "opendbc/dbc/toyota_2017_ref_pt.dbc",
+          "git_blob_sha": "17cd8f1b36900ecc7af88dde209f9dbd1da44d6e",
+          "bytes": 68172,
+          "role": "passive_reference"
+        },
+        {
+          "path": "dbc/toyota_adas.dbc",
+          "source_path": "opendbc/dbc/toyota_adas.dbc",
+          "git_blob_sha": "929552b768e6c97f830243dedaaa1af76892b6b9",
+          "bytes": 10178,
+          "role": "passive_reference"
+        },
+        {
+          "path": "dbc/toyota_iQ_2009_can.dbc",
+          "source_path": "opendbc/dbc/toyota_iQ_2009_can.dbc",
+          "git_blob_sha": "2213e1ade23f316c015472c5156d218933e77899",
+          "bytes": 7268,
+          "role": "passive_reference"
+        },
+        {
+          "path": "dbc/toyota_prius_2010_pt.dbc",
+          "source_path": "opendbc/dbc/toyota_prius_2010_pt.dbc",
+          "git_blob_sha": "5c7df7d18b3ea7fc41b9c245c0acb15591a174b3",
+          "bytes": 7330,
+          "role": "passive_reference"
+        },
+        {
+          "path": "dbc/toyota_radar_dsu_tssp.dbc",
+          "source_path": "opendbc/dbc/toyota_radar_dsu_tssp.dbc",
+          "git_blob_sha": "168e589136b8c6d39203a4491f7bd3d69841e8a6",
+          "bytes": 6517,
+          "role": "passive_reference"
+        },
+        {
+          "path": "dbc/toyota_tss2_adas.dbc",
+          "source_path": "opendbc/dbc/toyota_tss2_adas.dbc",
+          "git_blob_sha": "a229aef6f199d8b28a3f99025253fa9581d9bd25",
+          "bytes": 10426,
+          "role": "passive_reference"
+        },
+        {
+          "path": "dbc/volvo_v40_2017_pt.dbc",
+          "source_path": "opendbc/dbc/volvo_v40_2017_pt.dbc",
+          "git_blob_sha": "cf1fe27874ba0ee1872d569d723cdccd397b7a79",
+          "bytes": 13069,
+          "role": "passive_reference"
+        },
+        {
+          "path": "dbc/volvo_v60_2015_pt.dbc",
+          "source_path": "opendbc/dbc/volvo_v60_2015_pt.dbc",
+          "git_blob_sha": "d2b58fdd016d492826bdaca58c2baf37e773fa00",
+          "bytes": 10562,
+          "role": "passive_reference"
+        },
+        {
+          "path": "dbc/vw_mlb.dbc",
+          "source_path": "opendbc/dbc/vw_mlb.dbc",
+          "git_blob_sha": "4f7bb05a0b5b12c2ab70829901dbf956983885ef",
+          "bytes": 229446,
+          "role": "passive_reference"
+        },
+        {
+          "path": "dbc/vw_mqb.dbc",
+          "source_path": "opendbc/dbc/vw_mqb.dbc",
+          "git_blob_sha": "bfa397188ad2bbea3bd0e766856a73e18054b4ff",
+          "bytes": 126883,
+          "role": "passive_reference"
+        },
+        {
+          "path": "dbc/vw_mqbevo.dbc",
+          "source_path": "opendbc/dbc/vw_mqbevo.dbc",
+          "git_blob_sha": "91be4a246504272cc4e0b0709223e2565411b8d5",
+          "bytes": 113263,
+          "role": "passive_reference"
+        },
+        {
+          "path": "dbc/vw_pq.dbc",
+          "source_path": "opendbc/dbc/vw_pq.dbc",
+          "git_blob_sha": "77b009a73961e8851c4605d1a684cb1c97e42119",
+          "bytes": 102586,
           "role": "passive_reference"
         },
         {
@@ -177,6 +450,16 @@
       "source_blob_sha": "e72c8e32b2e4ad299496fd9e8bde44d2eb5ce439",
       "derived_path": "uds/negative_response_catalog.json",
       "license_path": "licenses/udsoncan-MIT.txt"
+    },
+    {
+      "id": "dtc",
+      "repository": "brendan-w/python-OBD",
+      "revision": "a378bdd81d58c67d08050e4244173a9a7dbda73d",
+      "license": "GPL-2.0-or-later (codes.py header)",
+      "source_path": "obd/codes.py",
+      "source_blob_sha": "fdec628a76ec8c96ed96cc769ebeb51aa14acf7c",
+      "derived_path": "dtc/reference_catalog.json",
+      "license_path": "licenses/python-obd-GPL-2.0.txt"
     }
   ],
   "existing_data": [
@@ -188,7 +471,7 @@
   "external_reference_data": "../../../docs/references/vendor/ddt4all/README.md",
   "limitations": [
     "No active service definitions or executable code imported; DBC may describe control signals but cannot authorize transmission.",
-    "Only selected standalone DBC files; generator fragments and unreviewed files excluded.",
+    "All 58 standalone top-level DBC files staged; generator fragments and generated outputs excluded.",
     "No manufacturer ECU database, external projects.json or PyRen database redistributed.",
     "No decoder formulas imported from python-OBD; response lengths are hints, not normative validation.",
     "UDS aliases preserved per context; no automatic retry or action policy inferred."

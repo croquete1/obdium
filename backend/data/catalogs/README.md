@@ -2,9 +2,10 @@
 
 Version 1. Source revisions, hashes, license paths, and limitations: [manifest.json](manifest.json). Existing SQLite/VIN data and recorded responses stay at their existing paths; no migration, replacement, runtime auto-discovery or packaging change in this PR.
 
-- dbc/: 19 standalone candidate CAN signal definitions, for offline/passive interpretation only. No live transmit, actuator control, or generation. Verify provenance, parser and vehicle compatibility before activation. Generator fragments are not standalone files and are excluded.
+- dbc/: 58 standalone candidate CAN signal definitions, for offline/passive interpretation only. No live transmit, actuator control, or generation. Verify provenance, parser and vehicle compatibility before activation. Generator fragments are not standalone files and are excluded.
 - fixtures/dbc/: one synthetic parser fixture.
 - obd2/: 198 normalized reference rows in services 01/03/06/07/09; unique request hex; not a capability claim or dispatch allowlist. No mode 04, 08, executable decoder or implied mode 02 support.
+- dtc/: 2066 unique reference code groups; source descriptions retained, not merged with the existing SQLite database. OEM meanings require validated manufacturer context.
 - uds/: 65 unique negative response code groups, 68 labels with contexts. No commands or automatic retry policy.
 - licenses/: license texts and attribution. External ECU fixtures/translations already staged under docs/references/vendor/ddt4all; reference them instead of duplicating them.
 
