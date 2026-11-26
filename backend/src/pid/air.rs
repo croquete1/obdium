@@ -177,11 +177,7 @@ impl OBD {
     pub fn abs_barometric_pressure(&mut self) -> Scalar {
         self.query(Command::new_pid(b"0133"))
             .map_checked_pid_data::<1>(&[0x41, 0x33], |[a]| {
-                Scalar::new(
-                    f32::from(a),
-                    Unit::KiloPascal,
-                    Some(self.unit_preferences),
-                )
+                Scalar::new(f32::from(a), Unit::KiloPascal, Some(self.unit_preferences))
             })
     }
 }
