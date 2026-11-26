@@ -86,7 +86,54 @@ pub struct Response {
     pub(crate) payload_size: usize,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
+pub enum PidPayloadError {
+    #[error("PID response is unavailable")]
+    Missing,
+    #[error("PID response contains an invalid hexadecimal byte")]
+    InvalidHex,
+    #[error("PID response does not match the expected service and identifier")]
+    UnexpectedHeader,
+    #[error("PID response does not contain exactly the expected data bytes")]
+    InvalidLength,
+}
+
 impl Response {
+    /// Validate an already extracted payload with an exact positive header and data size.
+    /// This does not establish ECU identity, freshness or correct transport reassembly.
+    pub fn checked_pid_data<const N: usize>(
+        &self,
+        header: &[u8],
+    ) -> Result<[u8; N], PidPayloadError> {
+        let payload = self.get_payload().ok_or(PidPayloadError::Missing)?;
+        if payload.trim().is_empty() || payload.trim().eq_ignore_ascii_case("NO DATA") {
+            return Err(PidPayloadError::Missing);
+        }
+
+        let mut tokens = payload.split_ascii_whitespace();
+        let parse = |token: &str| {
+            if token.len() != 2 || !token.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+                return Err(PidPayloadError::InvalidHex);
+            }
+            u8::from_str_radix(token, 16).map_err(|_| PidPayloadError::InvalidHex)
+        };
+        for expected in header {
+            let token = tokens.next().ok_or(PidPayloadError::InvalidLength)?;
+            if parse(token)? != *expected {
+                return Err(PidPayloadError::UnexpectedHeader);
+            }
+        }
+
+        let mut data = [0; N];
+        for byte in &mut data {
+            *byte = parse(tokens.next().ok_or(PidPayloadError::InvalidLength)?)?;
+        }
+        if tokens.next().is_some() {
+            return Err(PidPayloadError::InvalidLength);
+        }
+        Ok(data)
+    }
+
     pub fn new(raw: String, escaped: String) -> Self {
         Self {
             formatted_response: Some(raw),
@@ -269,5 +316,65 @@ impl Response {
             pairs += 1;
         }
         OBD::format_response(&payload)
+    }
+}
+
+#[cfg(test)]
+mod checked_payload_tests {
+    use super::*;
+
+    fn fixture(payload: &str) -> Response {
+        Response {
+            payload: Some(payload.into()),
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn exact_payload_supports_two_and_three_byte_headers() {
+        assert_eq!(
+            fixture("41 0c 00 ff").checked_pid_data::<2>(&[0x41, 0x0C]),
+            Ok([0, 255])
+        );
+        assert_eq!(
+            fixture("62 F4 0D 2B").checked_pid_data::<1>(&[0x62, 0xF4, 0x0D]),
+            Ok([43])
+        );
+    }
+
+    #[test]
+    fn unavailable_payload_is_explicit() {
+        assert_eq!(
+            Response::default().checked_pid_data::<1>(&[0x41, 0x0C]),
+            Err(PidPayloadError::Missing)
+        );
+        assert_eq!(
+            fixture("NO DATA").checked_pid_data::<1>(&[0x41, 0x0C]),
+            Err(PidPayloadError::Missing)
+        );
+    }
+
+    #[test]
+    fn invalid_hex_is_explicit_and_never_panics() {
+        for payload in ["41 0C GG", "41 0C +1", "41 0C é", "41 0C F"] {
+            assert_eq!(
+                fixture(payload).checked_pid_data::<1>(&[0x41, 0x0C]),
+                Err(PidPayloadError::InvalidHex)
+            );
+        }
+    }
+
+    #[test]
+    fn wrong_header_and_wrong_length_are_rejected() {
+        assert_eq!(
+            fixture("41 0D 01").checked_pid_data::<1>(&[0x41, 0x0C]),
+            Err(PidPayloadError::UnexpectedHeader)
+        );
+        for payload in ["41", "41 0C", "41 0C 00 01"] {
+            assert_eq!(
+                fixture(payload).checked_pid_data::<1>(&[0x41, 0x0C]),
+                Err(PidPayloadError::InvalidLength)
+            );
+        }
     }
 }
