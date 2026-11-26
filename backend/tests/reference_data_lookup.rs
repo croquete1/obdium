@@ -1,0 +1,76 @@
+#[path = "../src/reference_data.rs"]
+mod reference_data;
+
+use reference_data::{decode_signal, BitOrder, ReferenceCatalogs, ReferenceError};
+
+#[test]
+fn bundled_catalogs_return_known_and_unknown_reference_values() {
+    let catalogs = ReferenceCatalogs::bundled().expect("valid bundled data");
+    assert_eq!(catalogs.obd("010c").expect("RPM").name, "RPM");
+    assert!(catalogs.obd("04").is_none());
+    assert!(catalogs.obd("0801").is_none());
+    assert!(catalogs.dtc("p0001").expect("known DTC").descriptions[0].contains("Fuel"));
+    assert!(catalogs.dtc("X0000").is_none());
+    assert!(catalogs.nrc(0).is_none());
+    assert!(catalogs
+        .nrc(0x78)
+        .expect("pending")
+        .labels
+        .iter()
+        .any(|label| label.name.contains("ResponsePending")));
+}
+
+#[test]
+fn malformed_catalog_is_rejected_before_lookup() {
+    let bad = r#"{"schema_version":2,"status":"reference_only","entries":[]}"#;
+    assert!(matches!(
+        ReferenceCatalogs::from_json(bad, "", ""),
+        Err(ReferenceError::Header)
+    ));
+    let active = r#"{"schema_version":1,"status":"reference_only","entries":[{"request_hex":"04","name":"clear","description":"clear","upstream_response_length_hint":null}]}"#;
+    assert!(matches!(
+        ReferenceCatalogs::from_json(active, "", ""),
+        Err(ReferenceError::Entry(_))
+    ));
+    let large = " ".repeat(2 * 1024 * 1024 + 1);
+    assert!(matches!(
+        ReferenceCatalogs::from_json(&large, "", ""),
+        Err(ReferenceError::TooLarge)
+    ));
+}
+
+#[test]
+fn decodes_aligned_and_cross_byte_signals() {
+    let little = decode_signal(&[0x34, 0x12], 0, 16, BitOrder::Intel, false, 0.5, -1.0)
+        .expect("valid Intel");
+    assert_eq!(little.raw, 0x1234);
+    assert_eq!(little.scaled, 2329.0);
+    let big = decode_signal(&[0x12, 0x34], 7, 16, BitOrder::Motorola, false, 1.0, 0.0)
+        .expect("valid Motorola");
+    assert_eq!(big.raw, 0x1234);
+    let signed = decode_signal(&[0xf0, 0x0f], 4, 8, BitOrder::Intel, true, 1.0, 0.0)
+        .expect("signed crossing");
+    assert_eq!(signed.raw, -1);
+    let cross = decode_signal(&[0x03, 0xa0], 1, 5, BitOrder::Motorola, false, 1.0, 0.0)
+        .expect("Motorola crossing");
+    assert_eq!(cross.raw, 29);
+}
+
+#[test]
+fn rejects_invalid_layout_truncation_and_nonfinite_values() {
+    assert!(matches!(
+        decode_signal(&[0], 0, 0, BitOrder::Intel, false, 1.0, 0.0),
+        Err(ReferenceError::Layout)
+    ));
+    assert!(matches!(
+        decode_signal(&[0], 7, 2, BitOrder::Intel, false, 1.0, 0.0),
+        Err(ReferenceError::Truncated)
+    ));
+    assert!(matches!(
+        decode_signal(&[1], 0, 1, BitOrder::Intel, false, f64::NAN, 0.0),
+        Err(ReferenceError::Scaling)
+    ));
+    let max = decode_signal(&[0xff; 8], 0, 64, BitOrder::Intel, true, 1.0, 0.0)
+        .expect("64-bit signed");
+    assert_eq!(max.raw, -1);
+}
