@@ -40,11 +40,7 @@ impl OBD {
     pub fn intake_manifold_abs_pressure(&mut self) -> Scalar {
         self.query(Command::new_pid(b"010B"))
             .map_checked_pid_data::<1>(&[0x41, 0x0B], |[a]| {
-                Scalar::new(
-                    f32::from(a),
-                    Unit::KiloPascal,
-                    Some(self.unit_preferences),
-                )
+                Scalar::new(f32::from(a), Unit::KiloPascal, Some(self.unit_preferences))
             })
     }
 

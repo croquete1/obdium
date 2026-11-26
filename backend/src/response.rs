@@ -378,7 +378,14 @@ mod checked_payload_tests {
 
     #[test]
     fn measurement_formula_is_not_called_for_invalid_payloads() {
-        for payload in ["", "NO DATA", "41 0D", "41 0D GG", "41 0C 00", "41 0D 00 01"] {
+        for payload in [
+            "",
+            "NO DATA",
+            "41 0D",
+            "41 0D GG",
+            "41 0C 00",
+            "41 0D 00 01",
+        ] {
             let result = fixture(payload).map_checked_pid_data::<1>(&[0x41, 0x0D], |_| {
                 panic!("formula must not run on invalid data")
             });
