@@ -2,7 +2,7 @@
 //! No adapter commands are sent by this module.
 
 use crate::isotp::{parse_elm_classic_can_reply, CanId, IsoTpError};
-use crate::{decode_can_dtc_payload, DecodedDtc, DtcPayloadError};
+use crate::diagnostics::{decode_can_dtc_payload, DecodedDtc, DtcPayloadError};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DtcService {
@@ -87,7 +87,7 @@ pub fn decode_elm_dtc_transaction(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::DtcStatus;
+    use crate::diagnostics::DtcStatus;
 
     #[test]
     fn interleaved_replies_preserve_ecu_identity_and_exact_codes() {
