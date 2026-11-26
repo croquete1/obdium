@@ -1,0 +1,60 @@
+name: Dependency refresh preview
+
+# Resolve registry updates on an isolated runner without pushing code or publishing.
+on:
+  pull_request:
+    paths:
+      - 'backend/Cargo.toml'
+      - 'backend/Cargo.lock'
+      - '.github/workflows/dependency-refresh.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dependency-refresh-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  preview:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      CARGO_TERM_COLOR: never
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Inspect Rust toolchain
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+          rustc --version
+          cargo --version
+      - name: Resolve compatible registry versions
+        working-directory: backend
+        run: |
+          cargo update
+          cargo metadata --locked --format-version 1 > /tmp/obdium-cargo-metadata.json
+          git diff -- Cargo.lock
+      - name: Save candidate lockfile for review
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: candidate-cargo-lock
+          path: backend/Cargo.lock
+          if-no-files-found: error
+          retention-days: 7
+      - name: Install Tauri 2 system prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev libudev-dev patchelf
+      - name: Check candidate on Linux
+        working-directory: backend
+        run: |
+          cargo check --locked --all-targets
+          cargo test --locked
+      - name: Verify candidate remains locked
+        working-directory: backend
+        run: cargo tree --locked --depth 1

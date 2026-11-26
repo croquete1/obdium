@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use sqlite::State;
-use std::{default, fmt};
+use std::fmt;
 
 use crate::{
     engine::EngineType,
@@ -122,6 +122,76 @@ impl fmt::Display for TroubleCodeCategory {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.as_str())
     }
+}
+
+/// Status is determined by the positive response service, never by the code bytes.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DtcStatus {
+    Confirmed,
+    Pending,
+    Permanent,
+}
+
+/// One code decoded from a complete, reassembled CAN diagnostic message.
+/// ECU identity and transport framing belong to the caller.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DecodedDtc {
+    pub code: String,
+    pub status: DtcStatus,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
+pub enum DtcPayloadError {
+    #[error("CAN DTC response is missing its service or code count")]
+    MissingHeader,
+    #[error("Unsupported DTC response service: {0:#04x}")]
+    UnsupportedService(u8),
+    #[error("CAN DTC response length does not match its declared count")]
+    InvalidLength,
+    #[error("CAN DTC response contains a zero code inside the declared count")]
+    InvalidZeroCode,
+}
+
+/// Decode exactly one reassembled SAE CAN Mode 03, 07 or 0A positive payload.
+///
+/// The caller must remove ISO-TP framing and padding using its declared message
+/// length and retain the source ECU. This is not a parser for raw ELM strings,
+/// concatenated ECU replies, legacy non-CAN messages or UDS records.
+pub fn decode_can_dtc_payload(payload: &[u8]) -> Result<Vec<DecodedDtc>, DtcPayloadError> {
+    let [service, count, data @ ..] = payload else {
+        return Err(DtcPayloadError::MissingHeader);
+    };
+    let status = match service {
+        0x43 => DtcStatus::Confirmed,
+        0x47 => DtcStatus::Pending,
+        0x4A => DtcStatus::Permanent,
+        other => return Err(DtcPayloadError::UnsupportedService(*other)),
+    };
+    if data.len() != usize::from(*count) * 2 {
+        return Err(DtcPayloadError::InvalidLength);
+    }
+
+    let mut codes = Vec::with_capacity(usize::from(*count));
+    for pair in data.as_chunks::<2>().0 {
+        let left = pair[0];
+        let right = pair[1];
+        if left == 0 && right == 0 {
+            return Err(DtcPayloadError::InvalidZeroCode);
+        }
+        let category = match left >> 6 {
+            0 => 'P',
+            1 => 'C',
+            2 => 'B',
+            _ => 'U',
+        };
+        let code = format!(
+            "{category}{:X}{:X}{right:02X}",
+            (left >> 4) & 0x03,
+            left & 0x0F
+        );
+        codes.push(DecodedDtc { code, status });
+    }
+    Ok(codes)
 }
 
 #[derive(Debug, Default, Clone)]
@@ -581,5 +651,96 @@ impl OBD {
                 Some(self.unit_preferences),
             )
         })
+    }
+}
+
+#[cfg(test)]
+mod can_dtc_payload_tests {
+    use super::*;
+
+    #[test]
+    fn decodes_reported_p143c_without_consuming_count_as_code() {
+        let codes = decode_can_dtc_payload(&[0x43, 1, 0x14, 0x3C]).unwrap();
+        assert_eq!(
+            codes,
+            vec![DecodedDtc {
+                code: "P143C".into(),
+                status: DtcStatus::Confirmed,
+            }]
+        );
+    }
+
+    #[test]
+    fn preserves_service_like_bytes_inside_codes_and_zero_low_byte() {
+        let codes = decode_can_dtc_payload(&[0x43, 3, 0x43, 0x4A, 0x14, 0x00, 0x47, 0x43]).unwrap();
+        let names: Vec<_> = codes.iter().map(|code| code.code.as_str()).collect();
+        assert_eq!(names, ["C034A", "P1400", "C0743"]);
+        assert!(codes.iter().all(|code| code.status == DtcStatus::Confirmed));
+    }
+
+    #[test]
+    fn distinguishes_all_three_services_for_the_same_code() {
+        for (service, status) in [
+            (0x43, DtcStatus::Confirmed),
+            (0x47, DtcStatus::Pending),
+            (0x4A, DtcStatus::Permanent),
+        ] {
+            let codes = decode_can_dtc_payload(&[service, 1, 0x14, 0x3C]).unwrap();
+            assert_eq!(codes[0].code, "P143C");
+            assert_eq!(codes[0].status, status);
+        }
+    }
+
+    #[test]
+    fn decodes_all_four_system_categories() {
+        let codes =
+            decode_can_dtc_payload(&[0x43, 4, 0x30, 0x01, 0x70, 0x01, 0xB0, 0x01, 0xF0, 0x01])
+                .unwrap();
+        let names: Vec<_> = codes.iter().map(|code| code.code.as_str()).collect();
+        assert_eq!(names, ["P3001", "C3001", "B3001", "U3001"]);
+    }
+
+    #[test]
+    fn accepts_explicit_zero_count() {
+        assert_eq!(decode_can_dtc_payload(&[0x43, 0]), Ok(Vec::new()));
+    }
+
+    #[test]
+    fn rejects_missing_or_unsupported_header() {
+        assert_eq!(
+            decode_can_dtc_payload(&[]),
+            Err(DtcPayloadError::MissingHeader)
+        );
+        assert_eq!(
+            decode_can_dtc_payload(&[0x43]),
+            Err(DtcPayloadError::MissingHeader)
+        );
+        assert_eq!(
+            decode_can_dtc_payload(&[0x7F, 0x03, 0x11]),
+            Err(DtcPayloadError::UnsupportedService(0x7F))
+        );
+    }
+
+    #[test]
+    fn rejects_truncation_padding_and_concatenated_messages() {
+        for payload in [
+            &[0x43, 2, 0x14, 0x3C][..],
+            &[0x43, 1, 0x14][..],
+            &[0x43, 1, 0x14, 0x3C, 0, 0][..],
+            &[0x43, 0, 0x4A, 0][..],
+        ] {
+            assert_eq!(
+                decode_can_dtc_payload(payload),
+                Err(DtcPayloadError::InvalidLength)
+            );
+        }
+    }
+
+    #[test]
+    fn rejects_zero_code_inside_declared_count_without_partial_success() {
+        assert_eq!(
+            decode_can_dtc_payload(&[0x43, 2, 0x14, 0x3C, 0, 0]),
+            Err(DtcPayloadError::InvalidZeroCode)
+        );
     }
 }
