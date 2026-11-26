@@ -8,7 +8,9 @@ use std::time::{Duration, Instant};
 use thiserror::Error;
 
 use crate::cmd::{Command, CommandType};
-use crate::protocol::{validate_selection_ack, ProtocolSelection};
+use crate::protocol::{
+    parse_reported_protocol, validate_selection_ack, ProtocolSelection, ReportedProtocol,
+};
 use crate::response::Response;
 use crate::scalar::{Scalar, Unit, UnitPreferences};
 use crate::vin::VIN;
@@ -301,6 +303,14 @@ impl OBD {
             return Err(Error::ConnectionFailed);
         }
 
+        self.initialize_protocol(selection, protocol)
+    }
+
+    fn initialize_protocol(
+        &mut self,
+        selection: ProtocolSelection,
+        protocol: u8,
+    ) -> Result<(), Error> {
         if let Err(error) = self.init().and_then(|()| self.select_protocol(selection)) {
             self.disconnect();
             return Err(error);
@@ -936,6 +946,20 @@ impl OBD {
         response.formatted_response.ok_or(Error::InvalidResponse)
     }
 
+    /// Read the adapter's protocol configuration; this does not verify ECU communication.
+    /// Demo recordings do not contain authoritative live adapter state.
+    pub fn get_reported_protocol(&mut self) -> Result<ReportedProtocol, Error> {
+        if self.replay_requests {
+            return Err(Error::InvalidResponse);
+        }
+        let mut request = Command::new_at(b"AT DPN");
+        self.send_command(&mut request)?;
+        let response = self.get_at_response()?;
+        parse_reported_protocol(response.raw_response.as_deref().unwrap_or_default())
+            .map_err(|_| Error::InvalidResponse)
+    }
+
+    /// Requested configuration, not an independently verified ECU protocol.
     pub fn get_protocol_number(&self) -> u8 {
         self.protocol
     }
@@ -1098,6 +1122,7 @@ mod serial_prompt_tests {
         fail_clear: bool,
         fail_write: bool,
         eof_when_empty: bool,
+        scripted_replies: VecDeque<Vec<u8>>,
     }
 
     #[derive(Clone)]
@@ -1230,7 +1255,11 @@ mod serial_prompt_tests {
             }
             state.written.extend_from_slice(buffer);
             // Simulate an adapter whose reply is already queued when write returns.
-            state.pending.extend(b"ELM327 v1.5\r>".iter().copied());
+            let reply = state
+                .scripted_replies
+                .pop_front()
+                .unwrap_or_else(|| b"ELM327 v1.5\r>".to_vec());
+            state.pending.extend(reply);
             Ok(buffer.len())
         }
 
@@ -1246,6 +1275,78 @@ mod serial_prompt_tests {
             state: Arc::clone(&state),
         }));
         (obd, state)
+    }
+
+    fn initialization_replies(selection_reply: &[u8]) -> VecDeque<Vec<u8>> {
+        VecDeque::from([
+            b"ELM327 v1.5\r>".to_vec(),
+            b"OK\r>".to_vec(),
+            b"OK\r>".to_vec(),
+            b"OK\r>".to_vec(),
+            selection_reply.to_vec(),
+        ])
+    }
+
+    #[test]
+    fn every_protocol_selection_consumes_its_own_acknowledgement() {
+        for id in 0..=9 {
+            let (mut obd, state) = fixture_obd(FixtureState {
+                scripted_replies: initialization_replies(b"OK\r>"),
+                ..Default::default()
+            });
+            let selection = ProtocolSelection::try_from(id).unwrap();
+            obd.initialize_protocol(selection, id).unwrap();
+            assert_eq!(obd.get_protocol_number(), id);
+            assert!(obd.is_connected());
+            let state = state.lock().unwrap();
+            let mut expected = b"ATZ\rATE0\rATL0\rATH1\r".to_vec();
+            expected.extend_from_slice(selection.command());
+            expected.push(b'\r');
+            assert_eq!(state.written, expected);
+            assert!(state.pending.is_empty());
+        }
+    }
+
+    #[test]
+    fn rejected_protocol_configuration_disconnects() {
+        for reply in [b"?\r>".as_slice(), b"NOT OK\r>", b"OK\rERROR\r>"] {
+            let (mut obd, _) = fixture_obd(FixtureState {
+                scripted_replies: initialization_replies(reply),
+                ..Default::default()
+            });
+            assert!(matches!(
+                obd.initialize_protocol(ProtocolSelection::try_from(6).unwrap(), 6),
+                Err(Error::InitFailedNoOKReceived)
+            ));
+            assert!(!obd.is_connected());
+            assert_eq!(obd.get_protocol_number(), 0);
+        }
+    }
+
+    #[test]
+    fn failed_initialization_does_not_send_protocol_selection() {
+        let (mut obd, state) = fixture_obd(FixtureState {
+            scripted_replies: VecDeque::from([b"ELM327 v1.5\r>".to_vec(), b"?\r>".to_vec()]),
+            ..Default::default()
+        });
+        assert!(obd
+            .initialize_protocol(ProtocolSelection::try_from(6).unwrap(), 6)
+            .is_err());
+        assert!(!obd.is_connected());
+        assert_eq!(state.lock().unwrap().written, b"ATZ\rATE0\r");
+    }
+
+    #[test]
+    fn reported_protocol_is_read_without_changing_requested_selection() {
+        let (mut obd, state) = fixture_obd(FixtureState {
+            scripted_replies: VecDeque::from([b"A7\r>".to_vec()]),
+            ..Default::default()
+        });
+        let report = obd.get_reported_protocol().unwrap();
+        assert!(report.automatic);
+        assert_eq!(report.protocol.map(|protocol| protocol as u8), Some(7));
+        assert_eq!(obd.get_protocol_number(), 0);
+        assert_eq!(state.lock().unwrap().written, b"AT DPN\r");
     }
 
     #[test]
