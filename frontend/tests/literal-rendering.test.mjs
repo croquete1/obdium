@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
+import { replaceReadinessSnapshot, readinessLabels } from "../scripts/readiness-state.mjs";
 
 const eventsSource = readFileSync(new URL("../scripts/events.js", import.meta.url), "utf8");
 const featuresSource = readFileSync(new URL("../scripts/features.js", import.meta.url), "utf8");
@@ -19,6 +20,7 @@ function node() {
     textContent: "",
     innerHTML: "",
     appendChild(child) { children.push(child); },
+    replaceChildren() { children.length = 0; },
     querySelector(selector) {
       if (!fields.has(selector)) fields.set(selector, { textContent: "", style: {}, addEventListener() {} });
       return fields.get(selector);
@@ -81,11 +83,13 @@ test("readiness name is rendered literally", () => {
   const list = node();
   const handler = eventHandler("update-readiness-tests", 'listen("update-command-output"', {
     readinessTests: list, document: { createElement: node }, addNotification() {},
+    window: { connected: true }, replaceReadinessSnapshot, readinessLabels,
   });
   handler({ payload: [{ name: literal, available: true, complete: false }] });
   const row = list.children[0];
   assert.ok(!row.innerHTML.includes(literal));
   assert.equal(row.querySelector("#test-name").textContent, "TEST: " + literal);
+  assert.equal(row.querySelector("#test-availability").textContent, "SUPPORTED");
   assert.equal(row.querySelector("#test-completeness").textContent, "NOT READY");
 });
 
