@@ -1,7 +1,9 @@
 #[path = "../src/reference_data.rs"]
 mod reference_data;
 
-use reference_data::{decode_signal, BitOrder, ReferenceCatalogs, ReferenceError};
+use reference_data::{
+    decode_signal, translation_preview, BitOrder, ReferenceCatalogs, ReferenceError,
+};
 
 #[test]
 fn bundled_catalogs_return_known_and_unknown_reference_values() {
@@ -73,4 +75,39 @@ fn rejects_invalid_layout_truncation_and_nonfinite_values() {
     let max = decode_signal(&[0xff; 8], 0, 64, BitOrder::Intel, true, 1.0, 0.0)
         .expect("64-bit signed");
     assert_eq!(max.raw, -1);
+}
+
+#[test]
+fn translation_preview_resolves_all_locales_and_falls_back() {
+    let locales = [
+        "en", "cs-CZ", "de", "es", "fr", "hu", "it", "nl", "pl", "pt-PT", "ro", "ru", "sr",
+        "tr", "uk-UA", "zh-CN",
+    ];
+    let keys = [
+        "confirm", "cancel", "error", "refresh", "stop", "close", "file", "exit", "help",
+        "about", "no", "timeout",
+    ];
+    for locale in locales {
+        for key in keys {
+            let preview = translation_preview(locale, key)
+                .expect("valid preview")
+                .expect("known message");
+            assert_eq!(preview.locale, locale);
+            assert_eq!(preview.key, key);
+            assert!(!preview.fallback);
+            assert!(!preview.text.trim().is_empty());
+        }
+    }
+    let portuguese = translation_preview("pt-PT", "file")
+        .expect("valid preview")
+        .expect("known message");
+    assert_eq!(portuguese.text, "Ficheiro");
+    let fallback = translation_preview("unknown", "file")
+        .expect("valid fallback")
+        .expect("known message");
+    assert_eq!(fallback.locale, "en");
+    assert!(fallback.fallback);
+    assert!(translation_preview("en", "missing")
+        .expect("valid preview")
+        .is_none());
 }

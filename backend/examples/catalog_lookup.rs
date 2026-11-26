@@ -2,7 +2,7 @@
 #[path = "../src/reference_data.rs"]
 mod reference_data;
 
-use reference_data::{decode_signal, BitOrder, ReferenceCatalogs};
+use reference_data::{decode_signal, translation_preview, BitOrder, ReferenceCatalogs};
 use serde::Serialize;
 use std::error::Error;
 
@@ -12,7 +12,10 @@ fn print_json(value: &impl Serialize) -> Result<(), Box<dyn Error>> {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let args: Vec<String> = std::env::args().skip(1).collect();
+    let args: Vec<String> = std::env::args_os()
+        .skip(1)
+        .map(|arg| arg.into_string().map_err(|_| "arguments must be valid UTF-8"))
+        .collect::<Result<_, _>>()?;
     match args.as_slice() {
         [kind, key] if kind == "obd" => {
             print_json(&ReferenceCatalogs::bundled()?.obd(key))?;
@@ -24,8 +27,14 @@ fn main() -> Result<(), Box<dyn Error>> {
             let code = u8::from_str_radix(key, 16)?;
             print_json(&ReferenceCatalogs::bundled()?.nrc(code))?;
         }
+        [kind, locale, key] if kind == "translate" => {
+            print_json(&translation_preview(locale, key)?)?;
+        }
         [kind, bytes, start, width, endian, sign, factor, offset] if kind == "decode" => {
-            if bytes.len() > 128 || !bytes.len().is_multiple_of(2) || !bytes.is_ascii() {
+            if bytes.len() > 128
+                || !bytes.len().is_multiple_of(2)
+                || !bytes.bytes().all(|byte| byte.is_ascii_hexdigit())
+            {
                 return Err("expected at most 64 bytes of contiguous hexadecimal data".into());
             }
             let payload = (0..bytes.len())
@@ -53,7 +62,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             )?)?;
         }
         _ => {
-            return Err("usage: catalog_lookup obd|dtc|nrc KEY; or decode HEX START WIDTH intel|motorola signed|unsigned FACTOR OFFSET".into());
+            return Err("usage: catalog_lookup obd|dtc|nrc KEY; translate LOCALE KEY; or decode HEX START WIDTH intel|motorola signed|unsigned FACTOR OFFSET".into());
         }
     }
     Ok(())

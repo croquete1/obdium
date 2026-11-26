@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "status": "draft_reference",
+  "locale": "ru",
+  "source_blob_sha": "4ff5af5b9cea73fc711bfa6d9234b72d13af627a",
+  "messages": {
+    "confirm": "Подтвердить",
+    "cancel": "ОТМЕНА",
+    "error": "Ошибка",
+    "refresh": "Обновить",
+    "stop": "Стоп",
+    "close": "Закрыть",
+    "file": "Файл",
+    "exit": "Выход",
+    "help": "Справка",
+    "about": "О программе",
+    "no": "Нет",
+    "timeout": "ТАЙМАУТ"
+  }
+}

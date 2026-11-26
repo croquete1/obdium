@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "status": "draft_reference",
+  "locale": "it",
+  "source_blob_sha": "67afc329fb44e2ac0029db96843467e97c383db6",
+  "messages": {
+    "confirm": "Accetta",
+    "cancel": "ANNULLA",
+    "error": "Errore",
+    "refresh": "Aggiorna",
+    "stop": "Ferma",
+    "close": "Chiudi",
+    "file": "File",
+    "exit": "Esci",
+    "help": "Aiuto",
+    "about": "Informazioni",
+    "no": "No",
+    "timeout": "TEMPO SCADUTO"
+  }
+}

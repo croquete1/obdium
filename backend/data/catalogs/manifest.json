@@ -460,6 +460,112 @@
       "source_blob_sha": "fdec628a76ec8c96ed96cc769ebeb51aa14acf7c",
       "derived_path": "dtc/reference_catalog.json",
       "license_path": "licenses/python-obd-GPL-2.0.txt"
+    },
+    {
+      "id": "translation_preview",
+      "repository": "cedricp/ddt4all",
+      "revision": "09a39795725b7e510041436cdde3b1d65609142c",
+      "license": "GPL-3.0-or-later (translated data; EN original preview)",
+      "license_path": "licenses/ddt4all-GPL-3.0.txt",
+      "files": [
+        {
+          "path": "translations/cs-CZ.json",
+          "git_blob_sha": "3352fd79579c960c20ae515fc1dd490d354b9e4c",
+          "bytes": 451,
+          "role": "translation_preview"
+        },
+        {
+          "path": "translations/de.json",
+          "git_blob_sha": "774b175946b97c9ee8fe504d5ee840b1247ce21f",
+          "bytes": 454,
+          "role": "translation_preview"
+        },
+        {
+          "path": "translations/en.json",
+          "git_blob_sha": "d6c1455b22e193c2c672544cdb91a3981f21f07a",
+          "bytes": 359,
+          "role": "translation_preview"
+        },
+        {
+          "path": "translations/es.json",
+          "git_blob_sha": "24c134f979f3cd53dc2e45675f8ffe2839ce46e4",
+          "bytes": 448,
+          "role": "translation_preview"
+        },
+        {
+          "path": "translations/fr.json",
+          "git_blob_sha": "2ee0058f0243a1ed273710ad9b700292a4582be7",
+          "bytes": 456,
+          "role": "translation_preview"
+        },
+        {
+          "path": "translations/hu.json",
+          "git_blob_sha": "82e5b6d1da3c9cb49778715348ffc31c26b1f07e",
+          "bytes": 459,
+          "role": "translation_preview"
+        },
+        {
+          "path": "translations/it.json",
+          "git_blob_sha": "98e2d0b9ba9bec492ac1d64c0669ce72e2a30e11",
+          "bytes": 443,
+          "role": "translation_preview"
+        },
+        {
+          "path": "translations/nl.json",
+          "git_blob_sha": "8c38595a10ab7137fdf1ba9edfa284491c17229d",
+          "bytes": 442,
+          "role": "translation_preview"
+        },
+        {
+          "path": "translations/pl.json",
+          "git_blob_sha": "2a7cfe2061924e483ec85faa7ca19eee4695d5d3",
+          "bytes": 439,
+          "role": "translation_preview"
+        },
+        {
+          "path": "translations/pt-PT.json",
+          "git_blob_sha": "80a4d7ea315f6338283d05ffd13b4bf99d9001b1",
+          "bytes": 543,
+          "role": "translation_preview"
+        },
+        {
+          "path": "translations/ro.json",
+          "git_blob_sha": "dcd4370ff81f9f37139f75ff7e4265880ecbb9fd",
+          "bytes": 454,
+          "role": "translation_preview"
+        },
+        {
+          "path": "translations/ru.json",
+          "git_blob_sha": "0ac7331335f9c911580042da03253392c9e5c5e5",
+          "bytes": 521,
+          "role": "translation_preview"
+        },
+        {
+          "path": "translations/sr.json",
+          "git_blob_sha": "a09569e84bc5263b2452548a0361471a6793e3a5",
+          "bytes": 450,
+          "role": "translation_preview"
+        },
+        {
+          "path": "translations/tr.json",
+          "git_blob_sha": "4711e104581e91386578d20d4570fe47d5a944f0",
+          "bytes": 444,
+          "role": "translation_preview"
+        },
+        {
+          "path": "translations/uk-UA.json",
+          "git_blob_sha": "3c43cee049924f2806432ac7f6e1487f845b1053",
+          "bytes": 517,
+          "role": "translation_preview"
+        },
+        {
+          "path": "translations/zh-CN.json",
+          "git_blob_sha": "490eb87df22a6909099f069c1c0669f581b462a1",
+          "bytes": 436,
+          "role": "translation_preview"
+        }
+      ],
+      "note": "12 selected plain-text messages per locale, derived from pinned PO catalogs, PT-PT adapted; source hashes inside locale files. Draft, no production UI activation."
     }
   ],
   "existing_data": [

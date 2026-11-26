@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "status": "draft_reference",
+  "locale": "hu",
+  "source_blob_sha": "f87f177514df7432476f1fb3a8b87864abeaca4c",
+  "messages": {
+    "confirm": "Rendben",
+    "cancel": "MÉGSE",
+    "error": "Hiba",
+    "refresh": "Frissítés",
+    "stop": "Leállítás",
+    "close": "Bezárás",
+    "file": "Fájl",
+    "exit": "Kilépés",
+    "help": "Súgó",
+    "about": "Névjegy",
+    "no": "Nem",
+    "timeout": "IDŐTÚLLÉPÉS"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "status": "draft_reference",
+  "locale": "uk-UA",
+  "source_blob_sha": "ef3d039b55e39969734d90dfaae7b3c0887db1a4",
+  "messages": {
+    "confirm": "Підтвердити",
+    "cancel": "Відміна",
+    "error": "Помилка",
+    "refresh": "Оновити",
+    "stop": "Зупинити",
+    "close": "Закрити",
+    "file": "Файл",
+    "exit": "Вихід",
+    "help": "Довідка",
+    "about": "Про",
+    "no": "Ні",
+    "timeout": "ТАЙМАУТ"
+  }
+}

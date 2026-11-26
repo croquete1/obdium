@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "status": "draft_reference",
+  "locale": "zh-CN",
+  "source_blob_sha": "df96d6d9b428bf2da9ac42590fa2e87df2c45b2c",
+  "messages": {
+    "confirm": "确定",
+    "cancel": "取消",
+    "error": "错误",
+    "refresh": "刷新",
+    "stop": "停止",
+    "close": "关闭",
+    "file": "文件",
+    "exit": "退出",
+    "help": "帮助",
+    "about": "关于",
+    "no": "否",
+    "timeout": "超时"
+  }
+}

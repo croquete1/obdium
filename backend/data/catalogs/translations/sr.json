@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "status": "draft_reference",
+  "locale": "sr",
+  "source_blob_sha": "c73e89dc8e7dbb116f8e94bec853e69b244bf394",
+  "messages": {
+    "confirm": "Potvrdi",
+    "cancel": "OTKAŽI",
+    "error": "Greška",
+    "refresh": "Osvezi",
+    "stop": "Zaustavi",
+    "close": "Zatvori",
+    "file": "Datoteka",
+    "exit": "Izlaz",
+    "help": "Pomoć",
+    "about": "O programu",
+    "no": "Ne",
+    "timeout": "ISTEK VREMENA"
+  }
+}

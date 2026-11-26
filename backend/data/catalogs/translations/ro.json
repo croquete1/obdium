@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "status": "draft_reference",
+  "locale": "ro",
+  "source_blob_sha": "2ea91cc205ec1cd50a75bc20f727e50bd2769251",
+  "messages": {
+    "confirm": "Confirmă",
+    "cancel": "ANULARE",
+    "error": "Eroare",
+    "refresh": "Reîmprospătează",
+    "stop": "Oprește",
+    "close": "Închide",
+    "file": "Fișier",
+    "exit": "Iesire",
+    "help": "Ajutor",
+    "about": "Despre",
+    "no": "Nu",
+    "timeout": "EXPIRAT"
+  }
+}

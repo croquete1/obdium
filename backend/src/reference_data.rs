@@ -230,3 +230,77 @@ pub fn decode_signal(
     }
     Ok(DecodedSignal { raw, scaled })
 }
+
+#[derive(Deserialize)]
+struct TranslationPreview {
+    schema_version: u32,
+    status: String,
+    locale: String,
+    messages: BTreeMap<String, String>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct PreviewMessage {
+    pub locale: String,
+    pub key: String,
+    pub text: String,
+    pub fallback: bool,
+}
+
+/// Read the explicitly staged, unreviewed preview strings only.
+pub fn translation_preview(locale: &str, key: &str) -> Result<Option<PreviewMessage>, ReferenceError> {
+    let english = include_str!("../data/catalogs/translations/en.json");
+    let source = match locale {
+        "cs-CZ" => Some(include_str!("../data/catalogs/translations/cs-CZ.json")),
+        "de" => Some(include_str!("../data/catalogs/translations/de.json")),
+        "es" => Some(include_str!("../data/catalogs/translations/es.json")),
+        "fr" => Some(include_str!("../data/catalogs/translations/fr.json")),
+        "hu" => Some(include_str!("../data/catalogs/translations/hu.json")),
+        "it" => Some(include_str!("../data/catalogs/translations/it.json")),
+        "nl" => Some(include_str!("../data/catalogs/translations/nl.json")),
+        "pl" => Some(include_str!("../data/catalogs/translations/pl.json")),
+        "pt-PT" => Some(include_str!("../data/catalogs/translations/pt-PT.json")),
+        "ro" => Some(include_str!("../data/catalogs/translations/ro.json")),
+        "ru" => Some(include_str!("../data/catalogs/translations/ru.json")),
+        "sr" => Some(include_str!("../data/catalogs/translations/sr.json")),
+        "tr" => Some(include_str!("../data/catalogs/translations/tr.json")),
+        "uk-UA" => Some(include_str!("../data/catalogs/translations/uk-UA.json")),
+        "zh-CN" => Some(include_str!("../data/catalogs/translations/zh-CN.json")),
+        "en" => Some(english),
+        _ => None,
+    };
+    let parse_preview = |text: &str, expected: &str| -> Result<TranslationPreview, ReferenceError> {
+        if text.len() > MAX_CATALOG_BYTES {
+            return Err(ReferenceError::TooLarge);
+        }
+        let preview: TranslationPreview = serde_json::from_str(text)?;
+        if preview.schema_version != 1
+            || preview.status != "draft_reference"
+            || preview.locale != expected
+        {
+            return Err(ReferenceError::Header);
+        }
+        Ok(preview)
+    };
+    let fallback_catalog = parse_preview(english, "en")?;
+    let Some(default_text) = fallback_catalog.messages.get(key) else {
+        return Ok(None);
+    };
+    if let Some(source) = source {
+        let preview = parse_preview(source, locale)?;
+        if let Some(text) = preview.messages.get(key) {
+            return Ok(Some(PreviewMessage {
+                locale: preview.locale,
+                key: key.to_owned(),
+                text: text.clone(),
+                fallback: false,
+            }));
+        }
+    }
+    Ok(Some(PreviewMessage {
+        locale: "en".to_owned(),
+        key: key.to_owned(),
+        text: default_text.clone(),
+        fallback: true,
+    }))
+}

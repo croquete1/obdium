@@ -14,3 +14,7 @@ Native Rust integration gates (F10/F15/F16/F20): schema version, typed parser, s
 ## Offline Rust inspection
 
 From backend: `cargo run --locked --example catalog_lookup -- obd 010C`, `cargo run --locked --example catalog_lookup -- dtc P0001`, or `cargo run --locked --example catalog_lookup -- nrc 78`. These return reference JSON or null for an unknown key, not a vehicle response. `cargo run --locked --example catalog_lookup -- decode 3412 0 16 intel unsigned 0.5 -1` decodes a synthetic payload. The example and integration tests share `src/reference_data.rs`; no Tauri command, live CAN traffic, automatic activation or SQLite migration. The bit extractor is not a DBC file parser; multiplex, checksums and vehicle compatibility still require validation.
+
+## Localization preview
+
+16 draft JSON locale resources with 12 stable plain-text keys each (192 entries), no fuzzy or executable expressions. PT-PT terminology adapted, not independently reviewed. `cargo run --locked --example catalog_lookup -- translate pt-PT file` previews a message; unknown locales fall back to English. No UI localization claim. Source PO notices and translator credits preserved in the technical reference snapshot and license directory.

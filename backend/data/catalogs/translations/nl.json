@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "status": "draft_reference",
+  "locale": "nl",
+  "source_blob_sha": "50207cd2e06716d9964a24439cbd96f4cd65fef8",
+  "messages": {
+    "confirm": "Akkoord",
+    "cancel": "ANNULEREN",
+    "error": "Fout",
+    "refresh": "Verversen",
+    "stop": "Stoppen",
+    "close": "Sluiten",
+    "file": "Bestand",
+    "exit": "Afsluiten",
+    "help": "Hulp",
+    "about": "Over",
+    "no": "Nee",
+    "timeout": "TIME-OUT"
+  }
+}

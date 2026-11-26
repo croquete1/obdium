@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "status": "draft_reference",
+  "locale": "en",
+  "messages": {
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "error": "Error",
+    "refresh": "Refresh",
+    "stop": "Stop",
+    "close": "Close",
+    "file": "File",
+    "exit": "Exit",
+    "help": "Help",
+    "about": "About",
+    "no": "No",
+    "timeout": "Timeout"
+  }
+}
