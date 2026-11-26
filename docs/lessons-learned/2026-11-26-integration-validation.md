@@ -25,3 +25,13 @@ The most-derived snapshots resolve overlapping paths: #4 owns obd.rs, #7 owns di
 ## Acceptance and learning
 
 Require combined CI matrix, House Rules, dependency preview and frontend guards on the same candidate. Verify actual test counts and exact SHA. A green result on separate branches does not establish compatibility of their combination. Rebuild or reconcile the candidate when source heads move. No roadmap item becomes DONE merely because these checks pass. No merge, release, paid review or branch-protection change.
+
+## Second integration candidate — 26 November 2026
+
+Previous exact candidate 8be90f09fa9c2f28a43c72c2bb847788e3719ac3 passed all three workflows: CI 45834209032 (41 Rust tests, all three OS builds/lint and Linux fmt), House Rules 45834208879 (9 tests), dependency preview 45834208844 and Node DTC guards (3 tests): 53 distinct tests. Duplicate CI 45836702515 also passed. The original snapshot remains accessible by SHA.
+
+Add PR #10 at 8acbbffc16bac82ff31425b1208135d858d48bfd, retaining all eight original PR heads. CI 45844134126 on b79b138bcce004620ee5653e9b35c30b1ffc3628 ran 15 Rust tests in Linux and six Node graph tests, all successful; Linux/Windows Clippy/build succeeded; macOS cancelled and Linux fmt reported one hunk in air.rs, corrected in 8acbbffc16bac82ff31425b1208135d858d48bfd. New head CI pending.
+
+Nine non-overlapping file blobs copied verbatim after comparison to the common CI ancestor. Two overlapping files reconciled explicitly: features.js retains the disabled DTC route from #8 while adding the #10 graph sampler; ci.yml retains the #8 DTC regression step and adds the #10 graph step and .mjs syntax checking. Original main.js, index.html, events.rs bridge and DTC tests unchanged. Expected integrated count: 54 Rust + 9 Python + 9 Node = 72 distinct tests. Must verify actual logs. No merge/release or physical validation. The new candidate is for validation only; independent PR gates still apply.
+
+Learning: never copy a whole overlapping file from a newer PR without reconciling safety mitigations already present. Validate the union of regression tests on the same tree.
