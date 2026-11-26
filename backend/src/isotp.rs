@@ -1,10 +1,11 @@
 //! Reassemble classic CAN ISO-TP replies using normal addressing.
-//! Input is already tokenized into CAN IDs and data bytes; no adapter I/O.
+//! Supports a strict textual ELM layout or already tokenized frames; no adapter I/O.
 
 use std::collections::BTreeMap;
 
 const MAX_FRAMES: usize = 4096;
 const MAX_ECUS: usize = 32;
+const MAX_ELM_REPLY_BYTES: usize = 64 * 1024;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum CanId {
@@ -35,6 +36,10 @@ pub struct CanReply {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
 pub enum IsoTpError {
+    #[error("ELM reply exceeds the configured byte limit")]
+    ReplyTooLarge,
+    #[error("Invalid ELM CAN frame at line {0}")]
+    InvalidElmLine(usize),
     #[error("No CAN frames received in a diagnostic transaction")]
     NoFrames,
     #[error("Too many frames in a diagnostic transaction")]
@@ -68,9 +73,7 @@ struct Assembly {
 /// must establish transaction boundaries, normal addressing and classic CAN
 /// framing; this function does not support CAN FD, extended/mixed addressing,
 /// extended-length first frames or flow-control frames in the reply stream.
-pub fn assemble_classic_can_replies(
-    frames: &[CanFrame<'_>],
-) -> Result<Vec<CanReply>, IsoTpError> {
+pub fn assemble_classic_can_replies(frames: &[CanFrame<'_>]) -> Result<Vec<CanReply>, IsoTpError> {
     if frames.is_empty() {
         return Err(IsoTpError::NoFrames);
     }
@@ -158,6 +161,61 @@ pub fn assemble_classic_can_replies(
             })
         })
         .collect()
+}
+
+/// A strict parser for an already collected ELM reply in the configured
+/// space-separated, header-on, PCI-visible classic CAN format.
+///
+/// Each nonempty line must be a three- or eight-digit CAN ID followed by
+/// one to eight two-digit hex bytes. No optional DLC column, split 29-bit
+/// header, numbered lines or hidden PCI is inferred. The caller must
+/// establish the adapter configuration and remove the terminal prompt.
+/// Unexpected adapter text is an error, not an empty successful result.
+pub fn parse_elm_classic_can_reply(raw: &str) -> Result<Vec<CanReply>, IsoTpError> {
+    if raw.len() > MAX_ELM_REPLY_BYTES {
+        return Err(IsoTpError::ReplyTooLarge);
+    }
+
+    let mut frames = Vec::new();
+    for (index, line) in raw.split(['\r', '\n']).enumerate() {
+        let line = line.trim();
+        if line.is_empty() {
+            continue;
+        }
+        if frames.len() >= MAX_FRAMES {
+            return Err(IsoTpError::TooManyFrames);
+        }
+
+        let invalid = || IsoTpError::InvalidElmLine(index + 1);
+        let mut tokens = line.split_ascii_whitespace();
+        let header = tokens.next().ok_or_else(invalid)?;
+        if !header.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+            return Err(invalid());
+        }
+        let ecu = match header.len() {
+            3 => CanId::Standard(u16::from_str_radix(header, 16).map_err(|_| invalid())?),
+            8 => CanId::Extended(u32::from_str_radix(header, 16).map_err(|_| invalid())?),
+            _ => return Err(invalid()),
+        };
+
+        let mut data = Vec::new();
+        for token in tokens {
+            if data.len() >= 8
+                || token.len() != 2
+                || !token.bytes().all(|byte| byte.is_ascii_hexdigit())
+            {
+                return Err(invalid());
+            }
+            data.push(u8::from_str_radix(token, 16).map_err(|_| invalid())?);
+        }
+        frames.push((ecu, data));
+    }
+
+    let borrowed: Vec<_> = frames
+        .iter()
+        .map(|(ecu, data)| CanFrame { ecu: *ecu, data })
+        .collect();
+    assemble_classic_can_replies(&borrowed)
 }
 
 #[cfg(test)]
@@ -273,6 +331,66 @@ mod tests {
     #[test]
     fn missing_reply_is_not_a_successful_empty_batch() {
         assert_eq!(assemble_classic_can_replies(&[]), Err(IsoTpError::NoFrames));
+    }
+
+
+    #[test]
+    fn recorded_elm_layout_preserves_header_and_payload() {
+        // Synthetic fixture in the layout of backend/data/requests.json.
+        let replies = parse_elm_classic_can_reply("7E8 03 41 4A 45 \n\n").unwrap();
+        assert_eq!(replies[0].ecu, A);
+        assert_eq!(replies[0].payload, [0x41, 0x4A, 0x45]);
+    }
+
+    #[test]
+    fn elm_text_reassembles_interleaved_frames_and_extended_headers() {
+        let raw = "7E8 10 08 43 03 14 3C 03 00\r\n18DAF110 02 43 00\r7E8 21 01 01\r";
+        let replies = parse_elm_classic_can_reply(raw).unwrap();
+        assert_eq!(replies[0].ecu, A);
+        assert_eq!(replies[0].payload, [0x43, 3, 0x14, 0x3C, 3, 0, 1, 1]);
+        assert_eq!(replies[1].ecu, CanId::Extended(0x18DAF110));
+        assert_eq!(replies[1].payload, [0x43, 0]);
+    }
+
+    #[test]
+    fn elm_parser_rejects_unexpected_text_instead_of_skipping_it() {
+        for raw in [
+            "NO DATA",
+            "STOPPED",
+            "SEARCHING...",
+            "7E8 02 43 00\rBUS ERROR",
+            "7E8 02 43 GG",
+            "7E8 +2 43 00",
+            "18 DA F1 10 02 43 00",
+            "7E8 024300",
+            "7E8 02 43 00 >",
+        ] {
+            assert!(matches!(
+                parse_elm_classic_can_reply(raw),
+                Err(IsoTpError::InvalidElmLine(_))
+            ));
+        }
+    }
+
+    #[test]
+    fn elm_parser_rejects_empty_or_oversized_transactions() {
+        assert_eq!(parse_elm_classic_can_reply("\r\n"), Err(IsoTpError::NoFrames));
+        assert_eq!(
+            parse_elm_classic_can_reply(&" ".repeat(MAX_ELM_REPLY_BYTES + 1)),
+            Err(IsoTpError::ReplyTooLarge)
+        );
+    }
+
+    #[test]
+    fn elm_parser_propagates_transport_validation_errors() {
+        assert_eq!(
+            parse_elm_classic_can_reply("800 02 43 00"),
+            Err(IsoTpError::InvalidId(CanId::Standard(0x800)))
+        );
+        assert_eq!(
+            parse_elm_classic_can_reply("7E8 10 08 43 03 14 3C 03 00"),
+            Err(IsoTpError::Incomplete(A))
+        );
     }
 
     #[test]
