@@ -470,7 +470,8 @@ impl OBD {
             }
 
             let acknowledged =
-                validate_selection_ack(response.raw_response.as_deref().unwrap_or_default()).is_ok();
+                validate_selection_ack(response.raw_response.as_deref().unwrap_or_default())
+                    .is_ok();
             match (command.get_at(), response.formatted_response.as_deref()) {
                 (b"ATZ", Some(data)) => {
                     self.elm_version = Some(data.to_owned());
