@@ -1191,7 +1191,7 @@ mod serial_prompt_tests {
     #[test]
     fn transaction_keeps_reply_queued_during_write() {
         let (mut obd, state) = fixture_obd(FixtureState {
-            pending: VecDeque::from([b'X']),
+            pending: VecDeque::from(*b"X"),
             ..Default::default()
         });
 
