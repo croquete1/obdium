@@ -234,7 +234,10 @@ impl Test {
 // A single response avoids silently merging different ECUs. The generalized
 // ISO-TP transaction parser can replace this narrow adapter later.
 fn decode_readiness_reply(raw: &str) -> Option<[Test; 11]> {
-    let mut lines = raw.split(['\r', '\n']).map(str::trim).filter(|line| !line.is_empty());
+    let mut lines = raw
+        .split(['\r', '\n'])
+        .map(str::trim)
+        .filter(|line| !line.is_empty());
     let line = lines.next()?;
     if lines.next().is_some() {
         return None;
@@ -261,28 +264,44 @@ fn decode_readiness_reply(raw: &str) -> Option<[Test; 11]> {
     if tokens.next().is_some() || bytes[..3] != [0x06, 0x41, 0x01] {
         return None;
     }
-    Some(decode_readiness_bytes([bytes[3], bytes[4], bytes[5], bytes[6]]))
+    Some(decode_readiness_bytes([
+        bytes[3], bytes[4], bytes[5], bytes[6],
+    ]))
 }
 
 // J1979 PID 01: A is MIL/count; B is common monitors + ignition flag;
 // C is advanced availability, D advanced incompleteness.
 fn decode_readiness_bytes([_, b, c, d]: [u8; 4]) -> [Test; 11] {
     let mut tests = [Test::no_data(); 11];
-    for (index, name) in ["Components", "Fuel System", "Misfire"].into_iter().enumerate() {
+    for (index, name) in ["Components", "Fuel System", "Misfire"]
+        .into_iter()
+        .enumerate()
+    {
         let bit = 1 << (2 - index);
         let available = b & bit != 0;
         tests[index] = Test::new(name, available, available && b & (bit << 4) == 0);
     }
     let names = if b & 0x08 == 0 {
         [
-            "EGR and/or VVT System", "Oxygen Sensor Heater", "Oxygen Sensor",
-            "Gasoline Particulate Filter", "Secondary Air System", "Evaporative System",
-            "Heated Catalyst", "Catalyst",
+            "EGR and/or VVT System",
+            "Oxygen Sensor Heater",
+            "Oxygen Sensor",
+            "Gasoline Particulate Filter",
+            "Secondary Air System",
+            "Evaporative System",
+            "Heated Catalyst",
+            "Catalyst",
         ]
     } else {
         [
-            "EGR and/or VVT System", "PM filter monitoring", "Exhaust Gas Sensor",
-            "Reserved", "Boost Pressure", "Reserved", "NOx/SCR Monitor", "NMHC Catalyst",
+            "EGR and/or VVT System",
+            "PM filter monitoring",
+            "Exhaust Gas Sensor",
+            "Reserved",
+            "Boost Pressure",
+            "Reserved",
+            "NOx/SCR Monitor",
+            "NMHC Catalyst",
         ]
     };
     for (index, name) in names.into_iter().enumerate() {
@@ -291,73 +310,6 @@ fn decode_readiness_bytes([_, b, c, d]: [u8; 4]) -> [Test; 11] {
         tests[index + 3] = Test::new(name, available, available && d & bit == 0);
     }
     tests
-}
-
-#[cfg(test)]
-mod readiness_decoder_tests {
-    use super::*;
-
-    #[test]
-    fn common_monitors_use_b_not_mil_or_dtc_count() {
-        let tests = decode_readiness_bytes([0xff, 0x27, 0, 0]);
-        assert!(tests[0].available && tests[0].complete);
-        assert!(tests[1].available && !tests[1].complete);
-        assert!(tests[2].available && tests[2].complete);
-        let changed = decode_readiness_bytes([0, 0x27, 0, 0]);
-        for (left, right) in tests.iter().zip(changed) {
-            assert_eq!((left.available, left.complete), (right.available, right.complete));
-        }
-    }
-
-    #[test]
-    fn unsupported_is_never_complete() {
-        let tests = decode_readiness_bytes([0xff, 0, 0, 0]);
-        assert!(tests.iter().all(|test| !test.available && !test.complete));
-    }
-
-    #[test]
-    fn ignition_flag_and_completion_share_one_snapshot() {
-        let spark = decode_readiness_bytes([0, 0, 0x81, 0x01]);
-        assert_eq!(spark[10].name, "Catalyst");
-        assert!(spark[3].complete && !spark[10].complete);
-        let diesel = decode_readiness_bytes([0, 8, 0xff, 0]);
-        assert_eq!(diesel[10].name, "NMHC Catalyst");
-        assert!(diesel[10].complete);
-        for index in [6, 8] {
-            assert_eq!(diesel[index].name, "Reserved");
-            assert!(!diesel[index].available && !diesel[index].complete);
-        }
-    }
-
-    #[test]
-    fn exact_can_response_decodes() {
-        for id in ["7E8", "18DAF110"] {
-            let raw = format!("{id} 06 41 01 80 27 81 01\r\n");
-            let tests = decode_readiness_reply(&raw).unwrap();
-            assert!(tests[0].complete && !tests[1].complete);
-            assert!(tests[3].complete && !tests[10].complete);
-        }
-    }
-
-    #[test]
-    fn malformed_wrong_service_and_unsupported_layouts_are_unknown() {
-        for raw in [
-            "", "NO DATA", "7E8 06 42 01 00 07 00 00",
-            "7E8 06 41 02 00 07 00 00", "7E8 05 41 01 00 07 00",
-            "7E8 06 41 01 00 07 ZZ 00", "7E8 06 41 01 00 +7 00 00",
-            "7E8 06 41 01 00 07 00 00 00", "FFF 06 41 01 00 07 00 00",
-            "41 01 00 07 00 00",
-        ] {
-            assert!(decode_readiness_reply(raw).is_none(), "{raw}");
-        }
-    }
-
-    #[test]
-    fn multiple_ecus_cannot_be_silently_combined() {
-        assert!(decode_readiness_reply(
-            "7E8 06 41 01 00 07 00 00\r\n7E9 06 41 01 00 00 00 00"
-        ).is_none());
-    }
 }
 
 impl OBD {
@@ -649,5 +601,81 @@ impl OBD {
                 Some(self.unit_preferences),
             )
         })
+    }
+}
+
+#[cfg(test)]
+mod readiness_decoder_tests {
+    use super::*;
+
+    #[test]
+    fn common_monitors_use_b_not_mil_or_dtc_count() {
+        let tests = decode_readiness_bytes([0xff, 0x27, 0, 0]);
+        assert!(tests[0].available && tests[0].complete);
+        assert!(tests[1].available && !tests[1].complete);
+        assert!(tests[2].available && tests[2].complete);
+        let changed = decode_readiness_bytes([0, 0x27, 0, 0]);
+        for (left, right) in tests.iter().zip(changed) {
+            assert_eq!(
+                (left.available, left.complete),
+                (right.available, right.complete)
+            );
+        }
+    }
+
+    #[test]
+    fn unsupported_is_never_complete() {
+        let tests = decode_readiness_bytes([0xff, 0, 0, 0]);
+        assert!(tests.iter().all(|test| !test.available && !test.complete));
+    }
+
+    #[test]
+    fn ignition_flag_and_completion_share_one_snapshot() {
+        let spark = decode_readiness_bytes([0, 0, 0x81, 0x01]);
+        assert_eq!(spark[10].name, "Catalyst");
+        assert!(spark[3].complete && !spark[10].complete);
+        let diesel = decode_readiness_bytes([0, 8, 0xff, 0]);
+        assert_eq!(diesel[10].name, "NMHC Catalyst");
+        assert!(diesel[10].complete);
+        for index in [6, 8] {
+            assert_eq!(diesel[index].name, "Reserved");
+            assert!(!diesel[index].available && !diesel[index].complete);
+        }
+    }
+
+    #[test]
+    fn exact_can_response_decodes() {
+        for id in ["7E8", "18DAF110"] {
+            let raw = format!("{id} 06 41 01 80 27 81 01\r\n");
+            let tests = decode_readiness_reply(&raw).unwrap();
+            assert!(tests[0].complete && !tests[1].complete);
+            assert!(tests[3].complete && !tests[10].complete);
+        }
+    }
+
+    #[test]
+    fn malformed_wrong_service_and_unsupported_layouts_are_unknown() {
+        for raw in [
+            "",
+            "NO DATA",
+            "7E8 06 42 01 00 07 00 00",
+            "7E8 06 41 02 00 07 00 00",
+            "7E8 05 41 01 00 07 00",
+            "7E8 06 41 01 00 07 ZZ 00",
+            "7E8 06 41 01 00 +7 00 00",
+            "7E8 06 41 01 00 07 00 00 00",
+            "FFF 06 41 01 00 07 00 00",
+            "41 01 00 07 00 00",
+        ] {
+            assert!(decode_readiness_reply(raw).is_none(), "{raw}");
+        }
+    }
+
+    #[test]
+    fn multiple_ecus_cannot_be_silently_combined() {
+        assert!(
+            decode_readiness_reply("7E8 06 41 01 00 07 00 00\r\n7E9 06 41 01 00 00 00 00")
+                .is_none()
+        );
     }
 }
