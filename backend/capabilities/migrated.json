@@ -1,25 +1,24 @@
 {
   "identifier": "migrated",
-  "description": "permissions that were migrated from v1",
+  "description": "Main window: JSON export to user-selected files and one fixed automatic DTC log",
   "local": true,
   "windows": [
     "main"
   ],
   "permissions": [
     "core:default",
-    "fs:allow-write-file",
-    "fs:allow-remove",
+    "fs:allow-write-text-file",
     {
       "identifier": "fs:scope",
       "allow": [
-        "*/**"
+        {
+          "path": "$APPDATA/dtc_log.json"
+        }
       ]
     },
     "core:window:allow-close",
     "shell:allow-open",
     "dialog:allow-save",
-    "shell:default",
-    "fs:default",
-    "dialog:default"
+    "shell:default"
   ]
 }

@@ -107,4 +107,4 @@ jobs:
       - name: Graph measurement regression tests
         run: node --test frontend/tests/graph-samples.test.mjs frontend/tests/connection-lifecycle.test.mjs
       - name: DTC safety regression guards
-        run: node --test frontend/tests/dtc-clear-safety.test.mjs
+        run: node --test frontend/tests/dtc-clear-safety.test.mjs frontend/tests/literal-rendering.test.mjs frontend/tests/json-export.test.mjs

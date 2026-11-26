@@ -1,7 +1,7 @@
 const { listen, emit } = window.__TAURI__.event;
 const { save } = window.__TAURI__.dialog;
-const { writeFile, removeFile } = window.__TAURI__.fs;
-const { appWindow } = window.__TAURI__.window;
+const { writeTextFile } = window.__TAURI__.fs;
+import { saveJsonExport } from "./json-export.mjs";
 
 import {
   exportDtcs,
@@ -191,17 +191,17 @@ imTestExportButton.addEventListener("click", async () => {
     }
   });
 
-  const path = await save({
-    title: "Save as JSON",
-    defaultPath: "readiness_tests.json",
-    filters: [{ name: "JSON", extensions: ["json"] }],
-  });
-
-  if (!path) {
-    return;
+  try {
+    await saveJsonExport({
+      data: totalJSON,
+      defaultPath: "readiness_tests.json",
+      save,
+      writeTextFile,
+    });
+  } catch (error) {
+    addNotification("EXPORT FAILED", "Could not save readiness tests.");
+    console.error("JSON export failed", error);
   }
-
-  await writeFile({ path, contents: JSON.stringify(totalJSON, null, 2) });
 });
 
 const vinExportButton = document.getElementById("vin-export");
@@ -220,31 +220,18 @@ vinExportButton.addEventListener("click", async () => {
     }
   });
 
-  const path = await save({
-    title: "Save as JSON",
-    defaultPath: "vin_details.json",
-    filters: [{ name: "JSON", extensions: ["json"] }],
-  });
-
-  if (!path) {
-    return;
+  try {
+    await saveJsonExport({
+      data: vinObj,
+      defaultPath: "vin_details.json",
+      save,
+      writeTextFile,
+    });
+  } catch (error) {
+    addNotification("EXPORT FAILED", "Could not save VIN details.");
+    console.error("JSON export failed", error);
   }
-
-  await writeFile({ path, contents: JSON.stringify(vinObj, null, 2) });
 });
-
-// appWindow.listen("tauri://close-requested", async () => {
-//   // check if delete logs on exit setting is set
-//   if (window.deleteLogsOnExit && window.logFilePath) {
-//     try {
-//       removeFile(window.logFilePath);
-//     } catch (err) {
-//       console.error("Error when trying to delete log:", err);
-//     }
-//   }
-
-//   await appWindow.close();
-// });
 
 const input = document.getElementById("terminal-input");
 
