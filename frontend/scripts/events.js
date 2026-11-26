@@ -221,38 +221,53 @@ listen("update-pids", (event) => {
     const pidGroup = document.createElement("div");
     pidGroup.className = "pid-group";
     pidGroup.innerHTML = `
-        <div class="pid-container" ${!pidInfo.supported ? 'style="opacity: 0.15"' : ""} >
+        <div class="pid-container">
             <div class="info-row">
             <button class="arrow-icon"><img src="/assets/icons/arrow-icon.png"></button>
-            <span class="name">${pidInfo.supported ? "[SUPPORTED]" : "[UNSUPPORTED]"}  ${pidInfo.pidName.toUpperCase()}</span>
+            <span class="name"></span>
             </div>
             <div class="pid-details" style="display: none; height: 0;">
             <div class="pid-data-columns">
                 <div class="pid-column">
                 <div class="pid-label">MODE</div>
-                <div class="pid-value">$${pidInfo.mode}</div>
+                <div class="pid-value"></div>
                 </div>
                 <div class="pid-column">
                 <div class="pid-label">PID</div>
-                <div class="pid-value">${pidInfo.pid}</div>
+                <div class="pid-value"></div>
                 </div>
                 <div class="pid-column">
                 <div class="pid-label">COMMAND</div>
-                <div class="pid-value">${pidInfo.mode + pidInfo.pid}</div>
+                <div class="pid-value"></div>
                 </div>
                 <div class="pid-column">
                 <div class="pid-label">EQUATION</div>
-                <div class="pid-value">${pidInfo.formula == "" ? "??" : pidInfo.formula}</div>
+                <div class="pid-value"></div>
                 </div>
                 <div class="pid-column">
                 <div class="pid-label">UNIT</div>
-                <div class="pid-value">${pidInfo.unit == "" ? "??" : pidInfo.unit.toUpperCase()}</div>
+                <div class="pid-value"></div>
                 </div>
             </div>
             <button class="pid-button" id="remove-pid">REMOVE</button>
             </div>
         </div>
         `;
+
+    if (!pidInfo.supported) {
+      pidGroup.querySelector(".pid-container").style.opacity = "0.15";
+    }
+    pidGroup.querySelector(".info-row .name").textContent =
+      (pidInfo.supported ? "[SUPPORTED]" : "[UNSUPPORTED]") +
+      "  " + String(pidInfo.pidName ?? "").toUpperCase();
+    const values = pidGroup.querySelectorAll(".pid-value");
+    const mode = String(pidInfo.mode ?? "");
+    const pid = String(pidInfo.pid ?? "");
+    values[0].textContent = "$" + mode;
+    values[1].textContent = pid;
+    values[2].textContent = mode + pid;
+    values[3].textContent = String(pidInfo.formula || "??");
+    values[4].textContent = String(pidInfo.unit || "??").toUpperCase();
 
     pidList.appendChild(pidGroup);
 
@@ -300,12 +315,12 @@ listen("update-dtcs", (event) => {
     dtcRow.style = "height: 60px; position: relative;";
     dtcRow.innerHTML = `
           <div class="category" id="dtc-category" style="font-size: 40px; font-weight: 900; margin-left: 6px; min-width: 70px; text-align: center; display: inline-block;">
-              ${troubleCode.category}
+              
           </div>
           <div class="name" style="display: inline-block; vertical-align: top;">
-              <span class="name" id="dtc-name" style="font-size: 25px; font-weight: 700;">${troubleCode.name}</span>
+              <span class="name" id="dtc-name" style="font-size: 25px; font-weight: 700;"></span>
               <div class="name" id="dtc-location" style="color: #BDBDBD; font-size: 15px; margin-top: -5px; font-weight: 600;">
-              ${troubleCode.location}
+              
               </div>
           </div>
           
@@ -318,10 +333,14 @@ listen("update-dtcs", (event) => {
           
           <div class="name" id="dtc-description"
               style="position: absolute; color: #BDBDBD; left: 240px; top: 0; bottom: 0; max-width: 600px; overflow-wrap: break-word; display: flex; align-items: center; height: 100%;">
-              ${description}
+              
           </div>
           `;
 
+    dtcRow.querySelector("#dtc-category").textContent = String(troubleCode.category ?? "");
+    dtcRow.querySelector("#dtc-name").textContent = String(troubleCode.name ?? "");
+    dtcRow.querySelector("#dtc-location").textContent = String(troubleCode.location ?? "");
+    dtcRow.querySelector("#dtc-description").textContent = description;
     dtcList.appendChild(dtcRow);
   }
 
@@ -382,12 +401,17 @@ listen("update-readiness-tests", (event) => {
     testRow.className = "info-row";
     testRow.style = "justify-content: space-between;";
     testRow.innerHTML = `
-<div class="name" id="test-name" style="flex: 2; font-weight: 700; color: #f7f3ff;">TEST: ${test.name}</div>
-    <div class="name" id="test-availability" style="flex: 1; font-size: 0.97rem; font-weight: 500; text-transform: uppercase; color: #d4dadf;">${test.available ? "COMPLETE" : "NOT COMPLETE"}</div>
-      <div class="name" id="test-completeness" style="flex: 1; font-size: 0.97rem; font-weight: 500; text-transform: uppercase; color: #d4dadf;">${test.complete ? "READY" : "NOT READY"}</div>
+<div class="name" id="test-name" style="flex: 2; font-weight: 700; color: #f7f3ff;"></div>
+    <div class="name" id="test-availability" style="flex: 1; font-size: 0.97rem; font-weight: 500; text-transform: uppercase; color: #d4dadf;"></div>
+      <div class="name" id="test-completeness" style="flex: 1; font-size: 0.97rem; font-weight: 500; text-transform: uppercase; color: #d4dadf;"></div>
 
     `;
 
+    testRow.querySelector("#test-name").textContent = "TEST: " + String(test.name ?? "");
+    testRow.querySelector("#test-availability").textContent =
+      test.available ? "COMPLETE" : "NOT COMPLETE";
+    testRow.querySelector("#test-completeness").textContent =
+      test.complete ? "READY" : "NOT READY";
     readinessTests.appendChild(testRow);
   }
 });

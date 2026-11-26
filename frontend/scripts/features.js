@@ -214,10 +214,13 @@ export function addNotification(title, desc) {
         <path d="m6 6 12 12" />
       </svg>
     </button>
-    <div class="notification-title">${title}</div>
-    <div class="notification-desc">${desc}</div>
+    <div class="notification-title"></div>
+    <div class="notification-desc"></div>
     <div class="notification-progress"></div>
   `;
+
+  notification.querySelector(".notification-title").textContent = String(title ?? "");
+  notification.querySelector(".notification-desc").textContent = String(desc ?? "");
 
   notification
     .querySelector(".notification-close")
