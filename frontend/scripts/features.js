@@ -3,6 +3,7 @@ const { save } = window.__TAURI__.dialog;
 const { writeFile } = window.__TAURI__.fs;
 const invoke = window.__TAURI__.invoke;
 import { saveConnectionConfig } from "./settings.js";
+import { createGraphSampler } from "./graph-samples.mjs";
 
 const connectButton = document.getElementById("btn-connect");
 const disconnectButton = document.getElementById("btn-disconnect");
@@ -146,22 +147,17 @@ export async function trackGraph(graphId, name, unit) {
   graph.startTime = Date.now();
   graph.update();
 
-  let lastValue = null;
-  let lastSeenValue = null;
+  const sampler = createGraphSampler();
+  graph.data.datasets.forEach((dataset) => {
+    dataset.spanGaps = false;
+  });
   let lastElapsed = null;
   const myName = name.trim().toUpperCase();
 
   const listener = (event) => {
     const incomingName = event.payload.name?.trim().toUpperCase();
     if (incomingName === myName) {
-      lastValue = event.payload.value;
-
-      if (
-        graph.options.scales.y.title.text.toUpperCase() !==
-        event.payload.unit.toUpperCase()
-      ) {
-        graph.options.scales.y.title.text = event.payload.unit.toUpperCase();
-      }
+      sampler.push(event.payload);
     }
   };
 
@@ -183,11 +179,17 @@ export async function trackGraph(graphId, name, unit) {
       graph.data.datasets[0].data.shift();
     }
 
-    if (lastValue !== null && lastValue !== undefined) {
-      lastSeenValue = lastValue;
+    const sample = sampler.take();
+    if (sample && graph.options.scales.y.title.text.toUpperCase() !== sample.unit) {
+      // Never mix measurements expressed in different units on one axis.
+      graph.data.labels = [];
+      graph.data.datasets.forEach((dataset) => {
+        dataset.data = [];
+      });
+      graph.options.scales.y.title.text = sample.unit;
     }
 
-    graph.data.datasets[0].data.push(lastSeenValue);
+    graph.data.datasets[0].data.push(sample ? sample.value : null);
     graph.data.labels.push(elapsed);
 
     graph.update();

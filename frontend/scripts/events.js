@@ -27,6 +27,13 @@ listen("update-card", (event) => {
 
   if (window.obdViewPaused) return;
 
+  // update any graphs that might be using this
+  emit("update-graphs", {
+    name: event.payload.name,
+    value: event.payload.value,
+    unit: event.payload.unit,
+  });
+
   // create card if it doesnt exist
   if (!exists) {
     const container = document.querySelector(".grid");
@@ -101,12 +108,6 @@ listen("update-card", (event) => {
     }
   });
 
-  // update any graphs that might be using this
-  emit("update-graphs", {
-    name: event.payload.name,
-    value: event.payload.value,
-    unit: event.payload.unit,
-  });
 });
 
 listen("vehicle-details", (event) => {
