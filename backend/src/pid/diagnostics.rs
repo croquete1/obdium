@@ -172,7 +172,7 @@ pub fn decode_can_dtc_payload(payload: &[u8]) -> Result<Vec<DecodedDtc>, DtcPayl
     }
 
     let mut codes = Vec::with_capacity(usize::from(*count));
-    for pair in data.chunks_exact(2) {
+    for pair in data.as_chunks::<2>().0 {
         let left = pair[0];
         let right = pair[1];
         if left == 0 && right == 0 {
@@ -672,8 +672,7 @@ mod can_dtc_payload_tests {
 
     #[test]
     fn preserves_service_like_bytes_inside_codes_and_zero_low_byte() {
-        let codes =
-            decode_can_dtc_payload(&[0x43, 3, 0x43, 0x4A, 0x14, 0x00, 0x47, 0x43]).unwrap();
+        let codes = decode_can_dtc_payload(&[0x43, 3, 0x43, 0x4A, 0x14, 0x00, 0x47, 0x43]).unwrap();
         let names: Vec<_> = codes.iter().map(|code| code.code.as_str()).collect();
         assert_eq!(names, ["C034A", "P1400", "C0743"]);
         assert!(codes.iter().all(|code| code.status == DtcStatus::Confirmed));
@@ -694,10 +693,9 @@ mod can_dtc_payload_tests {
 
     #[test]
     fn decodes_all_four_system_categories() {
-        let codes = decode_can_dtc_payload(&[
-            0x43, 4, 0x30, 0x01, 0x70, 0x01, 0xB0, 0x01, 0xF0, 0x01,
-        ])
-        .unwrap();
+        let codes =
+            decode_can_dtc_payload(&[0x43, 4, 0x30, 0x01, 0x70, 0x01, 0xB0, 0x01, 0xF0, 0x01])
+                .unwrap();
         let names: Vec<_> = codes.iter().map(|code| code.code.as_str()).collect();
         assert_eq!(names, ["P3001", "C3001", "B3001", "U3001"]);
     }
