@@ -1,4 +1,3 @@
-use serialport::ErrorKind::{Io, NoDevice};
 use serialport::SerialPort;
 use sqlite::State;
 use std::collections::HashMap;
@@ -61,6 +60,42 @@ pub enum Error {
         "Error occured during I/O operation via serial communication. Error details (if any): {0}"
     )]
     AdapterReadWriteError(String),
+}
+
+// Limit a single adapter reply to avoid unbounded allocation if its prompt is lost.
+// Large/continuous diagnostic streams require a separate framing design.
+const MAX_ADAPTER_REPLY_BYTES: usize = 64 * 1024;
+
+fn map_serial_error(error: serialport::Error) -> Error {
+    if error.kind() == serialport::ErrorKind::NoDevice {
+        Error::NoConnection
+    } else {
+        Error::AdapterReadWriteError(error.to_string())
+    }
+}
+
+/// Read a complete prompt-terminated reply without clearing or discarding input.
+/// A partial reply is never accepted on EOF, timeout or I/O failure.
+fn read_prompt<R: Read + ?Sized>(reader: &mut R, until: u8) -> Result<String, Error> {
+    let mut response = String::new();
+    let mut buffer = [0u8; 1];
+
+    loop {
+        match reader.read(&mut buffer) {
+            Ok(1) => {
+                let byte = buffer[0];
+                if byte == until {
+                    return Ok(response);
+                }
+                if !byte.is_ascii() || response.len() >= MAX_ADAPTER_REPLY_BYTES {
+                    return Err(Error::InvalidResponse);
+                }
+                response.push(char::from(byte));
+            }
+            Ok(_) => return Err(Error::InvalidResponse),
+            Err(error) => return Err(Error::AdapterReadWriteError(error.to_string())),
+        }
+    }
 }
 
 pub enum Service {
@@ -442,20 +477,22 @@ impl OBD {
             None => return Err(Error::NoConnection),
         };
 
-        let _ = stream.set_timeout(Duration::from_secs(1));
-        let _ = stream.clear(serialport::ClearBuffer::All);
-
         let mut cmd = req.as_bytes();
         if cmd.is_empty() {
             return Ok(());
         }
 
-        cmd.push(b'\r');
-        match stream.write_all(&cmd) {
-            Ok(()) => (),
+        stream
+            .set_timeout(Duration::from_secs(1))
+            .map_err(map_serial_error)?;
+        stream
+            .clear(serialport::ClearBuffer::All)
+            .map_err(map_serial_error)?;
 
-            // Connection dropped
-            Err(_) => self.connection = None,
+        cmd.push(b'\r');
+        if let Err(error) = stream.write_all(&cmd) {
+            self.connection = None;
+            return Err(Error::AdapterReadWriteError(error.to_string()));
         }
 
         Ok(())
@@ -666,31 +703,9 @@ impl OBD {
             None => return Err(Error::NoConnection),
         };
 
-        port.clear(serialport::ClearBuffer::All)
-            .map_err(|error| match error.kind() {
-                NoDevice => Error::NoConnection,
-                Io(_) => Error::AdapterReadWriteError(error.description),
-                _ => Error::AdapterReadWriteError("unknown i/o error".to_string()),
-            })?;
-
-        let mut buffer = [0u8; 1];
-        let mut response = String::new();
-
-        loop {
-            match port.read(&mut buffer) {
-                Ok(1) => {
-                    let byte = buffer[0];
-                    if byte == until {
-                        break;
-                    }
-
-                    response.push(byte as char);
-                }
-                Ok(0) => std::thread::sleep(std::time::Duration::from_millis(10)),
-                Ok(_) => break,
-                Err(_) => break,
-            }
-        }
+        // The buffer is cleared before sending a command, never after it.
+        // A fast adapter may already have returned the entire reply.
+        let response = read_prompt(port.as_mut(), until)?;
 
         if response.contains("UNABLE TO CONNECT") {
             println!("unable to connect");
@@ -1007,5 +1022,76 @@ impl OBD {
                 Err(Box::new(err))
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod serial_prompt_tests {
+    use super::*;
+    use std::io::{self, Cursor};
+
+    #[test]
+    fn immediate_reply_is_preserved_until_prompt() {
+        let mut reader = Cursor::new(b"41 0C 1A F8\r>next");
+        let result = read_prompt(&mut reader, b'>').expect("complete reply");
+        assert_eq!(result, "41 0C 1A F8\r");
+        assert_eq!(reader.position(), b"41 0C 1A F8\r>".len() as u64);
+    }
+
+    #[test]
+    fn incomplete_reply_is_not_success() {
+        let mut reader = Cursor::new(b"41 0C");
+        assert!(matches!(
+            read_prompt(&mut reader, b'>'),
+            Err(Error::InvalidResponse)
+        ));
+    }
+
+    #[test]
+    fn io_error_after_partial_data_is_propagated() {
+        struct BrokenReader {
+            first: bool,
+        }
+        impl Read for BrokenReader {
+            fn read(&mut self, buffer: &mut [u8]) -> io::Result<usize> {
+                if self.first {
+                    self.first = false;
+                    buffer[0] = b'4';
+                    Ok(1)
+                } else {
+                    Err(io::Error::new(io::ErrorKind::TimedOut, "fixture timeout"))
+                }
+            }
+        }
+
+        let mut reader = BrokenReader { first: true };
+        assert!(matches!(
+            read_prompt(&mut reader, b'>'),
+            Err(Error::AdapterReadWriteError(_))
+        ));
+    }
+
+    #[test]
+    fn reply_size_limit_is_enforced() {
+        let mut bytes = vec![b'A'; MAX_ADAPTER_REPLY_BYTES];
+        bytes.push(b'>');
+        let mut reader = Cursor::new(bytes);
+        let reply = read_prompt(&mut reader, b'>').expect("maximum complete reply");
+        assert_eq!(reply.len(), MAX_ADAPTER_REPLY_BYTES);
+
+        let mut reader = Cursor::new(vec![b'A'; MAX_ADAPTER_REPLY_BYTES + 1]);
+        assert!(matches!(
+            read_prompt(&mut reader, b'>'),
+            Err(Error::InvalidResponse)
+        ));
+    }
+
+    #[test]
+    fn non_ascii_reply_is_rejected() {
+        let mut reader = Cursor::new([b'4', 0xff, b'>']);
+        assert!(matches!(
+            read_prompt(&mut reader, b'>'),
+            Err(Error::InvalidResponse)
+        ));
     }
 }
