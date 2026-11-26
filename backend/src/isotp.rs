@@ -35,6 +35,8 @@ pub struct CanReply {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
 pub enum IsoTpError {
+    #[error("No CAN frames received in a diagnostic transaction")]
+    NoFrames,
     #[error("Too many frames in a diagnostic transaction")]
     TooManyFrames,
     #[error("Too many responding ECUs")]
@@ -69,6 +71,9 @@ struct Assembly {
 pub fn assemble_classic_can_replies(
     frames: &[CanFrame<'_>],
 ) -> Result<Vec<CanReply>, IsoTpError> {
+    if frames.is_empty() {
+        return Err(IsoTpError::NoFrames);
+    }
     if frames.len() > MAX_FRAMES {
         return Err(IsoTpError::TooManyFrames);
     }
@@ -263,6 +268,11 @@ mod tests {
         let replies = assemble_classic_can_replies(&frames).unwrap();
         assert_eq!(replies[0].payload.len(), 118);
         assert_eq!(&replies[0].payload[111..], &[16; 7]);
+    }
+
+    #[test]
+    fn missing_reply_is_not_a_successful_empty_batch() {
+        assert_eq!(assemble_classic_can_replies(&[]), Err(IsoTpError::NoFrames));
     }
 
     #[test]
