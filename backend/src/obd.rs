@@ -8,6 +8,10 @@ use std::time::{Duration, Instant};
 use thiserror::Error;
 
 use crate::cmd::{Command, CommandType};
+use crate::protocol::{
+    can_probe_identifier_width, confirm_can_probe, parse_reported_protocol, validate_selection_ack,
+    ObdProtocol, ProtocolSelection, ReportedProtocol,
+};
 use crate::response::Response;
 use crate::scalar::{Scalar, Unit, UnitPreferences};
 use crate::vin::VIN;
@@ -273,6 +277,14 @@ impl OBD {
     }
 
     pub fn connect(&mut self, port: &str, baud_rate: u32, protocol: u8) -> Result<(), Error> {
+        if self.connection.is_some() {
+            return Ok(());
+        }
+
+        self.protocol = 0;
+        self.elm_version = None;
+        self.freeze_frame_query = false;
+
         if port == "DEMO MODE" {
             // No connection required
             self.replay_requests = true;
@@ -284,45 +296,48 @@ impl OBD {
         self.replay_requests = false;
         self.record_requests = false;
 
-        if self.connection.is_some() {
-            return Ok(());
-        }
+        let selection =
+            ProtocolSelection::try_from(protocol).map_err(|_| Error::InvalidProtocol(protocol))?;
 
         self.connection = serialport::new(port, baud_rate)
             .timeout(Duration::from_secs(1))
             .open()
             .ok();
 
-        if self.is_connected() {
-            let initialized = self.init();
-            let mut command = match protocol {
-                0 => Command::new_at(b"ATSP0"),
-                1 => Command::new_at(b"ATSP1"),
-                2 => Command::new_at(b"ATSP2"),
-                3 => Command::new_at(b"ATSP3"),
-                4 => Command::new_at(b"ATSP4"),
-                5 => Command::new_at(b"ATSP5"),
-                6 => Command::new_at(b"ATSP6"),
-                7 => Command::new_at(b"ATSP7"),
-                8 => Command::new_at(b"ATSP8"),
-                9 => Command::new_at(b"ATSP9"),
-                _ => return Err(Error::InvalidProtocol(protocol)),
-            };
-
-            self.send_command(&mut command)?;
-            self.protocol = protocol;
-
-            initialized
-        } else {
-            Err(Error::ConnectionFailed)
+        if !self.is_connected() {
+            return Err(Error::ConnectionFailed);
         }
+
+        self.initialize_protocol(selection, protocol)
+    }
+
+    fn initialize_protocol(
+        &mut self,
+        selection: ProtocolSelection,
+        protocol: u8,
+    ) -> Result<(), Error> {
+        if let Err(error) = self.init().and_then(|()| self.select_protocol(selection)) {
+            self.disconnect();
+            return Err(error);
+        }
+
+        // This is the selected configuration, not the negotiated ECU protocol.
+        self.protocol = protocol;
+        Ok(())
+    }
+
+    fn select_protocol(&mut self, selection: ProtocolSelection) -> Result<(), Error> {
+        self.send_command(&mut Command::new_at(selection.command()))?;
+        let response = self.get_at_response()?;
+        validate_selection_ack(response.raw_response.as_deref().unwrap_or_default())
+            .map_err(|_| Error::InitFailedNoOKReceived)
     }
 
     pub fn disconnect(&mut self) {
-        if let Some(connection) = self.connection.take() {
-            drop(connection);
-            self.connection = None;
-        }
+        self.connection = None;
+        self.protocol = 0;
+        self.elm_version = None;
+        self.freeze_frame_query = false;
     }
 
     pub fn is_connected(&self) -> bool {
@@ -454,11 +469,14 @@ impl OBD {
                 self.save_request(&command, &response);
             }
 
+            let acknowledged =
+                validate_selection_ack(response.raw_response.as_deref().unwrap_or_default())
+                    .is_ok();
             match (command.get_at(), response.formatted_response.as_deref()) {
                 (b"ATZ", Some(data)) => {
                     self.elm_version = Some(data.to_owned());
                 }
-                (_, Some(data)) if data.contains("OK") => {}
+                (_, _) if acknowledged => {}
                 x => {
                     println!("{:?}", x);
                     return Err(Error::InitFailedNoOKReceived);
@@ -936,8 +954,47 @@ impl OBD {
         response.formatted_response.ok_or(Error::InvalidResponse)
     }
 
+    /// Read the adapter's protocol configuration; this does not verify ECU communication.
+    /// Demo recordings do not contain authoritative live adapter state.
+    pub fn get_reported_protocol(&mut self) -> Result<ReportedProtocol, Error> {
+        if self.replay_requests {
+            return Err(Error::InvalidResponse);
+        }
+        let mut request = Command::new_at(b"AT DPN");
+        self.send_command(&mut request)?;
+        let response = self.get_at_response()?;
+        parse_reported_protocol(response.raw_response.as_deref().unwrap_or_default())
+            .map_err(|_| Error::InvalidResponse)
+    }
+
+    /// Read-only CAN probe, using the standard supported-PID request.
+    /// A successful result correlates ECU response framing with the adapter report.
+    /// The nominal bus speed is reported by the adapter, not measured independently.
+    /// Legacy protocol layouts are not supported by this verification path.
+    pub fn probe_can_protocol(&mut self) -> Result<ObdProtocol, Error> {
+        if self.replay_requests {
+            return Err(Error::InvalidResponse);
+        }
+        let selection = ProtocolSelection::try_from(self.protocol)
+            .map_err(|_| Error::InvalidProtocol(self.protocol))?;
+        if matches!(selection, ProtocolSelection::Manual(protocol) if protocol.can_parameters().is_none())
+        {
+            return Err(Error::InvalidResponse);
+        }
+        self.send_command(&mut Command::new_pid(b"0100"))?;
+        let raw = self.read_until(b'>')?;
+        can_probe_identifier_width(&raw).map_err(|_| Error::InvalidResponse)?;
+        let report = self.get_reported_protocol()?;
+        confirm_can_probe(selection, report, &raw).map_err(|_| Error::InvalidResponse)
+    }
+
+    /// Requested configuration, not an independently verified ECU protocol.
     pub fn get_protocol_number(&self) -> u8 {
-        self.protocol
+        if self.is_connected() {
+            self.protocol
+        } else {
+            0
+        }
     }
 
     /// Test and run Mode 22 pids from
@@ -1098,6 +1155,7 @@ mod serial_prompt_tests {
         fail_clear: bool,
         fail_write: bool,
         eof_when_empty: bool,
+        scripted_replies: VecDeque<Vec<u8>>,
     }
 
     #[derive(Clone)]
@@ -1230,7 +1288,11 @@ mod serial_prompt_tests {
             }
             state.written.extend_from_slice(buffer);
             // Simulate an adapter whose reply is already queued when write returns.
-            state.pending.extend(b"ELM327 v1.5\r>".iter().copied());
+            let reply = state
+                .scripted_replies
+                .pop_front()
+                .unwrap_or_else(|| b"ELM327 v1.5\r>".to_vec());
+            state.pending.extend(reply);
             Ok(buffer.len())
         }
 
@@ -1246,6 +1308,165 @@ mod serial_prompt_tests {
             state: Arc::clone(&state),
         }));
         (obd, state)
+    }
+
+    fn initialization_replies(selection_reply: &[u8]) -> VecDeque<Vec<u8>> {
+        VecDeque::from([
+            b"ELM327 v1.5\r>".to_vec(),
+            b"OK\r>".to_vec(),
+            b"OK\r>".to_vec(),
+            b"OK\r>".to_vec(),
+            selection_reply.to_vec(),
+        ])
+    }
+
+    #[test]
+    fn every_protocol_selection_consumes_its_own_acknowledgement() {
+        for id in 0..=9 {
+            let (mut obd, state) = fixture_obd(FixtureState {
+                scripted_replies: initialization_replies(b"OK\r>"),
+                ..Default::default()
+            });
+            let selection = ProtocolSelection::try_from(id).unwrap();
+            obd.initialize_protocol(selection, id).unwrap();
+            assert_eq!(obd.get_protocol_number(), id);
+            assert!(obd.is_connected());
+            let state = state.lock().unwrap();
+            let mut expected = b"ATZ\rATE0\rATL0\rATH1\r".to_vec();
+            expected.extend_from_slice(selection.command());
+            expected.push(b'\r');
+            assert_eq!(state.written, expected);
+            assert!(state.pending.is_empty());
+        }
+    }
+
+    #[test]
+    fn rejected_protocol_configuration_disconnects() {
+        for reply in [b"?\r>".as_slice(), b"NOT OK\r>", b"OK\rERROR\r>"] {
+            let (mut obd, _) = fixture_obd(FixtureState {
+                scripted_replies: initialization_replies(reply),
+                ..Default::default()
+            });
+            assert!(matches!(
+                obd.initialize_protocol(ProtocolSelection::try_from(6).unwrap(), 6),
+                Err(Error::InitFailedNoOKReceived)
+            ));
+            assert!(!obd.is_connected());
+            assert_eq!(obd.get_protocol_number(), 0);
+        }
+    }
+
+    #[test]
+    fn failed_initialization_does_not_send_protocol_selection() {
+        let (mut obd, state) = fixture_obd(FixtureState {
+            scripted_replies: VecDeque::from([b"ELM327 v1.5\r>".to_vec(), b"?\r>".to_vec()]),
+            ..Default::default()
+        });
+        assert!(obd
+            .initialize_protocol(ProtocolSelection::try_from(6).unwrap(), 6)
+            .is_err());
+        assert!(!obd.is_connected());
+        assert_eq!(state.lock().unwrap().written, b"ATZ\rATE0\r");
+    }
+
+    #[test]
+    fn misleading_initialization_acknowledgements_stop_before_selection() {
+        for reply in [b"NOT OK\r>".as_slice(), b"OK\rERROR\r>"] {
+            let (mut obd, state) = fixture_obd(FixtureState {
+                scripted_replies: VecDeque::from([b"ELM327 v1.5\r>".to_vec(), reply.to_vec()]),
+                ..Default::default()
+            });
+            assert!(matches!(
+                obd.initialize_protocol(ProtocolSelection::try_from(6).unwrap(), 6),
+                Err(Error::InitFailedNoOKReceived)
+            ));
+            assert!(!obd.is_connected());
+            assert_eq!(state.lock().unwrap().written, b"ATZ\rATE0\r");
+        }
+    }
+
+    #[test]
+    fn disconnect_clears_previous_protocol_configuration() {
+        let (mut obd, _) = fixture_obd(FixtureState {
+            scripted_replies: initialization_replies(b"OK\r>"),
+            ..Default::default()
+        });
+        obd.initialize_protocol(ProtocolSelection::try_from(7).unwrap(), 7)
+            .unwrap();
+        obd.query_freeze_frame(true);
+        obd.disconnect();
+        assert_eq!(obd.get_protocol_number(), 0);
+        assert!(obd.elm_version.is_none());
+        assert!(!obd.freeze_frame_query);
+    }
+
+    #[test]
+    fn reported_protocol_is_read_without_changing_requested_selection() {
+        let (mut obd, state) = fixture_obd(FixtureState {
+            scripted_replies: VecDeque::from([b"A7\r>".to_vec()]),
+            ..Default::default()
+        });
+        let report = obd.get_reported_protocol().unwrap();
+        assert!(report.automatic);
+        assert_eq!(report.protocol.map(|protocol| protocol as u8), Some(7));
+        assert_eq!(obd.get_protocol_number(), 0);
+        assert_eq!(state.lock().unwrap().written, b"AT DPN\r");
+    }
+
+    #[test]
+    fn can_probe_requires_positive_ecu_response_before_reading_adapter_report() {
+        let (mut obd, state) = fixture_obd(FixtureState {
+            scripted_replies: VecDeque::from([
+                b"SEARCHING...\r18DAF110 06 41 00 00 00 00 00\r>".to_vec(),
+                b"A9\r>".to_vec(),
+            ]),
+            ..Default::default()
+        });
+        assert_eq!(obd.probe_can_protocol().unwrap(), ObdProtocol::Can29At250);
+        assert_eq!(state.lock().unwrap().written, b"0100\rAT DPN\r");
+        assert_eq!(obd.get_protocol_number(), 0);
+    }
+
+    #[test]
+    fn unsuccessful_can_probe_does_not_query_adapter_report() {
+        let (mut obd, state) = fixture_obd(FixtureState {
+            scripted_replies: VecDeque::from([b"NO DATA\r>".to_vec()]),
+            ..Default::default()
+        });
+        assert!(matches!(
+            obd.probe_can_protocol(),
+            Err(Error::InvalidResponse)
+        ));
+        assert_eq!(state.lock().unwrap().written, b"0100\r");
+    }
+
+    #[test]
+    fn manual_legacy_selection_does_not_start_can_probe() {
+        let (mut obd, state) = fixture_obd(FixtureState::default());
+        obd.protocol = 3;
+        assert!(matches!(
+            obd.probe_can_protocol(),
+            Err(Error::InvalidResponse)
+        ));
+        assert!(state.lock().unwrap().written.is_empty());
+    }
+
+    #[test]
+    fn can_probe_rejects_manual_protocol_mismatch() {
+        let (mut obd, state) = fixture_obd(FixtureState {
+            scripted_replies: VecDeque::from([
+                b"7E8 06 41 00 FF FF FF FF\r>".to_vec(),
+                b"8\r>".to_vec(),
+            ]),
+            ..Default::default()
+        });
+        obd.protocol = 6;
+        assert!(matches!(
+            obd.probe_can_protocol(),
+            Err(Error::InvalidResponse)
+        ));
+        assert_eq!(state.lock().unwrap().written, b"0100\rAT DPN\r");
+        assert_eq!(obd.get_protocol_number(), 6);
     }
 
     #[test]

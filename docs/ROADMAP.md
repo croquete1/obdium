@@ -165,6 +165,19 @@ Dependências: nenhuma. Erros 008,011–013,017,026,029.
 - [ ] F03.03 Sessão única com estados disconnected/connecting/ready/degraded/disconnecting; cancelar filas e listeners, rejeitar eventos antigos por session_id; reconectar sem repetir escritas.
 - [ ] F03.04 Scheduler único com prioridade, fairness, frequência por PID, batches quando suportados, backpressure e métricas de latência; não bloquear UI.
 - [ ] F03.05 Negociação de protocolos, autodeteção/manual, inicialização ELM/STN e quirks de firmware; distinguir respostas 11-bit/29-bit, ISO 9141-2, ISO 14230-4, SAE J1850 e ISO 15765-4 conforme capacidade.
+  - [ ] F03.05.01 (P0) Modelar seleção 0 (automática) e protocolos 1–9 com tipos Rust, validar confirmação AT SP, limpar sessão após falha; primeiro módulo e testes em desenvolvimento.
+  - [ ] F03.05.02 (P0) Consultar AT DPN depois de resposta OBD positiva e distinguir pedido, configuração reportada e comunicação ECU verificada; rejeitar protocolo manual divergente, não inventar fallback.
+  - [ ] F03.05.03 (P1) SAE J1850 PWM 41,6 kbit/s e VPW 10,4 kbit/s: parsing por origem, integridade e serviços aplicáveis.
+  - [ ] F03.05.04 (P1) ISO 9141-2, inicialização 5 baud, 10,4 kbit/s: respostas e timings reais.
+  - [ ] F03.05.05 (P1) ISO 14230-4 KWP, slow/fast init, 10,4 kbit/s: formato, comprimento, origem e erros.
+  - [ ] F03.05.06 (P0) ISO 15765-4, CAN 11/29 bits a 500 kbit/s: integrar F03.06 e PRs existentes.
+  - [ ] F03.05.07 (P0) ISO 15765-4, CAN 11/29 bits a 250 kbit/s: mesmas garantias sem assumir velocidade do host.
+  - [ ] F03.05.08 (P0) Fixtures determinísticas para nove protocolos e modo auto, falhas de inicialização, timeout, ausência de dados, respostas negativas e múltiplas ECUs.
+  - [ ] F03.05.09 (P1) Capacidades ELM/STN por evidência, não por versão anunciada; separar adaptador, transporte e barramento.
+  - [ ] F03.05.10 (P1) Painel de ligação com seleção, protocolo reportado, confirmação ECU, latência medida e erros; dados desconhecidos explícitos.
+  - [ ] F03.05.11 (P1) Matriz por protocolo/adaptador/SO/serviço (01/02/03/04/06/07/09/0A quando aplicável); distinguir não suportado, simulado, CI e hardware.
+  - [ ] F03.05.12 (P0) Validação física dos nove protocolos com veículos ou bancada apropriada; só leitura por defeito, sem novos comandos de escrita; Mode 04 sujeito à política F04/F11.
+  - Referência técnica: [ELM327DSL](https://elmelectronics.com/wp-content/uploads/2020/05/ELM327DSL.pdf), AT SP, AT DP/DPN; configuração reportada não prova ligação ECU. J1939, UDS/OBDonUDS, DoIP, CAN FD, J2534 e KWP1281 ficam como extensões futuras separadas, não como opções ELM equivalentes.
 - [ ] F03.06 Parser binário com ISO-TP, sequência, length, timeout e ECU de origem; não misturar frames. Distinguir erros de transporte, resposta negativa, não suportado, indisponível e malformed.
 - [ ] F03.07 Descobrir ECUs OBD normalizadas e PIDs suportados por ECU; cache por sessão, sem sondagem OEM indiscriminada.
 - [ ] F03.08 Resolver valores ausentes/panics (BUG-005/006/010/014/015/024/027), testes de reconexão, stress e memória.
