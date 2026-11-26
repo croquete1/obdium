@@ -1,0 +1,2530 @@
+# Ukrainian translation of DDT4ALL.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR yuriy@novostavskiy.kiev.ua, 2020.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: DDT4ALL\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-24 00:02+0100\n"
+"PO-Revision-Date: 2026-05-10 06:30+0200\n"
+"Last-Translator: Furtif <msntchat@hotmail.fr>\n"
+"Language-Team: \n"
+"Language: uk_UA\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
+"X-Generator: Poedit 3.9\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+
+#, python-format
+msgid "Failed to connect to DoIP entity: %s"
+msgstr "Не вдалося підключитися до сутності DoIP: %s"
+
+#, python-format
+msgid "DoIP routing activated for %(ip)s:%(port)s"
+msgstr "Маршрутизацію DoIP активовано для %(ip)s:%(port)s"
+
+msgid "No vehicle-identification response was received"
+msgstr "Відповідь ідентифікації транспортного засобу не отримано"
+
+#, python-format
+msgid "Vehicle VIN=%(vin)s logical address=0x%(address)04X EID=%(eid)s"
+msgstr ""
+"Транспортний засіб VIN=%(vin)s логічна адреса=0x%(address)04X EID=%(eid)s"
+
+#, python-format
+msgid "DoIP connection failed: %s"
+msgstr "З'єднання DoIP не вдалося: %s"
+
+msgid "Not connected to DoIP device"
+msgstr "Не підключено до пристрою DoIP"
+
+msgid "No DoIP ECU logical address is selected"
+msgstr "Логічну адресу ECU DoIP не вибрано"
+
+#, python-format
+msgid "Invalid hex request format: %s"
+msgstr "Неправильний формат hex-запиту: %s"
+
+msgid "ELM AT commands are not supported over DoIP"
+msgstr "Команди AT ELM не підтримуються через DoIP"
+
+msgid "K-line initialization is not supported over DoIP"
+msgstr "Ініціалізація K-line не підтримується через DoIP"
+
+msgid "K-line addressing is not supported over DoIP"
+msgstr "Адресація K-line не підтримується через DoIP"
+
+msgid "Warning, cannot get signed value for"
+msgstr "Попередження, не можна отримати значення зі знаком для"
+
+msgid "Division by zero, please check data item: "
+msgstr "Ділення на нуль, будь ласка перевірте елемент даних: "
+
+msgid "Adding group "
+msgstr "Додавання групи "
+
+msgid "Unable to find eculist"
+msgstr "Не вдається знайти eculist"
+
+msgid "Cannot find file "
+msgstr "Не вдається знайти файл "
+
+msgid "Cannot load ECU file"
+msgstr "Не вдалося завантажити файл ECU"
+
+msgid "XML not found"
+msgstr "XML не знайдено"
+
+msgid "Cannot retrieve functionnal address of ECU"
+msgstr "Неможливо отримати функціональну адресу ECU"
+
+msgid "Generated stream "
+msgstr "Згенерований потік "
+
+msgid "Send request stream "
+msgstr "Надіслати потік запиту "
+
+msgid "Received stream "
+msgstr "Отриманий потік "
+
+msgid "Request ECU Error"
+msgstr "Помилка запиту ECU"
+
+msgid "Decoded values"
+msgstr "Декодовані значення"
+
+msgid "Found: "
+msgstr "Знайдено: "
+
+msgid "Identified ECU"
+msgstr "Ідентифіковано ECU"
+
+msgid "Found ECU"
+msgstr "Знайдено ECU"
+
+msgid "(not perfect match)"
+msgstr "(не ідеальна відповідність)"
+
+msgid "(no relevant ECU file found)"
+msgstr "(не знайдено відповідного файлу ECU)"
+
+msgid "Warning, address"
+msgstr "Попередження, адреса"
+
+msgid "is not mapped"
+msgstr "не зіставлено"
+
+msgid "Scanning address: "
+msgstr "Сканування адреси: "
+
+#, python-format
+msgid "# check_ecu: empty response for addr %(addr)s protocol %(protocol)s"
+msgstr "# check_ecu: порожня відповідь для addr %(addr)s протокол %(protocol)s"
+
+#, python-format
+msgid ""
+"# check_ecu: invalid hex response for addr %(addr)s protocol %(protocol)s: "
+"%(err)s"
+msgstr ""
+"# check_ecu: недійсна hex-відповідь для addr %(addr)s протокол %(protocol)s: "
+"%(err)s"
+
+#, python-format
+msgid ""
+"# check_ecu: response too short (%(bytes)d bytes) for addr %(addr)s protocol "
+"%(protocol)s"
+msgstr ""
+"# check_ecu: занадто коротка відповідь (%(bytes)d байт) для addr %(addr)s "
+"протокол %(protocol)s"
+
+msgid "No DoIP addresses available for scanning"
+msgstr "Немає доступних DoIP адрес для сканування"
+
+#, python-format
+msgid "Initializing DoIP connection to %(ip)s:%(port)s"
+msgstr "Ініціалізація підключення DoIP до %(ip)s:%(port)s"
+
+#, python-format
+msgid "DoIP connection established: %(ip)s:%(port)s"
+msgstr "Підключення DoIP встановлено: %(ip)s:%(port)s"
+
+#, python-format
+msgid "DoIP vehicle discovered: VIN=%(vin)s address=%(addr)04X"
+msgstr "Виявлено транспортний засіб DoIP: VIN=%(vin)s адреса=%(addr)04X"
+
+#, python-format
+msgid "DoIP reconnection failed: %s"
+msgstr "Повторне підключення DoIP не вдалося: %s"
+
+msgid "unmapped ECU"
+msgstr "ECU без відповідності"
+
+#, python-format
+msgid "Scanning DoIP address %(addr)s ECU: %(name)s"
+msgstr "Сканування адреси DoIP %(addr)s ECU: %(name)s"
+
+#, python-format
+msgid "Simulation mode: DoIP address %s was not queried"
+msgstr "Режим симуляції: адресу DoIP %s не було опитано"
+
+#, python-format
+msgid "Skipping invalid DoIP address %(addr)s: %(error)s"
+msgstr "Пропуск недійсної адреси DoIP %(addr)s: %(error)s"
+
+#, python-format
+msgid "DoIP scan failed at %(addr)s: %(error)s"
+msgstr "Збій сканування DoIP на %(addr)s: %(error)s"
+
+#, python-format
+msgid "Could not start DoIP UDS session at %(addr)s: %(error)s"
+msgstr "Не вдалося запустити сеанс UDS DoIP на %(addr)s: %(error)s"
+
+#, python-format
+msgid "DoIP UDS identification failed at %(addr)s: %(error)s"
+msgstr "Ідентифікація UDS DoIP не вдалася на %(addr)s: %(error)s"
+
+#, python-format
+msgid "Could not close DoIP diagnostic session at %(addr)s: %(error)s"
+msgstr "Не вдалося закрити сеанс діагностики DoIP на %(addr)s: %(error)s"
+
+#, python-format
+msgid "Could not start DoIP legacy session at %(addr)s: %(error)s"
+msgstr ""
+"Не вдалося запустити сеанс старого протоколу DoIP на %(addr)s: %(error)s"
+
+#, python-format
+msgid "DoIP legacy identification failed at %(addr)s: %(error)s"
+msgstr ""
+"Ідентифікація за старим протоколом DoIP не вдалася на %(addr)s: %(error)s"
+
+#, python-format
+msgid "Could not close DoIP legacy session at %(addr)s: %(error)s"
+msgstr "Не вдалося закрити сеанс старого протоколу DoIP на %(addr)s: %(error)s"
+
+#, python-format
+msgid "Device detection error: %s"
+msgstr "Помилка виявлення пристрою: %s"
+
+#, python-format
+msgid "Device initialization error: %s"
+msgstr "Помилка ініціалізації пристрою: %s"
+
+msgid "Found USB device:"
+msgstr "Знайдено USB адаптер:"
+
+msgid "USB device detection error:"
+msgstr "Помилка виявлення USB пристрою:"
+
+msgid ""
+"Note: This error does not affect serial communication or bypass cable "
+"functionality."
+msgstr ""
+"Примітка: Ця помилка не впливає на послідовну комунікацію чи "
+"функціональність обхідного кабелю."
+
+msgid "Trying to open port "
+msgstr "Пробую відкрити порт "
+
+msgid "Port initialization failed"
+msgstr "Помилка ініціалізації порту"
+
+msgid "Port connection failed - port object is invalid"
+msgstr "Помилка підключення порту - об'єкт порту недійсний"
+
+msgid "STN connection established"
+msgstr "STN з'єднання встановлено"
+
+msgid "Version: "
+msgstr "Версія: "
+
+#, python-format
+msgid "STPX/STN configuration warning: %s"
+msgstr "Попередження конфігурації STPX/STN: %s"
+
+msgid "No ELM interface on port"
+msgstr "Інтерфейс ELM відсутній на порту"
+
+msgid "OBDLink Connection OK, attempting full speed UART switch"
+msgstr "З'єднання OBDLink OK, спроба перемкнути швидкість UART на повну"
+
+msgid "Failed to switch OBDLink to "
+msgstr "Не вдалося перемкнути OBDLink на "
+
+msgid "OBDLink Connection OK, using optimal settings"
+msgstr "З'єднання OBDLink OK, використовуємо оптимальні налаштування"
+
+msgid "Connection established successfully"
+msgstr "З'єднання встановлено успішно"
+
+msgid "Configuring ELS27 V5 CAN pins (12-13)"
+msgstr "Налаштування пінів ELS27 V5 CAN (12-13)"
+
+msgid "ELS27 V5 CAN configuration complete"
+msgstr "Налаштування ELS27 V5 CAN завершено"
+
+#, python-format
+msgid "ELS27 V5 configuration warning: %s"
+msgstr "Попередження налаштування ELS27 V5: %s"
+
+msgid "Port is None - cannot switch speed"
+msgstr "Порт None - не можна перемкнути швидкість"
+
+#, python-format
+msgid "%s switched baudrate OK, changing UART speed now..."
+msgstr "%s перемкнув baudrate OK, змінюючи швидкість UART..."
+
+#, python-format
+msgid "%s baudrate switched OK, changing UART speed now..."
+msgstr "%s baudrate перемкнуто OK, зміна швидкості UART..."
+
+#, python-format
+msgid "Not supported baudrate %s"
+msgstr "Непідтримувана швидкість %s"
+
+msgid "ELM reset..."
+msgstr "Скидання ELM..."
+
+msgid "Unknown address: "
+msgstr "Невідома адреса: "
+
+msgid ""
+"send_can: received first frame only — AT CAF0 may have been reset by AT SP, "
+"or FC failed"
+msgstr ""
+"send_can: отримано лише перший кадр — AT CAF0 міг бути скинутий командою AT "
+"SP або FC не вдалося"
+
+#, python-format
+msgid "send_can: unexpected response byte %s — check AT CAF0 is active"
+msgstr ""
+"send_can: неочікуваний байт відповіді %s — перевірте, чи активовано AT CAF0"
+
+msgid "Using saved device settings"
+msgstr "Використання збережених налаштувань пристрою"
+
+msgid "Using optimal device settings"
+msgstr "Використання оптимальних налаштувань пристрою"
+
+msgid "Connecting to device at port: "
+msgstr "Підключення до пристрою на порту: "
+
+msgid "Using baudrate: "
+msgstr "Використання швидкості передачі даних: "
+
+msgid "Testing for ELS27 device..."
+msgstr "Тестування пристрою ELS27..."
+
+msgid "ELS27 device detected: "
+msgstr "ELS27 пристрій виявлено: "
+
+msgid "Using detected baud rate: "
+msgstr "Використання виявленої швидкості передачі даних: "
+
+msgid "Warning: No ELS27 response detected"
+msgstr "Попередження: не виявлено відповіді ELS27"
+
+msgid "Will attempt connection anyway..."
+msgstr "Спробуємо підключення в будь-якому випадку..."
+
+msgid "Connection failed: "
+msgstr "З'єднання не вдалося: "
+
+msgid "Testing basic connectivity..."
+msgstr "Тестування базової з'єднаності..."
+
+msgid "Warning: Device may not be ELM327 compatible"
+msgstr "Попередження: пристрій може не бути сумісним з ELM327"
+
+msgid "ELM327 device detected successfully"
+msgstr "Пристрій ELM327 успішно виявлено"
+
+msgid "Device version: "
+msgstr "Версія пристрою: "
+
+msgid "Connection error: "
+msgstr "Помилка з'єднання: "
+
+msgid "FAIL"
+msgstr "Помилка"
+
+msgid "OK/TIMEOUT"
+msgstr "ГАРАЗД/ТАЙМАУТ"
+
+msgid "OK"
+msgstr "Підтвердити"
+
+msgid "Incompatible adapter on ARM core"
+msgstr "Несумісний адаптер на ядрі ARM"
+
+msgid "Result: "
+msgstr "Результат: "
+
+msgid " succeeded from "
+msgstr " успішно з "
+
+msgid "ELM Max version:"
+msgstr "Максимальна версія ELM:"
+
+msgid "Using saved settings for"
+msgstr "Використання збережених налаштувань для"
+
+msgid "Using optimal settings for"
+msgstr "Використання оптимальних налаштувань для"
+
+msgid "Using settings for"
+msgstr "Використання налаштувань для"
+
+msgid "ELM327 doesn't support DoIP, falling back to serial mode"
+msgstr "ELM327 не підтримує DoIP, повертаємося до серійного режиму"
+
+msgid "Serial port opened"
+msgstr "Серійний порт відкрито"
+
+#, python-format
+msgid "Serial connection error: %s"
+msgstr "Помилка серійного з'єднання: %s"
+
+msgid "ELM not connected or wrong COM port"
+msgstr "ELM не з'єднано або невірний COM порт"
+
+#, python-format
+msgid "Unexpected error: %s"
+msgstr "Неочікувана помилка: %s"
+
+#, python-format
+msgid "Bluetooth connection attempted: %s"
+msgstr "Спроба підключення Bluetooth: %s"
+
+#, python-format
+msgid "Serial connection established: %(port)s @ %(baud)s baud"
+msgstr "Серійне з'єднання встановлено: %(port)s @ %(baud)s baud"
+
+#, python-format
+msgid "Bluetooth connection failed: %s"
+msgstr "Підключення Bluetooth не вдалося: %s"
+
+#, python-format
+msgid "DoIP connection failed: %(ip)s:%(port)s"
+msgstr "Підключення DoIP не вдалося: %(ip)s:%(port)s"
+
+#, python-format
+msgid "DoIP initialization failed: %s"
+msgstr "Ініціалізація DoIP не вдалася: %s"
+
+#, python-format
+msgid "Port closed: %s"
+msgstr "Порт закрито: %s"
+
+#, python-format
+msgid "Error closing port: %s"
+msgstr "Помилка закриття порту: %s"
+
+#, python-format
+msgid "Connecting to WiFi adapter at %(ip)s:%(port)s"
+msgstr "Підключення до WiFi адаптера за адресою %(ip)s:%(port)s"
+
+#, python-format
+msgid "WiFi connection established: %(ip)s:%(port)s"
+msgstr "Підключення WiFi встановлено: %(ip)s:%(port)s"
+
+#, python-format
+msgid "WiFi connection timeout to %(ip)s:%(port)s"
+msgstr "Таймаут підключення WiFi до %(ip)s:%(port)s"
+
+#, python-format
+msgid "WiFi connection error: %s"
+msgstr "Помилка підключення WiFi: %s"
+
+#, python-format
+msgid "Unexpected WiFi error: %s"
+msgstr "Неочікувана помилка WiFi: %s"
+
+#, python-format
+msgid "WiFi recv: %s"
+msgstr "Прийом WiFi: %s"
+
+#, python-format
+msgid "WiFi socket timed out %s times in a row; reconnect scheduled"
+msgstr ""
+"Вичерпано час очікування сокета WiFi %s разів поспіль; заплановано повторне "
+"підключення"
+
+#, python-format
+msgid "Serial error in read_byte: %s"
+msgstr "Серійна помилка в read_byte: %s"
+
+msgid "Connection to ELM was lost"
+msgstr "Звязок з ELM втрачено"
+
+#, python-format
+msgid "*       Error: %s"
+msgstr "*       Помилка: %s"
+
+#, python-format
+msgid "Cannot decode bytes %s"
+msgstr "Неможливо декодувати байти %s"
+
+#, python-format
+msgid "Error in read(): %s"
+msgstr "Помилка в read(): %s"
+
+msgid "WiFi connection - baudrate change not applicable"
+msgstr "Підключення WiFi - зміна швидкості передачі даних не застосовується"
+
+msgid "Attempting WiFi reconnection..."
+msgstr "Спроба підключення WiFi..."
+
+msgid "Port handler is None, cannot write"
+msgstr "Обробник порту None, не можна записати"
+
+#, python-format
+msgid "Serial write error: %s"
+msgstr "Помилка запису серійного порту: %s"
+
+#, python-format
+msgid "*       Write error: %s"
+msgstr "Помилка запису: %s"
+
+msgid "TIMEOUT"
+msgstr "ТАЙМАУТ"
+
+msgid "Checking port speed:"
+msgstr "Перевірка швидкості порта:"
+
+msgid "WiFi connection - skipping baudrate check"
+msgstr "Підключення WiFi - пропуск перевірки швидкості передачі даних"
+
+msgid "Bluetooth connection - skipping baudrate check"
+msgstr "Підключення Bluetooth - пропуск перевірки швидкості передачі даних"
+
+msgid "Start COM speed: "
+msgstr "Швидкість COM порта : "
+
+msgid "ELM not responding"
+msgstr "ELM не відповідає"
+
+msgid "Cannot zip database, no 'ecus' directory"
+msgstr "Неможливо стиснути базу даних, немає директорії 'ecus'"
+
+msgid "Starting conversion"
+msgstr "Початок конвертації"
+
+msgid "Starting processing "
+msgstr "Початок обробки "
+
+msgid " to "
+msgstr " до "
+
+msgid "Skipping current file (cannot parse it)"
+msgstr "Пропуск поточного файлу (неможливо його розібрати)"
+
+msgid "Writing database"
+msgstr "Запис бази даних"
+
+msgid "Writing archive"
+msgstr "Запис архіву"
+
+msgid "Opening ECU Database..."
+msgstr "Відкриття бази даних ECU..."
+
+msgid "DataItem not found"
+msgstr "DataItem не знайдено"
+
+msgid "parts as: "
+msgstr "частини як: "
+
+msgid " please review dumpVehicles def."
+msgstr " будь ласка перевірте визначення dumpVehicles."
+
+msgid "ELS27 V5 CAN pin configuration complete"
+msgstr "Налаштування пінів ELS27 V5 CAN завершено"
+
+msgid "Found USB adapter:"
+msgstr "Знайдено USB адаптер:"
+
+msgid "USB not available"
+msgstr "USB недоступний"
+
+msgid "USB Device"
+msgstr "USB пристрій"
+
+msgid "Warning: Could not read string descriptor:"
+msgstr "Попередження: не вдалося прочитати дескриптор рядка:"
+
+msgid "USB OBD Device"
+msgstr "USB OBD пристрій"
+
+msgid "Warning: Vendor request failed:"
+msgstr "Попередження: запит провайдера не вдався:"
+
+msgid "Warning: PyQtWebEngine not available. Some features may be limited."
+msgstr ""
+"Попередження: PyQtWebEngine недоступний. Деякі функції можуть бути обмежені."
+
+msgid "resources/projects.json not found or invalid."
+msgstr "resources/projects.json не знайдено або недійсний."
+
+#, python-format
+msgid "Warning: Could not write version.h: %s"
+msgstr "Попередження: не вдалося записати version.h: %s"
+
+msgid "Using custom DDT database"
+msgstr "Використання власної бази DDT"
+
+msgid "No COM port selected"
+msgstr "Не обрано COM порт"
+
+#, python-format
+msgid "Initializing ELM with speed %i..."
+msgstr "Ініціалізація ELM зі швидкістю %i..."
+
+msgid "DoIP connection failed: "
+msgstr "З'єднання DoIP не вдалося: "
+
+msgid "No ELM327 or OBDLINK-SX detected on COM port "
+msgstr "ELM327 чи OBDLINK-SX не виявлено на COM порті "
+
+msgid "AB90 AIRBAG Reset"
+msgstr "Скидання подушок безпеки AB90"
+
+msgid "Airbag Tools"
+msgstr "Інструменти Airbag"
+
+msgid ""
+"AB90 (Clio III)/2<br>AIRBAG VIRGINIZER<br><font color='red'>THIS PLUGIN WILL "
+"UNLOCK AIRBAG CRASH DATA<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</"
+"font>"
+msgstr ""
+"AB90 (Clio III)/2<br>AIRBAG VIRGINIZER<br><font color='red'>Цей плагін "
+"розблокує дані про зіткнення AIRBAG<br>ІДІТЬ ГЕТЬ, ЯКЩО НЕ МАЄТЕ ІДЕЇ, ЩО ЦЕ "
+"ОЗНАЧАЄ</font>"
+
+msgid "Check ACU Virgin"
+msgstr "Перевірити ACU Virgin"
+
+msgid "Waiting"
+msgstr "Зачекайте"
+
+msgid "Virginize ACU"
+msgstr "Очистити ACU (новий стан)"
+
+msgid "Cannot connect to ECU"
+msgstr "Не вдається підключитися до ECU"
+
+msgid "<font color='orange'>UNEXPECTED RESPONSE</font>"
+msgstr "<font color='orange'>НЕСПОДІВАНА ВІДПОВІДЬ</font>"
+
+msgid "<font color='red'>CRASH DETECTED</font>"
+msgstr "<font color='red'>АВАРІЯ ЗНАЙДЕНА</font>"
+
+msgid "<font color='green'>NO CRASH DETECTED</font>"
+msgstr "<font color='green'>АВАРІЯ НЕ ВИЯВЛЕНО</font>"
+
+#, python-format
+msgid "SDS stream: %s"
+msgstr "Потік SDS: %s"
+
+msgid "<font color='green'>CLEAR EXECUTED</font>"
+msgstr "<font color='green'>ОЧИЩЕННЯ ВИКОНАНО</font>"
+
+msgid "<font color='red'>CLEAR FAILED</font>"
+msgstr "<font color='red'>ОЧИЩЕННЯ НЕ ВДАЛОСЯ</font>"
+
+msgid "Megane/Scenic II card programming"
+msgstr "Програмування картки Megane/Scenic II"
+
+msgid "Keys"
+msgstr "Ключі"
+
+msgid "ENTER AFTER SALE MODE"
+msgstr "УВІЙТИ В РЕЖИМ ПОСЛЕПРОДАЖУ"
+
+msgid ""
+"<font color='red'>MEGANE II CARD PROGRAMMING<br>EXPERIMENTAL : NOT TESTED "
+"YET</font>"
+msgstr ""
+"<font color='red'>ПРОГРАМУВАННЯ КАРТКИ MEGANE II<br>ЕКСПЕРИМЕНТАЛЬНО : ЩЕ НЕ "
+"ТЕСТОВАНО</font>"
+
+msgid "LEARN"
+msgstr "Навчити"
+
+msgid "VALIDATE"
+msgstr "ПЕРЕВІРИТИ"
+
+msgid "CANCEL"
+msgstr "Відміна"
+
+msgid "Algo 2"
+msgstr "Алгоритм 2"
+
+msgid "ISK"
+msgstr "Код ISK"
+
+msgid "PIN"
+msgstr "ПІН-код"
+
+msgid "Num key learnt"
+msgstr "Кількість ключів записано"
+
+msgid "CARD IDE"
+msgstr "Ідентифікатор картки (IDE)"
+
+msgid "Cannot get ISK, check connections and UCH compatibility"
+msgstr "Неможливо отримати ISK, перевірте з'єднання та сумісність UCH"
+
+msgid "<font color='red'>PIN CODE NOT RECOGNIZED</font>"
+msgstr "<font color='red'>PIN-КОД НЕ РОЗПІЗНАНО</font>"
+
+msgid "<font color='green'>PIN CODE OK / KEY LEARNING</font>"
+msgstr "<font color='green'>PIN-КОД OK / НАВЧАННЯ КЛЮЧА</font>"
+
+msgid "<font color='green'>PIN CODE OK / UCH LEARNING</font>"
+msgstr "<font color='green'>PIN-КОД OK / НАВЧАННЯ UCH</font>"
+
+msgid "Modus/Clio III EPS Reset"
+msgstr "Скидання ЕПК Modus/Clio III"
+
+msgid "EPS Tools"
+msgstr "Інструменти EPS"
+
+msgid ""
+"Modus/Clio III EPS VIRGINIZER<br><font color='red'>THIS PLUGIN WILL RESET "
+"EPS IMMO DATA<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</font>"
+msgstr ""
+"Modus/Clio III EPS VIRGINIZER<br><font color='red'>ЦЕЙ ПЛАГІН СКИНЕ ДАНІ "
+"IMMO EPS<br>ІДІТЬ ГЕТЬ, ЯКЩО НЕ МАЄТЕ ІДЕЇ, ЩО ЦЕ ОЗНАЧАЄ</font>"
+
+msgid "BLANK STATUS & VIN READ"
+msgstr "ПУСТИЙ СТАН & ЧИТАННЯ VIN"
+
+msgid "Virginize EPS"
+msgstr "Очистити EPS (новий стан)"
+
+msgid "VIN - READ"
+msgstr "VIN - ЧИТАННЯ"
+
+msgid "VIN - WRITE"
+msgstr "VIN - ЗАПИС"
+
+msgid "Write VIN"
+msgstr "Записати VIN"
+
+msgid "<font color='red'>VIN - INVALID</font>"
+msgstr "<font color='red'>VIN - НЕДІЙСНИЙ</font>"
+
+msgid "<font color='red'>VIN - BAD LENGTH</font>"
+msgstr "<font color='red'>VIN - НЕПРАВИЛЬНА ДОВЖИНА</font>"
+
+msgid "<font color='orange'>VIN WRITE FAILED</font>"
+msgstr "<font color='orange'>ЗАПИС VIN НЕ ВДАВСЯ</font>"
+
+msgid "<font color='green'>VIN WRITE OK</font>"
+msgstr "<font color='green'>ЗАПИС VIN OK</font>"
+
+msgid "<font color='green'>EPS virgin</font>"
+msgstr "<font color='green'>EPS чистий (новий)</font>"
+
+msgid "<font color='red'>EPS coded</font>"
+msgstr "<font color='red'>EPS закодований</font>"
+
+#, python-format
+msgid "SdSC0 stream: %s"
+msgstr "Потік SdSC0: %s"
+
+msgid "Clio IV EPS Reset"
+msgstr "Скидання ЕПК Clio IV"
+
+msgid ""
+"Clio IV EPS VIRGINIZER<br><font color='red'>THIS PLUGIN WILL RESET EPS IMMO "
+"DATA<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</font>"
+msgstr ""
+"Clio IV EPS VIRGINIZER<br><font color='red'>ЦЕЙ ПЛАГІН СКИНЕ ДАНІ IMMO "
+"EPS<br>ІДІТЬ ГЕТЬ, ЯКЩО НЕ МАЄТЕ ІДЕЇ, ЩО ЦЕ ОЗНАЧАЄ</font>"
+
+msgid "Check EPS Virgin"
+msgstr "Перевірити EPS Virgin"
+
+msgid "<font color='green'>EPS not operational</font>"
+msgstr "<font color='green'>EPS не працює</font>"
+
+msgid "<font color='red'>UNEXPECTED RESPONSE</font>"
+msgstr "<font color='red'>НЕСПОДІВАНА ВІДПОВІДЬ</font>"
+
+#, python-format
+msgid "SdSFA stream: %s"
+msgstr "Потік SdSFA: %s"
+
+msgid "DDT2000 command macros (.cmd)"
+msgstr "Командні макроси DDT2000 (.cmd)"
+
+msgid "Macros"
+msgstr "Командні макроси"
+
+msgid ""
+"ERROR: command should have 5 parameters: \n"
+"    <command> <lid> <rsp_len> <offset> <hex mask> <hex value>\n"
+"        <lid> - ECUs local identifier. Length should be 2 simbols for KWP or "
+"4 for CAN\n"
+"        <rsp_len> - lengt of command response including positive response "
+"bytes, equals MinBytes from ddt db\n"
+"        <offset> - offeset in bytes to first changed byte (starts from 1 not "
+"0) \n"
+"        <hex mask> - bit mask for changed bits, 1 - changable, 0 - "
+"untachable\n"
+"        <hex value> - bit value\n"
+"    <hex mask> and <hex value> should have equal length\n"
+msgstr ""
+"ПОМИЛКА: команда повинна мати 5 параметрів: \n"
+"    <команда> <lid> <rsp_len> <зсув> <hex-маска> <hex-значення>\n"
+"        <lid> - локальний ідентифікатор ЕБУ. Довжина має бути 2 символи для "
+"KWP або 4 для CAN\n"
+"        <rsp_len> - довжина відповіді команди, включаючи байти позитивної "
+"відповіді, дорівнює MinBytes з бази ddt\n"
+"        <зсув> - зміщення в байтах до першого зміненого байта (починається з "
+"1, а не з 0) \n"
+"        <hex-маска> - бітова маска для змінених бітів, 1 - змінюваний, 0 - "
+"недоторканний\n"
+"        <hex-значення> - значення біта\n"
+"    <hex-маска> та <hex-значення> повинні мати однакову довжину\n"
+
+msgid ""
+"ERROR: command should have 6 parameters: \n"
+"    <command> <lid> <rsp_len> <offset> <hex mask> <hex value> <label>\n"
+"        <lid> - ECUs local identifier. Length should be 2 simbols for KWP or "
+"4 for CAN\n"
+"        <rsp_len> - lengt of command response including positive response "
+"bytes, equals MinBytes from ddt db\n"
+"        <offset> - offeset in bytes to first changed byte (starts from 1 not "
+"0) \n"
+"        <hex mask> - bit mask for changed bits, 1 - changable, 0 - "
+"untachable\n"
+"        <hex value> - bit value\n"
+"        <label> - label to go\n"
+"    <hex mask> and <hex value> should have equal length\n"
+msgstr ""
+"ПОМИЛКА: команда повинна мати 6 параметрів: \n"
+"    <команда> <lid> <rsp_len> <зсув> <hex-маска> <hex-значення> <мітка>\n"
+"        <lid> - локальний ідентифікатор ЕБУ. Довжина має бути 2 символи для "
+"KWP або 4 для CAN\n"
+"        <rsp_len> - довжина відповіді команди, включаючи байти позитивної "
+"відповіді, дорівнює MinBytes з бази ddt\n"
+"        <зсув> - зміщення в байтах до першого зміненого байта (починається з "
+"1, а не з 0) \n"
+"        <hex-маска> - бітова маска для змінених бітів, 1 - змінюваний, 0 - "
+"недоторканний\n"
+"        <hex-значення> - значення біта\n"
+"        <мітка> - мітка переходу\n"
+"    <hex-маска> та <hex-значення> повинні мати однакову довжину\n"
+
+msgid ""
+"ERROR: command should have 4 or 7 parameters: \n"
+"    <command> <lid> <rsp_len> <offset> <hex mask> <hex value> <label>\n"
+"        <lid> - ECUs local identifier. Length should be 2 simbols for KWP or "
+"4 for CAN\n"
+"        <rsp_len> - lengt of command response including positive response "
+"bytes, equals MinBytes from ddt db\n"
+"        <offset> - offeset in bytes to first changed byte (starts from 1 not "
+"0) \n"
+"        <hex mask> - bit mask for changed bits, 1 - changable, 0 - "
+"untachable\n"
+"        <val step> - value step\n"
+"        <val offset> - value offset\n"
+"        <val divider> - value divider\n"
+"\n"
+msgstr ""
+"ПОМИЛКА: команда повинна мати 4 або 7 параметрів: \n"
+"    <команда> <lid> <rsp_len> <зсув> <hex-маска> <hex-значення> <мітка>\n"
+"        <lid> - локальний ідентифікатор ЕБУ. Довжина має бути 2 символи для "
+"KWP або 4 для CAN\n"
+"        <rsp_len> - довжина відповіді команди, включаючи байти позитивної "
+"відповіді, дорівнює MinBytes з бази ddt\n"
+"        <зсув> - зміщення в байтах до першого зміненого байта (починається з "
+"1, а не з 0) \n"
+"        <hex-маска> - бітова маска для змінених бітів, 1 - змінюваний, 0 - "
+"недоторканний\n"
+"        <крок значення> - крок значення\n"
+"        <зсув значення> - зміщення значення\n"
+"        <дільник значення> - дільник значення\n"
+"\n"
+
+msgid "No ELM connection (plugin need_hw=True ?)"
+msgstr "Немає підключення до ELM (для плагіна потрібно need_hw=True ?)"
+
+#, python-format
+msgid "guard: %(limit)d steps exceeded (infinite loop?)"
+msgstr "захист: перевищено %(limit)d кроків (нескінченний цикл?)"
+
+msgid "# abort requested"
+msgstr "# запитано переривання"
+
+#, python-format
+msgid "openning file: %(file)s"
+msgstr "відкриття файлу: %(file)s"
+
+#, python-format
+msgid "%(file)s:%(line)d: empty macro name"
+msgstr "%(file)s:%(line)d: порожня назва макросу"
+
+#, python-format
+msgid "%(file)s:%(line)d: unexpected end of macro"
+msgstr "%(file)s:%(line)d: неочікуваний кінець макросу"
+
+#, python-format
+msgid "%(file)s: includes are nested too deeply (%(limit)d levels)"
+msgstr ""
+"%(file)s: включення мають занадто глибоку вкладеність (%(limit)d рівнів)"
+
+#, python-format
+msgid "Cannot read %(file)s: %(error)s"
+msgstr "Не вдалося прочитати %(file)s: %(error)s"
+
+#, python-format
+msgid "%(file)s: included file not found: %(target)s"
+msgstr "%(file)s: включений файл не знайдено: %(target)s"
+
+#, python-format
+msgid "include loop: %(target)s"
+msgstr "циклічне включення: %(target)s"
+
+#, python-format
+msgid "# include %(file)s"
+msgstr "# включення файлу %(file)s"
+
+#, python-format
+msgid "  %(name)s = %(value)s"
+msgstr "  %(name)s = %(value)s"
+
+#, python-format
+msgid "  %(macro)s"
+msgstr "  %(macro)s"
+
+msgid "[h]elp                 - this help"
+msgstr "[h]elp                 - ця довідка"
+
+msgid "[q]uit, [e]xit, end    - exit from terminal"
+msgstr "[q]uit, [e]xit, end    - вихід із термінала"
+
+msgid "wait|sleep x           - wait x seconds"
+msgstr "wait|sleep x           - чекати x секунд"
+
+msgid "include <file>         - play another .cmd here"
+msgstr "include <файл>         - виконати інший .cmd тут"
+
+msgid "Variables:"
+msgstr "Змінні:"
+
+msgid "Macros:"
+msgstr "Командні макроси:"
+
+#, python-format
+msgid "Error: unknown macro name: %(macro)s"
+msgstr "Помилка: невідома назва макросу: %(macro)s"
+
+#, python-format
+msgid "Error: recursion prohibited: %(macro)s"
+msgstr "Помилка: рекурсія заборонена: %(macro)s"
+
+#, python-format
+msgid "### %(file)s : %(count)d lines"
+msgstr "### %(file)s : %(count)d рядків"
+
+msgid "# end of command file"
+msgstr "# кінець командного файлу"
+
+#, python-format
+msgid "> %(line)s"
+msgstr "> %(line)s"
+
+#, python-format
+msgid "Error: unknown label '%(label)s'"
+msgstr "Помилка: невідома мітка '%(label)s'"
+
+msgid "###### Variables #####"
+msgstr "###### Змінні #####"
+
+#, python-format
+msgid "# %(name)20s = %(value)s"
+msgstr "# %(name)20s = %(value)s"
+
+#, python-format
+msgid "Error: unknown variable %(name)s"
+msgstr "Помилка: невідома змінна %(name)s"
+
+msgid "Error: too many variables in one line"
+msgstr "Помилка: забагато змінних в одному рядку"
+
+msgid "#(subst)"
+msgstr "#(subst)"
+
+#, python-format
+msgid "# delay: %(seconds)s"
+msgstr "# затримка: %(seconds)s"
+
+#, python-format
+msgid "Unrecognized init command: %(name)s"
+msgstr "Нерозпізнана команда ініціалізації: %(name)s"
+
+msgid "ERROR: Unknown function"
+msgstr "ПОМИЛКА: Невідома функція"
+
+msgid "read  value: "
+msgstr "прочитане значення: "
+
+msgid "ERROR: Length is unexpected"
+msgstr "ПОМИЛКА: Неочікувана довжина"
+
+msgid "ERROR: Wrong simbol in response"
+msgstr "ПОМИЛКА: Невірний символ у відповіді"
+
+msgid "ERROR: Not positive response"
+msgstr "ПОМИЛКА: Відповідь не є позитивною"
+
+msgid "Match. Exit"
+msgstr "Збіг знайдено. Вихід"
+
+msgid "Not match. Continue"
+msgstr "Немає збігу. Продовжити"
+
+msgid "Not match. Exit"
+msgstr "Немає збігу. Вихід"
+
+msgid "Match. Continue"
+msgstr "Збіг знайдено. Продовжити"
+
+msgid "Match. goto: "
+msgstr "Збіг знайдено. Перейти до: "
+
+msgid "Not match. goto: "
+msgstr "Немає збігу. Перейти до: "
+
+#, python-format
+msgid ""
+"# LID(%(lid)s) $rawValue = %(raw)s  $scaledValue = %(scaled)s  $hexValue = "
+"%(hex)s"
+msgstr ""
+"# LID(%(lid)s) $rawValue = %(raw)s  $scaledValue = %(scaled)s  $hexValue = "
+"%(hex)s"
+
+#, python-format
+msgid "ERROR: unexpected positive response: %(rsp)s"
+msgstr "ПОМИЛКА: неочікувана позитивна відповідь: %(rsp)s"
+
+msgid "write value: "
+msgstr "записане значення: "
+
+msgid "ELM connected"
+msgstr "ELM підключено"
+
+msgid "ELM not connected"
+msgstr "ELM не підключено"
+
+msgid "installed copy (cmd_macros_lib/macros)"
+msgstr "встановлена копія (cmd_macros_lib/macros)"
+
+msgid "manually chosen folder"
+msgstr "папка обрана вручну"
+
+#, python-format
+msgid "ddt4all tables (%(count)d addresses)"
+msgstr "таблиці ddt4all (%(count)d адрес)"
+
+#, python-format
+msgid "pyren3 fallback (%(count)d addresses)"
+msgstr "резерв pyren3 (%(count)d адрес)"
+
+msgid "no table"
+msgstr "немає таблиці"
+
+msgid "pyren3 fallback: disabled"
+msgstr "резерв pyren3: вимкнено"
+
+msgid "pyren3 fallback: no entry"
+msgstr "резерв pyren3: немає запису"
+
+#, python-format
+msgid ""
+"pyren3 fallback: %(count)d addresses as a fallback, used only for the "
+"addresses missing from the ddt4all tables"
+msgstr ""
+"резерв pyren3: %(count)d адрес як резерв, використовується лише для "
+"відсутніх адрес у таблицях ddt4all"
+
+#, python-format
+msgid "pyren3 fallback: %(count)d addresses (source in use)"
+msgstr "резерв pyren3: %(count)d адрес (джерело у використанні)"
+
+msgid "Done"
+msgstr "Готово"
+
+#, python-format
+msgid "ERROR: %(error)s"
+msgstr "ПОМИЛКА: %(error)s"
+
+msgid "Error"
+msgstr "Помилка"
+
+msgid "DDT2000 command macros"
+msgstr "Командні макроси DDT2000"
+
+msgid "Macro folder (.cmd and *.txt)"
+msgstr "Папка макросів (.cmd та *.txt)"
+
+msgid "Browse"
+msgstr "Огляд"
+
+msgid "Refresh"
+msgstr "Оновити"
+
+msgid "Macro folder:"
+msgstr "Папка макросів:"
+
+msgid "Log ELM traffic to file"
+msgstr "Записувати трафік ELM у файл"
+
+msgid "Log file name:"
+msgstr "Назва файлу журналу:"
+
+msgid ".cmd files (by ECU)"
+msgstr "Файли .cmd (за ЕБУ)"
+
+msgid "Named macros (by *.txt)"
+msgstr "Іменовані макроси (за *.txt)"
+
+msgid "Macros by ECU (.cmd)"
+msgstr "Макроси за ЕБУ (.cmd)"
+
+msgid "Named macros (*.txt)"
+msgstr "Іменовані макроси (*.txt)"
+
+msgid "Send key"
+msgstr "Надіслати клавішу"
+
+msgid "Key for 'if_key':"
+msgstr "Клавіша для 'if_key':"
+
+msgid "Execute .cmd"
+msgstr "Виконати .cmd"
+
+msgid "Execute macro"
+msgstr "Виконати макрос"
+
+msgid "Stop"
+msgstr "Зупинити"
+
+msgid "Close"
+msgstr "Закрити"
+
+msgid "Log"
+msgstr "Журнал"
+
+msgid "Macro folder"
+msgstr "Папка макросів"
+
+#, python-format
+msgid "Parsing error %(file)s: %(error)s"
+msgstr "Помилка синтаксичного аналізу %(file)s: %(error)s"
+
+#, python-format
+msgid "%(macro)s (defined in %(file)s)"
+msgstr "%(macro)s (визначено у %(file)s)"
+
+#, python-format
+msgid "Host: %(host)s"
+msgstr "Вузол: %(host)s"
+
+#, python-format
+msgid "Addresses: %(legacy)s"
+msgstr "Адреси: %(legacy)s"
+
+msgid ""
+"Format: DDT2000 command macros (pyren3); the bundled macros target Renault "
+"ECUs, address resolution follows the vehicle loaded in ddt4all."
+msgstr ""
+"Формат: командні макроси DDT2000 (pyren3); вбудовані макроси призначені для "
+"ЕБУ Renault, зіставлення адрес слідує завантаженому автомобілю в ddt4all."
+
+#, python-format
+msgid "Folder: %(folder)s"
+msgstr "Папка: %(folder)s"
+
+msgid "(none)"
+msgstr "(немає)"
+
+#, python-format
+msgid "Source: %(source)s"
+msgstr "Джерело: %(source)s"
+
+#, python-format
+msgid ""
+"%(groups)d ECU group(s), %(files)d .cmd file(s), %(named)d named macro(s) in "
+"%(txt)d .txt file(s)"
+msgstr ""
+"%(groups)d груп ЕБУ, %(files)d файлів .cmd, %(named)d іменованих макросів у "
+"%(txt)d файлах .txt"
+
+#, python-format
+msgid "Journal files: %(elm)s and %(ecu)s"
+msgstr "Файли журналу: %(elm)s та %(ecu)s"
+
+msgid "No ELM connection: the journal is not written."
+msgstr "Немає підключення до ELM: журнал не записується."
+
+#, python-format
+msgid "Cannot write the journal (%(error)s)"
+msgstr "Не вдалося записати журнал (%(error)s)"
+
+#, python-format
+msgid "Journal: %(elm)s"
+msgstr "Журнал: %(elm)s"
+
+#, python-format
+msgid "Journal: %(ecu)s"
+msgstr "Журнал: %(ecu)s"
+
+msgid "ddt4all not found (console mode only)"
+msgstr "ddt4all не знайдено (лише режим консолі)"
+
+#, python-format
+msgid "ddt4all %(flavor)s | %(elm)s | addressing: %(addressing)s"
+msgstr "ddt4all %(flavor)s | %(elm)s | адресація: %(addressing)s"
+
+#, python-format
+msgid "%(elm)s | %(files)d .cmd (%(groups)d ECU) | %(named)d named macro(s)"
+msgstr ""
+"%(elm)s | %(files)d файлів .cmd (%(groups)d груп ЕБУ) | %(named)d іменованих "
+"макросів"
+
+#, python-format
+msgid ""
+"%(host)s\n"
+"Addresses: %(legacy)s\n"
+"%(detail)s\n"
+"Folder: %(folder)s\n"
+"Source: %(source)s\n"
+"%(journal)s"
+msgstr ""
+"%(host)s\n"
+"Адреси: %(legacy)s\n"
+"%(detail)s\n"
+"Папка: %(folder)s\n"
+"Джерело: %(source)s\n"
+"%(journal)s"
+
+msgid "Journal: disabled"
+msgstr "Журнал: вимкнено"
+
+msgid "A macro is already running."
+msgstr "Макрос вже виконується."
+
+msgid "ddt4all is not available: this plugin must be started from ddt4all."
+msgstr "ddt4all недоступний: цей плагін потрібно запускати з ddt4all."
+
+msgid "No ELM connection: connect ddt4all to the ELM before running a macro."
+msgstr ""
+"Немає підключення до ELM: підключіть ddt4all до ELM перед запуском макросу."
+
+#, python-format
+msgid "--- START %(kind)s: %(macro)s ---"
+msgstr "--- СТАРТ %(kind)s: %(macro)s ---"
+
+msgid "Select a .cmd file (double-click to run)."
+msgstr "Виберіть файл .cmd (подвійний клік для запуску)."
+
+msgid "Select a named macro (double-click to run)."
+msgstr "Виберіть іменований макрос (подвійний клік для запуску)."
+
+#, python-format
+msgid "# key '%(key)s' sent"
+msgstr "# клавіша '%(key)s' надіслана"
+
+msgid "# stop requested..."
+msgstr "# запитано зупинку..."
+
+#, python-format
+msgid "--- END: %(status)s ---"
+msgstr "--- КІНЕЦЬ: %(status)s ---"
+
+#, python-format
+msgid ""
+"WARNING: address %(addr)s resolves to %(tx)s/%(rx)s (ddt4all) but pyren3 "
+"uses %(pltx)s/%(plrx)s"
+msgstr ""
+"ПОПЕРЕДЖЕННЯ: адреса %(addr)s зіставляється з %(tx)s/%(rx)s (ddt4all), але "
+"pyren3 використовує %(pltx)s/%(plrx)s"
+
+msgid "Laguna II UCH Reset"
+msgstr "Скидання ЦКБЕ Laguna II"
+
+msgid "UCH Tools"
+msgstr "Інструменти ЦКБЕ (UCH)"
+
+msgid ""
+"LAGUNA II UCH VIRGINIZER<br><font color='red'>THIS PLUGIN WILL ERASE YOUR "
+"UCH<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</font>"
+msgstr ""
+"LAGUNA II UCH VIRGINIZER<br><font color='red'>ЦЕЙ ПЛАГІН ВИДАЛИТЬ ВАШ "
+"UCH<br>ІДІТЬ ГЕТЬ, ЯКЩО НЕ МАЄТЕ ІДЕЇ, ЩО ЦЕ ОЗНАЧАЄ</font>"
+
+msgid "Check UCH Virgin"
+msgstr "Перевірити UCH Virgin"
+
+msgid "Virginize UCH"
+msgstr "Очистити ЦКБЕ (новий стан)"
+
+msgid "<font color='green'>UCH virgin</font>"
+msgstr "<font color='green'>ЦКБЕ чистий (новий)</font>"
+
+msgid "<font color='red'>UCH coded</font>"
+msgstr "<font color='red'>UCH закодовано</font>"
+
+msgid "Laguna III UCH Reset"
+msgstr "Скидання ЦКБЕ Laguna III"
+
+msgid ""
+"LAGUNA III UCH VIRGINIZER<br><font color='red'>THIS PLUGIN WILL ERASE YOUR "
+"UCH<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</font>"
+msgstr ""
+"LAGUNA III UCH VIRGINIZER<br><font color='red'>ЦЕЙ ПЛАГІН ВИДАЛИТЬ ВАШ "
+"UCH<br>ІДІТЬ ГЕТЬ, ЯКЩО НЕ МАЄТЕ ІДЕЇ, ЩО ЦЕ ОЗНАЧАЄ</font>"
+
+msgid "Megane/Scenic II UCH Reset"
+msgstr "Скидання ЦКБЕ Megane/Scenic II"
+
+msgid ""
+"MEGANE II UCH VIRGINIZER<br><font color='red'>THIS PLUGIN WILL ERASE YOUR "
+"UCH<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</font>"
+msgstr ""
+"MEGANE II UCH VIRGINIZER<br><font color='red'>ЦЕЙ ПЛАГІН ВИДАЛИТЬ ВАШ "
+"UCH<br>ІДІТЬ ГЕТЬ, ЯКЩО НЕ МАЄТЕ ІДЕЇ, ЩО ЦЕ ОЗНАЧАЄ</font>"
+
+msgid "Megane3 AIRBAG Reset"
+msgstr "Скидання подушок безпеки Megane3"
+
+msgid ""
+"Megane III<br>AIRBAG VIRGINIZER<br><font color='red'>THIS PLUGIN WILL UNLOCK "
+"AIRBAG CRASH DATA<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</font>"
+msgstr ""
+"Megane III<br>AIRBAG VIRGINIZER<br><font color='red'>Цей плагін розблокує "
+"дані про зіткнення AIRBAG<br>ІДІТЬ ГЕТЬ, ЯКЩО НЕ МАЄТЕ ІДЕЇ, ЩО ЦЕ ОЗНАЧАЄ</"
+"font>"
+
+#, python-format
+msgid "SDS FA stream: %s"
+msgstr "Потік SDS FA: %s"
+
+msgid "ZOE/FLENCE/Megane III/Scenic III EPS Reset"
+msgstr "Скидання ЕПК ZOE/FLENCE/Megane III/Scenic III"
+
+msgid ""
+"ZOE/FLENCE/Megane III/Scenic III EPS VIRGINIZER<br><font color='red'>THIS "
+"PLUGIN WILL RESET EPS IMMO DATA<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT "
+"MEANS</font>"
+msgstr ""
+"ZOE/FLENCE/Megane III/Scenic III EPS VIRGINIZER<br><font color='red'>Цей "
+"плагін скине дані IMMO EPS<br>ІДІТЬ ГЕТЬ, ЯКЩО НЕ МАЄТЕ ІДЕЇ, ЩО ЦЕ ОЗНАЧАЄ</"
+"font>"
+
+msgid "Megane/Scenic III UCH Reset"
+msgstr "Скидання ЦКБЕ Megane/Scenic III"
+
+msgid ""
+"MEGANE III UCH VIRGINIZER<br><font color='red'>THIS PLUGIN WILL ERASE YOUR "
+"UCH<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</font>"
+msgstr ""
+"MEGANE III UCH VIRGINIZER<br><font color='red'>ЦЕЙ ПЛАГІН ВИДАЛИТЬ ВАШ "
+"UCH<br>ІДІТЬ ГЕТЬ, ЯКЩО НЕ МАЄТЕ ІДЕЇ, ЩО ЦЕ ОЗНАЧАЄ</font>"
+
+msgid "RSAT4 AIRBAG Reset"
+msgstr "Скидання подушок безпеки RSAT4"
+
+msgid ""
+"TWINGO III/ZOE/DOKKER/DUSTER ph2/TRAFIC III/CAPTUR/LODGY ph1/2<br>AIRBAG "
+"VIRGINIZER<br><font color='red'>THIS PLUGIN WILL UNLOCK AIRBAG CRASH "
+"DATA<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</font>"
+msgstr ""
+"TWINGO III/ZOE/DOKKER/DUSTER ph2/TRAFIC III/CAPTUR/LODGY ph1/2<br>AIRBAG "
+"VIRGINIZER<br><font color='red'>ЦЕЙ ПЛАГІН РОЗБЛОКУЄ ДАНІ ПРО ЗІТКНЕННЯ "
+"AIRBAG<br>ІДІТЬ ГЕТЬ, ЯКЩО НЕ МАЄТЕ ІДЕЇ, ЩО ЦЕ ОЗНАЧАЄ</font>"
+
+#, python-format
+msgid "SdSEX stream: %s"
+msgstr "Потік SdSEX: %s"
+
+msgid "CRC calculator"
+msgstr "Калькулятор CRC"
+
+msgid "VIN"
+msgstr "Номер VIN"
+
+msgid "CRC Calculator"
+msgstr "Калькулятор CRC"
+
+msgid "CRC CALCULATOR"
+msgstr "КАЛЬКУЛЯТОР CRC"
+
+msgid "Zoe water pump Reset"
+msgstr "Скидання водяного насоса Zoe"
+
+msgid "EVC Tools"
+msgstr "Інструменти EVC"
+
+msgid "Water pump counters"
+msgstr "Лічильники водяного насоса"
+
+msgid "Name"
+msgstr "Назва"
+
+msgid "Values"
+msgstr "Значення"
+
+msgid "Action"
+msgstr "Дія"
+
+msgid "Low Speed"
+msgstr "Низька швидкість"
+
+msgid "Middle Speed"
+msgstr "Середня швидкість"
+
+msgid "High Speed"
+msgstr "Висока швидкість"
+
+msgid "V_Timer_DrivWEP_ON"
+msgstr "V_Timer_DrivWEP_ON"
+
+msgid "Reset"
+msgstr "Скидання"
+
+msgid ""
+"Zoe water pump counters<br><font color='red'>THIS PLUGIN WILL ERASE WATER "
+"PUMP COUNTERS<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</font>"
+msgstr ""
+"Лічильники водяного насоса Zoe<br><font color='red'>ЦЕЙ ПЛАГІН ВИДАЛИТЬ "
+"ЛІЧИЛЬНИКИ ВОДЯНОГО НАСОСА<br>ІДІТЬ ГЕТЬ, ЯКЩО НЕ МАЄТЕ ІДЕЇ, ЩО ЦЕ ОЗНАЧАЄ</"
+"font>"
+
+msgid "Check values"
+msgstr "Перевірити значення"
+
+msgid "Waiting action"
+msgstr "Очікування дії"
+
+msgid "Reset all counters"
+msgstr "Скинути всі лічильники"
+
+msgid ""
+"<h1>TIPS</h1><ul><li>Insert key CARD</li><li>Put D position</li><li>Press/"
+"Stay START until <b>Remove card</b> message</li><li>Put P position</"
+"li><li>Keep key card inserted</li></ul>"
+msgstr ""
+"<h1>ПОРАДИ</h1><ul><li>Вставте ключ-карту</li><li>Встановіть положення D</"
+"li><li>Натисніть/Утримуйте START доки не з'явиться повідомлення <b>Вийміть "
+"картку</b></li><li>Встановіть положення P</li><li>Тримайте ключ-карту "
+"вставленою</li></ul>"
+
+msgid "<font color='green'>Values read</font>"
+msgstr "<font color='green'>Значення прочитано</font>"
+
+msgid "Reading Low speed"
+msgstr "Читання низької швидкості"
+
+msgid "Reading Middle speed"
+msgstr "Читання середньої швидкості"
+
+msgid "Reading High speed"
+msgstr "Читання високої швидкості"
+
+msgid "<font color='green'>CLEAR V_Timer_DrivWEP_ON EXECUTED</font>"
+msgstr "<font color='green'>ОЧИЩЕННЯ V_Timer_DrivWEP_ON ВИКОНАНО</font>"
+
+msgid "<font color='red'>CLEAR V_Timer_DrivWEP_ON FAILED</font>"
+msgstr "<font color='red'>ОЧИЩЕННЯ V_Timer_DrivWEP_ON НЕ ВДАЛОСЯ</font>"
+
+msgid "<font color='green'>CLEAR Low EXECUTED</font>"
+msgstr "<font color='green'>ОЧИЩЕННЯ LOW ВИКОНАНО</font>"
+
+msgid "<font color='red'>CLEAR Low FAILED</font>"
+msgstr "<font color='red'>ОЧИЩЕННЯ LOW НЕ ВДАЛОСЯ</font>"
+
+msgid "<font color='green'>CLEAR Medium EXECUTED</font>"
+msgstr "<font color='green'>ОЧИЩЕННЯ MEDIUM ВИКОНАНО</font>"
+
+msgid "<font color='red'>CLEAR Medium FAILED</font>"
+msgstr "<font color='red'>ОЧИЩЕННЯ MEDIUM НЕ ВДАЛОСЯ</font>"
+
+msgid "<font color='green'>CLEAR HIGH EXECUTED</font>"
+msgstr "<font color='green'>ОЧИЩЕННЯ HIGH ВИКОНАНО</font>"
+
+msgid "<font color='red'>CLEAR HIGH FAILED</font>"
+msgstr "<font color='red'>ОЧИЩЕННЯ HIGH НЕ ВДАЛОСЯ</font>"
+
+msgid "Add"
+msgstr "Додати"
+
+msgid "Del"
+msgstr "Видалити"
+
+msgid "Move up"
+msgstr "Перемістити вгору"
+
+msgid "Check"
+msgstr "Перевірити"
+
+#, python-format
+msgid "Request %s not found"
+msgstr "Запит %s не знайдено"
+
+#, python-format
+msgid ""
+"<font color=green>Request</font><font color=blue>'%s'</font> has no missing "
+"input values"
+msgstr ""
+"<font color=green>Запит</font><font color=blue>'%s'</font> не має відсутніх "
+"вхідних значень"
+
+#, python-format
+msgid ""
+"<font color=red>Request</font><font color=blue>'%s'</font> has missing inputs"
+msgstr ""
+"<font color=red>Запит</font><font color=blue>'%s'</font> має відсутні входи"
+
+#, python-format
+msgid "<font color=orange> - '%s'</font>"
+msgstr "<font color=orange> - '%s'</font>"
+
+msgid "Delay;Request"
+msgstr "Затримка;Запит"
+
+msgid "Screen initialization"
+msgstr "Ініціалізація екрану"
+
+msgid "Requests to send before screen drawing"
+msgstr "Запити для відправки перед відображенням екрану"
+
+msgid "Button name;Unique name"
+msgstr "Назва кнопки;Унікальне ім'я"
+
+msgid "New"
+msgstr "Нове"
+
+msgid "Duplicate selected"
+msgstr "Дублювати вибране"
+
+msgid "Remove selected"
+msgstr "Видалити обране"
+
+msgid "Reload"
+msgstr "Перезавантажити"
+
+msgid "Validate changes"
+msgstr "Перевірити зміни"
+
+msgid "Description"
+msgstr "Опис"
+
+msgid "Data type"
+msgstr "Тип даних"
+
+msgid "Numeric"
+msgstr "Числовий"
+
+msgid "Numeric items"
+msgstr "Числові елементи"
+
+msgid "Hex"
+msgstr "Шістнадцятковий"
+
+#, python-format
+msgid "Data is used by request %s"
+msgstr "Дані використовуються запитом %s"
+
+msgid "New data"
+msgstr "Нові дані"
+
+msgid "Replace me with request description"
+msgstr "Замініть мене описом запиту"
+
+msgid "Data name;Description"
+msgstr "Назва даних;Опис"
+
+msgid "Goto data"
+msgstr "Йти до даних"
+
+msgid "Remove"
+msgstr "Видалити"
+
+msgid "Add to screen"
+msgstr "Додати на екран"
+
+msgid "ECU Function address"
+msgstr "Функціональна адреса ECU"
+
+msgid "ECU Protocol"
+msgstr "Протокол ЕБУ"
+
+msgid "Tool > Ecu ID (Hex)"
+msgstr "Прилад > ID ЕБУ (Hex)"
+
+msgid "Ecu > Tool ID (Hex)"
+msgstr "ЕБУ > ID Приладу (Hex)"
+
+msgid "Coding"
+msgstr "Кодування"
+
+msgid "ECU Auto identification"
+msgstr "Автоматична ідентифікація ECU"
+
+msgid "Add new"
+msgstr "Додати нове"
+
+msgid "Delete selected"
+msgstr "Видалити обране"
+
+msgid "Number of bits"
+msgstr "Кількість бітів"
+
+msgid "Signed"
+msgstr "Знаковий"
+
+msgid "Add item"
+msgstr "Додати"
+
+msgid "Del item"
+msgstr "Видалити елемент"
+
+msgid "New item"
+msgstr "Новий"
+
+msgid "Value;Text"
+msgstr "Значення;Текст"
+
+msgid "Number of bit"
+msgstr "Номер біта"
+
+msgid "Unit"
+msgstr "Одиниця вимірювання"
+
+msgid "Format"
+msgstr "Формат"
+
+msgid "Value = (AX+B) / C"
+msgstr "Значення = (AX+B) / C"
+
+msgid "Number of bytes"
+msgstr "Кількість байтів"
+
+msgid "Send request bytes (HEX)"
+msgstr "Надіслати байти запиту (HEX)"
+
+msgid "Receive bytes (HEX)"
+msgstr "Отримати байти (HEX)"
+
+msgid "Data length"
+msgstr "Довжина даних"
+
+msgid "Shift byte count"
+msgstr "Зсув байтів"
+
+msgid "Data name;Start byte;Bit offset;Bit count;Endianess"
+msgstr ""
+"Назва даних;Початковий байт;Бітовий зсув;Кількість бітів;Порядок байтів"
+
+msgid "Little"
+msgstr "Прямий порядок (Little-endian)"
+
+msgid "Big"
+msgstr "Зворотний порядок (Big-endian)"
+
+msgid "Inherits globals"
+msgstr "Успадковує глобальні змінні"
+
+msgid "No SDS"
+msgstr "Без SDS"
+
+msgid "Plant"
+msgstr "Завод"
+
+msgid "After Sale"
+msgstr "Після продажу"
+
+msgid "Engineering"
+msgstr "Інженерія"
+
+msgid "Supplier"
+msgstr "Постачальник"
+
+msgid "Reload requests"
+msgstr "Перечитати запити"
+
+msgid "Add request"
+msgstr "Додати запит"
+
+msgid "Send bytes"
+msgstr "Надіслати байти"
+
+msgid "Receive bytes"
+msgstr "Отримати байти"
+
+msgid "Request name;Bytes;Manual"
+msgstr "Назва запиту;Байти;Ручний"
+
+msgid "No request named"
+msgstr "Запит не названо"
+
+msgid "Found similar"
+msgstr "Знайдено схожі"
+
+msgid "Cannot find data "
+msgstr "Не вдалось знайти дані "
+
+msgid " vs "
+msgstr " проти "
+
+msgid "Cannot draw input "
+msgstr "Не вдалося відобразити поле введення "
+
+msgid "No Value"
+msgstr "Немає значення"
+
+msgid ""
+"<center>This Software is free, but I need money to buy cables/ECUs and make "
+"this application more reliable</center>"
+msgstr ""
+"<center>Це програмне забезпечення безкоштовне, але мені потрібні гроші на "
+"купівлю кабелів/ECU і зробити цю програму більш надійною</center>"
+
+msgid "Yes I contribute"
+msgstr "Так, я зроблю внесок"
+
+msgid "No, I don't"
+msgstr "Ні, я не буду"
+
+msgid "Thank you for you contribution, if nothing happens, please go to"
+msgstr ""
+"Дякую за ваш внесок, якщо нічого не відбувається, будь ласка перейдіть до"
+
+msgid "ECU Finder"
+msgstr "Пошук ECU"
+
+msgid "Address :"
+msgstr "Адреса:"
+
+msgid "ID frame :"
+msgstr "Кадр ID:"
+
+msgid "Search vehicle"
+msgstr "Пошук автомобіля"
+
+msgid "No vehicles available"
+msgstr "Немає доступних транспортних засобів"
+
+#, python-format
+msgid "%d loaded ECUs in database."
+msgstr "%d завантажених ECU в базі даних."
+
+msgid "No ECU database is installed"
+msgstr "Базу даних ECU не встановлено"
+
+msgid "Restart DDT4ALL after installing or updating the database."
+msgstr "Перезапустіть DDT4ALL після встановлення або оновлення бази даних."
+
+msgid ""
+"Download the ECU database separately and copy the file (`ecu.zip` or the "
+"original DDT2000 XML database (`DDT2000DATA`)) to:\n"
+msgstr ""
+"Завантажте базу даних ECU окремо та скопіюйте файл (`ecu.zip` або "
+"оригінальну базу даних XML DDT2000 (`DDT2000DATA`)) до:\n"
+
+msgid "DDT4All Documentation"
+msgstr "Документація DDT4All"
+
+msgid "WebEngine not available."
+msgstr "WebEngine недоступний."
+
+msgid ""
+"For full documentation with web browsing capability, install PyQtWebEngine:"
+msgstr ""
+"Для повної документації з можливістю перегляду веб-сторінок, встановіть "
+"PyQtWebEngine:"
+
+msgid "Visit the online documentation at:"
+msgstr "Відвідайте онлайн документацію за адресою:"
+
+msgid "This basic view will still show ECU documentation when available."
+msgstr ""
+"Цей базовий вигляд все одно буде показувати документацію ECU, коли доступна."
+
+msgid "Refresh rate (ms):"
+msgstr "Частота оновлення (мс):"
+
+msgid "Can timeout (ms) [0:AUTO] :"
+msgstr "Час очікування (мс) [0:AUTO] :"
+
+msgid "Documentation"
+msgstr "Документація"
+
+msgid "Screen"
+msgstr "Екран"
+
+msgid "CAN Sniffer"
+msgstr "CAN-аналізатор"
+
+msgid "Requests"
+msgstr "Запити"
+
+msgid "Data"
+msgstr "Дані"
+
+msgid "Buttons"
+msgstr "Кнопки"
+
+msgid "Ecu parameters"
+msgstr "Параметри ЕБУ"
+
+msgid "Screen Window"
+msgstr "Вікно екрана"
+
+msgid "Screens"
+msgstr "Екрани"
+
+msgid "Logs Window"
+msgstr "Вікно логу"
+
+msgid "Ecu Window"
+msgstr "Вікно Ecu"
+
+msgid "Ecu List Window"
+msgstr "Вікно списку Ecu"
+
+msgid "ToolBar"
+msgstr "Панель інструментів"
+
+msgid "Read DTC"
+msgstr "Читання помилок DTC"
+
+msgid "Full log"
+msgstr "Повний лог"
+
+msgid "Expert mode (enable writing)"
+msgstr "Режим експерта (включаючи запис)"
+
+msgid "Auto refresh"
+msgstr "Авто-оновлення"
+
+msgid "Refresh (one shot)"
+msgstr "Оновити (разово)"
+
+msgid "Manual command"
+msgstr "Ручний ввід команди"
+
+msgid "Manual request"
+msgstr "Ручний запит"
+
+msgid "Software flow control"
+msgstr "Програмне керування потоком"
+
+msgid "Zoom In"
+msgstr "Наблизити"
+
+msgid "Zoom Out"
+msgstr "Віддалити"
+
+msgid "UI Edit"
+msgstr "Редагування UI"
+
+msgid "File"
+msgstr "Файл"
+
+msgid "Open XML"
+msgstr "Відкрити XML"
+
+msgid "Save current ECU"
+msgstr "Зберегти ЕБУ"
+
+msgid "Save last record"
+msgstr "Зберегти останній запис"
+
+msgid "Save ECU list"
+msgstr "Зберегти список ЕБУ"
+
+msgid "Exit"
+msgstr "Вихід"
+
+msgid "Tools"
+msgstr "Інструменти"
+
+msgid "Identify ECU"
+msgstr "Ідентифікація ЕБУ"
+
+msgid "Create New ECU"
+msgstr "Створити новий ЕБУ"
+
+msgid "Zip database"
+msgstr "Стиснути базу даних"
+
+msgid "Clear DDT4ALL History"
+msgstr "Очистити історію DDT4ALL"
+
+msgid "Reset DDT4ALL Settings"
+msgstr "Скинути налаштування DDT4ALL"
+
+msgid "View"
+msgstr "Вигляд"
+
+msgid "CarList Order"
+msgstr "Порядок списку автомобілів"
+
+msgid "By Project Code"
+msgstr "За кодом проекту"
+
+msgid "By Car Name"
+msgstr "За назвою автомобіля"
+
+msgid "Theme"
+msgstr "Тема"
+
+msgid "Dark Theme"
+msgstr "Темний стиль"
+
+msgid "Light Theme"
+msgstr "Світла тема"
+
+msgid "Panels"
+msgstr "Панелі"
+
+msgid "New Category"
+msgstr "Нова категорія"
+
+msgid "New Screen"
+msgstr "Новий екран"
+
+msgid "Rename"
+msgstr "Перейменувати"
+
+msgid "Plugins"
+msgstr "Плагіни"
+
+msgid "Cannot load plugin "
+msgstr "Не вдалось завантажити плагін "
+
+msgid "Help"
+msgstr "Довідка"
+
+msgid "Web Wiki"
+msgstr "Веб-вікі"
+
+msgid "About Developers"
+msgstr "Про розробника"
+
+msgid "Get Git update"
+msgstr "Отримати Git оновлення"
+
+msgid "About"
+msgstr "Про"
+
+msgid "About DDT4ALL"
+msgstr "Про DDT4ALL"
+
+msgid " version:"
+msgstr " версія:"
+
+msgid "Created by:"
+msgstr "Створено завдяки:"
+
+msgid "History cleared"
+msgstr "Історія очищена"
+
+msgid "Last selected vehicle and ECU history has been cleared."
+msgstr "Історія останнього вибраного автомобіля та ECU була очищена."
+
+msgid "Configuration Reset"
+msgstr "Конфігурацію очищено"
+
+msgid "The configuration has been reset."
+msgstr "Конфігурацію було очищено."
+
+msgid "Options"
+msgstr "Параметри"
+
+#, python-format
+msgid "Error updating menu bar: %s"
+msgstr "Помилка оновлення меню: %s"
+
+msgid "CAN Line 1 Auto"
+msgstr "Автоматична лінія CAN 1"
+
+msgid "CAN Line 1@500K"
+msgstr "Лінія CAN 1@500K"
+
+msgid "CAN Line 1@250K"
+msgstr "Лінія CAN 1@250K"
+
+msgid "CAN Line 2@500K"
+msgstr "Лінія CAN 2@500K"
+
+msgid "CAN Line 2@250K"
+msgstr "Лінія CAN 2@250K"
+
+msgid "CAN Line 2@125K"
+msgstr "Лінія CAN 2@125K"
+
+msgid "KWP2000"
+msgstr "Протокол KWP2000"
+
+msgid "ISO8"
+msgstr "Протокол ISO8"
+
+msgid "Save database (keep '.zip' extension)"
+msgstr "Зберегти базу даних (зберегти розширення '.zip')"
+
+msgid "Zipping XML database... (this can take a few minutes)"
+msgstr "Стиснення XML бази даних... (це може зайняти кілька хвилин)"
+
+msgid "Zip job finished"
+msgstr "Архівування завершено"
+
+msgid "No database found"
+msgstr "Не знайдено базу данних"
+
+msgid "Check documentation"
+msgstr "Перевірте документацію"
+
+msgid "Enter new name"
+msgstr "Введіть нове ім'я"
+
+msgid "Enter category name"
+msgstr "Введіть назву категорії"
+
+msgid "Please select a category before creating new screen"
+msgstr "Виберіть категорію перед створенням нового екрана"
+
+msgid "Enter screen name"
+msgstr "Введіть назву екрана"
+
+msgid "Scanning CAN"
+msgstr "Сканування CAN"
+
+msgid "Scanning KWP"
+msgstr "Сканування KWP"
+
+msgid "Scanning DoIP"
+msgstr "Сканування DoIP"
+
+msgid "Scan options"
+msgstr "Опції сканування"
+
+msgid "EDITION MODE"
+msgstr "РЕЖИМ РЕДАГУВАННЯ"
+
+msgid "CONNECTED"
+msgstr "ПІДКЛЮЧЕНО"
+
+msgid "DISCONNECTED"
+msgstr "ВІДКЛЮЧЕНО"
+
+msgid "Save vehicule (keep '.ecu' extension)"
+msgstr "Зберегти автомобіль (зберегти розширення '.ecu')"
+
+msgid "Save ECU (keep '.json' extension)"
+msgstr "Зберегти ЕБУ (зберегти розширення '.json')"
+
+msgid "Save record (keep '.txt' extension)"
+msgstr "Зберегти запис (зберегти розширення '.txt')"
+
+msgid "Recorded "
+msgstr "Записано "
+
+msgid " entries"
+msgstr " входження"
+
+#, python-format
+msgid "Invalid DoIP ECU address: %s"
+msgstr "Недійсна адреса ECU DoIP: %s"
+
+msgid "No"
+msgstr "Ні"
+
+msgid "ELM port selection"
+msgstr "Виберіть порт ELM"
+
+msgid "USB"
+msgstr "Підключення по USB"
+
+msgid "WiFi"
+msgstr "Підключення по Wi-Fi"
+
+msgid "Bluetooth"
+msgstr "Підключення по Bluetooth"
+
+msgid "OBDLINK SX/EX"
+msgstr "Адаптер OBDLINK SX/EX"
+
+msgid "ELS27/ELS27 V5 - May appear as FTDI/CH340/CP210x device"
+msgstr "ELS27/ELS27 V5 - Може з'явитися як пристрій FTDI/CH340/CP210x"
+
+msgid "Vlinker FS/MC"
+msgstr "Адаптер Vlinker FS/MC"
+
+msgid "DERLEK USB-DIAG2/3"
+msgstr "Адаптер DERLEK USB-DIAG2/3"
+
+msgid "VGate (High-Speed)"
+msgstr "VGate (Висока швидкість)"
+
+msgid "DoIP (Diagnostics over IP)"
+msgstr "DoIP (Діагностика через IP)"
+
+msgid "Interface language"
+msgstr "Мова інтерфейсу"
+
+msgid "Port speed"
+msgstr "Швидкість порта"
+
+msgid "Connected mode"
+msgstr "Режим підключення"
+
+msgid "Edition mode"
+msgstr "Режим редагування"
+
+msgid "ELM benchmark"
+msgstr "Перевірка ELM"
+
+msgid "WiFi port : "
+msgstr "WiFi порт : "
+
+msgid "I acknowledge that improper use may cause damage to my vehicle."
+msgstr "Я розумію що можу нашкодити автомобілю у гіршому випадку"
+
+msgid "Enable CAN2"
+msgstr "Увімкнути CAN2"
+
+msgid "Dark style"
+msgstr "Темний стиль"
+
+msgid "WiFi Socket-TimeOut"
+msgstr "Таймаут сокета WiFi"
+
+msgid "Enable DoIP Scan"
+msgstr "Увімкнути сканування DoIP"
+
+msgid "DoIP (Diagnostics over IP) Configuration (Experimental)"
+msgstr "Конфігурація DoIP (Діагностика через IP) (Експериментально)"
+
+msgid "Device Preset : "
+msgstr "Налаштування пристрою : "
+
+msgid "Custom"
+msgstr "Налаштовуваний"
+
+msgid "Bosch MTS"
+msgstr "Прилад Bosch MTS"
+
+msgid "VXDIAG VCX Nano"
+msgstr "Прилад VXDIAG VCX Nano"
+
+msgid "VAG ODIS"
+msgstr "Інтерфейс VAG ODIS"
+
+msgid "JLR DoIP VCI"
+msgstr "Інтерфейс JLR DoIP VCI"
+
+msgid "Generic DoIP"
+msgstr "Звичайний DoIP"
+
+msgid "DoIP Target IP : "
+msgstr "Цільовий IP DoIP : "
+
+msgid "DoIP Port : "
+msgstr "Порт DoIP: "
+
+msgid "DoIP Timeout (seconds) : "
+msgstr "Таймаут DoIP (секунди) : "
+
+msgid "Enable Vehicle Announcement Discovery"
+msgstr "Увімкнути виявлення оголошень транспортних засобів"
+
+msgid "Auto-reconnect on connection loss"
+msgstr "Автоматичне перепідключення при втраті з'єднання"
+
+msgid "Change UART speed"
+msgstr "Змінити швидкість UART"
+
+#, python-format
+msgid "DoIP device added to list: %(ip)s:%(port)s"
+msgstr "Пристрій DoIP додано до списку: %(ip)s:%(port)s"
+
+#, python-format
+msgid "Error adding DoIP device to list: %s"
+msgstr "Помилка додавання пристрою DoIP до списку: %s"
+
+msgid "DoIP device removed from list"
+msgstr "Пристрій DoIP видалено зі списку"
+
+#, python-format
+msgid "Error removing DoIP device from list: %s"
+msgstr "Помилка видалення пристрою DoIP зі списку: %s"
+
+msgid "Checking..."
+msgstr "Перевірка..."
+
+msgid "Please enter WiFi adapter IP address"
+msgstr "Введіть IP-адресу WiFi адаптера"
+
+msgid "Invalid WiFi format. Use IP:PORT (e.g., 192.168.0.10:35000)"
+msgstr ""
+"Невірний формат WiFi. Використовуйте IP:PORT (наприклад, 192.168.0.10:35000)"
+
+msgid "Please select a serial port"
+msgstr "Виберіть послідовний порт"
+
+msgid "Selected port is no longer available"
+msgstr "Вибраний порт більше не доступний"
+
+msgid "Attempting connection..."
+msgstr "Спроба підключення..."
+
+msgid "Port: "
+msgstr "Порт: "
+
+msgid "Speed: "
+msgstr "Швидкість: "
+
+msgid "Connection test failed"
+msgstr "Тест підключення не вдався"
+
+msgid "Troubleshooting suggestions:"
+msgstr "Пропозиції вирішення проблем:"
+
+msgid "1. Check device is properly connected"
+msgstr "1. Перевірте, чи пристрій правильно підключений"
+
+msgid "2. Try different baud rates"
+msgstr "2. Спробуйте різні швидкості передачі"
+
+msgid "3. Ensure device drivers are installed"
+msgstr "3. Переконайтеся, що драйвери пристроїв встановлені"
+
+msgid "4. Check port permissions (Linux/macOS)"
+msgstr "4. Перевірте права доступу до порту (Linux/macOS)"
+
+msgid "Connection test successful!"
+msgstr "Тест підключення успішний!"
+
+msgid "Error during connection test: "
+msgstr "Помилка під час тесту підключення: "
+
+msgid "Reset and Recheck"
+msgstr "Скинути та перевірити знову"
+
+#, python-format
+msgid "Error updating port list: %s"
+msgstr "Помилка оновлення списку портів: %s"
+
+msgid "VGate iCar Pro selected - Enhanced STN/STPX support enabled"
+msgstr "VGate iCar Pro обраний - Увімкнена розширена підтримка STN/STPX"
+
+msgid "Long command support and high-speed communication available"
+msgstr "Підтримка довгих команд та висока швидкість зв'язку доступні"
+
+#, python-format
+msgid "DoIP preset applied: %(name)s -> %(ip)s"
+msgstr "Налаштування DoIP застосовано: %(name)s -> %(ip)s"
+
+#, python-format
+msgid "DoIP preset applied: %(name)s (IP unchanged)"
+msgstr "Налаштування DoIP застосовано: %(name)s (IP не змінено)"
+
+#, python-format
+msgid "Error preparing DoIP update: %s"
+msgstr "Помилка підготовки оновлення DoIP: %s"
+
+#, python-format
+msgid "Applied %s preset:"
+msgstr "Застосовано %s налаштування:"
+
+#, python-format
+msgid "  IP: %s"
+msgstr "  IP адреса: %s"
+
+#, python-format
+msgid "  Port: %s"
+msgstr "  Порт: %s"
+
+#, python-format
+msgid "  Timeout: %ss"
+msgstr "  Час очікування: %s с"
+
+msgid "  Configuration saved and device list reloaded"
+msgstr "  Конфігурація збережена та список пристроїв перезавантажено"
+
+#, python-format
+msgid "Error in force DoIP update: %s"
+msgstr "Помилка в примусовому оновленні DoIP: %s"
+
+#, python-format
+msgid "Error in delayed DoIP update: %s"
+msgstr "Помилка в відкладеному оновленні DoIP: %s"
+
+#, python-format
+msgid "DoIP device updated: %(ip)s:%(port)s"
+msgstr "Пристрій DoIP оновлено: %(ip)s:%(port)s"
+
+msgid "DoIP device removed from list (scan disabled)"
+msgstr "Пристрій DoIP видалено зі списку (сканування вимкнено)"
+
+#, python-format
+msgid "Error in targeted DoIP update: %s"
+msgstr "Помилка в цілевому оновленні DoIP: %s"
+
+msgid "N/A"
+msgstr "Н/Д"
+
+msgid "DoIP (Diagnostics over IP) selected"
+msgstr "DoIP (Діагностика через IP) обраний"
+
+msgid "Ethernet-based diagnostic communication"
+msgstr "Діагностична комунікація на основі Ethernet"
+
+msgid "Select an ISO 13400 DoIP entity by its IP address"
+msgstr "Виберіть сутність DoIP ISO 13400 за її IP-адресою"
+
+msgid "You must check the recommandations"
+msgstr "Ви повинні перевірити рекомендації"
+
+msgid "Please select a communication port"
+msgstr "Виберіть порт для зв'язку"
+
+msgid "ECU Command"
+msgstr "Команда ЕБУ"
+
+msgid "Start diagnostic session"
+msgstr "Почати діагностичну сесію"
+
+msgid "Request"
+msgstr "Запит"
+
+msgid "Data to send"
+msgstr "Дані для надсилання"
+
+msgid "Computed ISOTP Frame"
+msgstr "Обчислений кадр ISOTP"
+
+msgid "Compute frame"
+msgstr "Обчислити кадр"
+
+msgid "Data received"
+msgstr "Дані отримано"
+
+msgid "Execute"
+msgstr "Виконати"
+
+msgid ""
+"<center>This feature is experimental</center>\n"
+"<center>Use it at your own risk</center>\n"
+"<center>and if you know exactely what you do</center>\n"
+msgstr ""
+"<center>Ця функція є експериментальною</center>\n"
+"<center>Використовуйте на власний ризик</center>\n"
+"<center>і якщо ви точно знаєте, що робите</center>\n"
+
+msgid "Err, cannot rename "
+msgstr "Помилка, невдалося перейменувати "
+
+msgid "To be able to edit your screen, first export it in JSON format"
+msgstr "Для редагування екрана спочатку збережіть його у форматі JSON"
+
+msgid "Enter label name"
+msgstr "Введіть ім'я мітки"
+
+msgid "Add button"
+msgstr "Додати кнопку"
+
+msgid "Add label"
+msgstr "Додати мітку"
+
+msgid "Rename label"
+msgstr "Перейменувати мітку"
+
+msgid "Change color"
+msgstr "Змінити колір"
+
+msgid "Remove element"
+msgstr "Видалити елемент"
+
+msgid "Diagnotic session"
+msgstr "Діагностична сесія"
+
+msgid "Input"
+msgstr "Поле вводу"
+
+msgid "Output"
+msgstr "Поле виводу"
+
+msgid "Protocol not supported"
+msgstr "Протокол не підтримується"
+
+msgid "Protocol not supported: "
+msgstr "Протокол не підтримується: "
+
+msgid "XML file not found : "
+msgstr "XML файл не знайдено : "
+
+msgid "Invalid DDT file"
+msgstr "Невірний DDT файл"
+
+msgid "Connection to ELM lost, trying to reconnect..."
+msgstr "Підключення до ELM втрачено, спроба підключитися знову..."
+
+msgid "Cannot reconnect..."
+msgstr "Не вдається перепідключитися..."
+
+msgid "Switching to session mode"
+msgstr "Переключення до сесійного режиму"
+
+msgid "Sending ELM request :"
+msgstr "Відправка ELM запиту :"
+
+msgid "Blocked ELM request :"
+msgstr "Заблокований ELM запит :"
+
+msgid "Sending ELM request:"
+msgstr "Відправка ELM запиту:"
+
+msgid "Sending simulated ELM request :"
+msgstr "Відправка симульованого ELM запиту :"
+
+msgid "Bad ELM response :"
+msgstr "Погана відповідь ELM:"
+
+msgid "ELM response : "
+msgstr "Відповідь ELM : "
+
+msgid "Button request not found : "
+msgstr "Запит кнопки не знайдено : "
+
+msgid "Sending request :"
+msgstr "Відправка запиту :"
+
+msgid "Unknown request "
+msgstr "Невідомий запит "
+
+msgid "Command aborted "
+msgstr "Команду перервано "
+
+msgid "Value error of this stuff need a bypass gateway maybe."
+msgstr "Помилка значення: можливо, потрібен обхідний шлюз."
+
+msgid "Request aborted (look at red paramters entries): "
+msgstr "Запит перервано (перевірта червоні значення): "
+
+msgid "Delay"
+msgstr "Затримка"
+
+msgid "For your safety"
+msgstr "Для вашої безпеки"
+
+msgid ""
+"<center>BLOCKED COMMAND</center>\n"
+"Activate expert mode to unlock"
+msgstr ""
+"<center>БЛОКОВАНА КОМАНДА</center>\n"
+"Активуйте експертний режим для розблокування"
+
+msgid "Writing parameter"
+msgstr "Запис параметрів"
+
+msgid "Blocked writing parameter"
+msgstr "Заблоковано записування параметра"
+
+msgid "Invalid"
+msgstr "Недійсний"
+
+msgid "ECU uses SDS "
+msgstr "ECU використовує SDS "
+
+msgid "Cannot call request "
+msgstr "Неможливо викликати запит "
+
+msgid "Update time"
+msgstr "Час оновлення"
+
+msgid "Clearing DTC information"
+msgstr "Скидання інформації DTC"
+
+msgid "No ClearDTC request for that ECU, will send default 14FF00"
+msgstr "У ЕБУ немає запиту ClearDTC, посилаю стандартний 14FF00"
+
+msgid "<center>You are about to clear diagnostic troubles codes</center>"
+msgstr "<center>Зараз будуть витерті діагностичні помилки</center>"
+
+msgid "<center>Ae you sure this is what you want.</center>"
+msgstr "<center>Впевнені?</center>"
+
+msgid "Clear DTC failed"
+msgstr "Не вдалося скинути DTC"
+
+msgid "Clear DTC successfully done"
+msgstr "DTC успішно скинуто"
+
+msgid "No ReadDTC request for that ECU"
+msgstr "Немає запиту ReadDTC для цього ECU"
+
+msgid "Invalid response for ReadDTC command"
+msgstr "Неправильна відповідь на команду ReadDTC"
+
+msgid "Read DTC returned an error"
+msgstr "Читання DTC завершилось помилкою"
+
+msgid "No DTC"
+msgstr "Немає DTC"
+
+msgid "Invalid DTC response: "
+msgstr "Неправильна відповідь DTC: "
+
+msgid "DTC parsing error - response: "
+msgstr "Помилка розбору DTC - відповідь: "
+
+msgid "Diagnostic Trouble Codes"
+msgstr "Коди діагностичних несправностей"
+
+msgid "Clear ALL DTC"
+msgstr "Витерти УСІ DTC"
+
+msgid "ECU trouble codes"
+msgstr "ECU коди помилок"
+
+msgid "Parsing screen "
+msgstr "Аналіз екрана "
+
+msgid "found request in input "
+msgstr "знайдено запит на вході "
+
+msgid "found in display "
+msgstr "знайдено в дисплеї "
+
+msgid "found in button "
+msgstr "знайдено в кнопці "
+
+msgid "found in presend "
+msgstr "знайдено в presend "
+
+msgid "found data in input "
+msgstr "дані знайдені на вході "
+
+msgid "found data in display "
+msgstr "дані знайдені в дисплеї "
+
+msgid "Waiting..."
+msgstr "Очікування..."
+
+msgid "Frame length error: "
+msgstr "Помилка довжини кадру: "
+
+msgid "Frame hex error: "
+msgstr "Помилка hex кадру: "

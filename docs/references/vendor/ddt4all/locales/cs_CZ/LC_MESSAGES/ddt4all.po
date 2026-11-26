@@ -1,0 +1,2526 @@
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: DDT4ALL\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-24 00:02+0100\n"
+"PO-Revision-Date: 2026-05-28 19:27+0200\n"
+"Last-Translator: Furtif <msntchat@hotmail.fr>\n"
+"Language-Team: Czech\n"
+"Language: cs_CZ\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+"X-Generator: Poedit 3.9\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+
+#, python-format
+msgid "Failed to connect to DoIP entity: %s"
+msgstr "Připojení k entitě DoIP se nezdařilo: %s"
+
+#, python-format
+msgid "DoIP routing activated for %(ip)s:%(port)s"
+msgstr "Směrování DoIP aktivováno pro %(ip)s:%(port)s"
+
+msgid "No vehicle-identification response was received"
+msgstr "Nebyla přijata žádná odpověď identifikace vozidla"
+
+#, python-format
+msgid "Vehicle VIN=%(vin)s logical address=0x%(address)04X EID=%(eid)s"
+msgstr "Vozidlo VIN=%(vin)s logická adresa=0x%(address)04X EID=%(eid)s"
+
+#, python-format
+msgid "DoIP connection failed: %s"
+msgstr "Připojení DoIP selhalo: %s"
+
+msgid "Not connected to DoIP device"
+msgstr "Nepřipojeno k zařízení DoIP"
+
+msgid "No DoIP ECU logical address is selected"
+msgstr "Není vybrána logická adresa ECU DoIP"
+
+#, python-format
+msgid "Invalid hex request format: %s"
+msgstr "Neplatný formát hex požadavku: %s"
+
+msgid "ELM AT commands are not supported over DoIP"
+msgstr "Příkazy AT ELM nejsou přes DoIP podporovány"
+
+msgid "K-line initialization is not supported over DoIP"
+msgstr "Inicializace K-line není přes DoIP podporována"
+
+msgid "K-line addressing is not supported over DoIP"
+msgstr "Adresování K-line není přes DoIP podporováno"
+
+msgid "Warning, cannot get signed value for"
+msgstr "Varování, nelze získat hodnotu se znaménkem pro"
+
+msgid "Division by zero, please check data item: "
+msgstr "Dělení nulou, prosím zkontrolujte datovou položku: "
+
+msgid "Adding group "
+msgstr "Přidání skupiny "
+
+msgid "Unable to find eculist"
+msgstr "Nelze najít eculist"
+
+msgid "Cannot find file "
+msgstr "Nelze najít soubor "
+
+msgid "Cannot load ECU file"
+msgstr "Nelze načíst soubor ECU"
+
+msgid "XML not found"
+msgstr "XML nenalezeno"
+
+msgid "Cannot retrieve functionnal address of ECU"
+msgstr "Nelze získat funkční adresu ECU"
+
+msgid "Generated stream "
+msgstr "Generovaný stream "
+
+msgid "Send request stream "
+msgstr "Odeslat stream požadavku "
+
+msgid "Received stream "
+msgstr "Přijatý stream "
+
+msgid "Request ECU Error"
+msgstr "Chyba požadavku ECU"
+
+msgid "Decoded values"
+msgstr "Dekódované hodnoty"
+
+msgid "Found: "
+msgstr "Nalezeno: "
+
+msgid "Identified ECU"
+msgstr "Identifikováno ECU"
+
+msgid "Found ECU"
+msgstr "Nalezeno ECU"
+
+msgid "(not perfect match)"
+msgstr "(není dokonalá shoda)"
+
+msgid "(no relevant ECU file found)"
+msgstr "(nebyl nalezen žádný relevantní soubor ECU)"
+
+msgid "Warning, address"
+msgstr "Varování, adresa"
+
+msgid "is not mapped"
+msgstr "není zmapováno"
+
+msgid "Scanning address: "
+msgstr "Skenování adresy: "
+
+#, python-format
+msgid "# check_ecu: empty response for addr %(addr)s protocol %(protocol)s"
+msgstr "# check_ecu: prázdná odpověď pro adresu %(addr)s protokol %(protocol)s"
+
+#, python-format
+msgid ""
+"# check_ecu: invalid hex response for addr %(addr)s protocol %(protocol)s: "
+"%(err)s"
+msgstr ""
+"# check_ecu: neplatná hex odpověď pro adresu %(addr)s protokol %(protocol)s: "
+"%(err)s"
+
+#, python-format
+msgid ""
+"# check_ecu: response too short (%(bytes)d bytes) for addr %(addr)s protocol "
+"%(protocol)s"
+msgstr ""
+"# check_ecu: odpověď je příliš krátká (%(bytes)d bajtů) pro adresu %(addr)s "
+"protokol %(protocol)s"
+
+msgid "No DoIP addresses available for scanning"
+msgstr "Žádné adresy DoIP nejsou k dispozici pro skenování"
+
+#, python-format
+msgid "Initializing DoIP connection to %(ip)s:%(port)s"
+msgstr "Inicializace připojení DoIP k %(ip)s:%(port)s"
+
+#, python-format
+msgid "DoIP connection established: %(ip)s:%(port)s"
+msgstr "Připojení DoIP navázáno: %(ip)s:%(port)s"
+
+#, python-format
+msgid "DoIP vehicle discovered: VIN=%(vin)s address=%(addr)04X"
+msgstr "Vozidlo DoIP detekováno: VIN=%(vin)s adresa=%(addr)04X"
+
+#, python-format
+msgid "DoIP reconnection failed: %s"
+msgstr "Opětovné připojení DoIP se nezdařilo: %s"
+
+msgid "unmapped ECU"
+msgstr "Nepřiřazená ECU"
+
+#, python-format
+msgid "Scanning DoIP address %(addr)s ECU: %(name)s"
+msgstr "Skenování adresy DoIP %(addr)s ECU: %(name)s"
+
+#, python-format
+msgid "Simulation mode: DoIP address %s was not queried"
+msgstr "Režim simulace: adresa DoIP %s nebyla dotazována"
+
+#, python-format
+msgid "Skipping invalid DoIP address %(addr)s: %(error)s"
+msgstr "Neplatná adresa DoIP %(addr)s se přeskakuje: %(error)s"
+
+#, python-format
+msgid "DoIP scan failed at %(addr)s: %(error)s"
+msgstr "Skenování DoIP selhalo na %(addr)s: %(error)s"
+
+#, python-format
+msgid "Could not start DoIP UDS session at %(addr)s: %(error)s"
+msgstr "Nelze spustit relaci UDS DoIP na %(addr)s: %(error)s"
+
+#, python-format
+msgid "DoIP UDS identification failed at %(addr)s: %(error)s"
+msgstr "Identifikace UDS DoIP selhala na %(addr)s: %(error)s"
+
+#, python-format
+msgid "Could not close DoIP diagnostic session at %(addr)s: %(error)s"
+msgstr "Nelze uzavřít diagnostickou relaci DoIP na %(addr)s: %(error)s"
+
+#, python-format
+msgid "Could not start DoIP legacy session at %(addr)s: %(error)s"
+msgstr "Nelze spustit starou relaci DoIP na %(addr)s: %(error)s"
+
+#, python-format
+msgid "DoIP legacy identification failed at %(addr)s: %(error)s"
+msgstr "Identifikace starého protokolu DoIP selhala na %(addr)s: %(error)s"
+
+#, python-format
+msgid "Could not close DoIP legacy session at %(addr)s: %(error)s"
+msgstr "Nelze uzavřít starou relaci DoIP na %(addr)s: %(error)s"
+
+#, python-format
+msgid "Device detection error: %s"
+msgstr "Chyba detekce zařízení: %s"
+
+#, python-format
+msgid "Device initialization error: %s"
+msgstr "Chyba inicializace zařízení: %s"
+
+msgid "Found USB device:"
+msgstr "Nalezeno USB zařízení:"
+
+msgid "USB device detection error:"
+msgstr "Chyba detekce USB zařízení:"
+
+msgid ""
+"Note: This error does not affect serial communication or bypass cable "
+"functionality."
+msgstr ""
+"Poznámka: Tato chyba neovlivní sériovou komunikaci ani funkčnost "
+"obcházejícího kabelu."
+
+msgid "Trying to open port "
+msgstr "Pokus o otevření portu "
+
+msgid "Port initialization failed"
+msgstr "Inicializace portu selhala"
+
+msgid "Port connection failed - port object is invalid"
+msgstr "Připojení k portu selhalo - objekt portu je neplatný"
+
+msgid "STN connection established"
+msgstr "Spojení STN navázáno"
+
+msgid "Version: "
+msgstr "Verze: "
+
+#, python-format
+msgid "STPX/STN configuration warning: %s"
+msgstr "Varování konfigurace STPX/STN: %s"
+
+msgid "No ELM interface on port"
+msgstr "Na portu není žádné rozhraní ELM"
+
+msgid "OBDLink Connection OK, attempting full speed UART switch"
+msgstr "Připojení OBDLink v pořádku, pokus o přepnutí UART na plnou rychlost"
+
+msgid "Failed to switch OBDLink to "
+msgstr "Nepodařilo se přepnout OBDLink na "
+
+msgid "OBDLink Connection OK, using optimal settings"
+msgstr "Připojení OBDLink OK, používá se optimální nastavení"
+
+msgid "Connection established successfully"
+msgstr "Spojení úspěšně navázáno"
+
+msgid "Configuring ELS27 V5 CAN pins (12-13)"
+msgstr "Konfigurace pinů CAN ELS27 V5 (12-13)"
+
+msgid "ELS27 V5 CAN configuration complete"
+msgstr "Konfigurace ELS27 V5 CAN dokončena"
+
+#, python-format
+msgid "ELS27 V5 configuration warning: %s"
+msgstr "Varování konfigurace ELS27 V5: %s"
+
+msgid "Port is None - cannot switch speed"
+msgstr "Port je None - nelze přepnout rychlost"
+
+#, python-format
+msgid "%s switched baudrate OK, changing UART speed now..."
+msgstr ""
+"%s přepnutí přenosové rychlosti proběhlo v pořádku, právě se mění rychlost "
+"UART..."
+
+#, python-format
+msgid "%s baudrate switched OK, changing UART speed now..."
+msgstr ""
+"%s přepnutí přenosové rychlosti proběhlo v pořádku, právě se mění rychlost "
+"UART..."
+
+#, python-format
+msgid "Not supported baudrate %s"
+msgstr "Nepodporovaná přenosová rychlost %s"
+
+msgid "ELM reset..."
+msgstr "Resetování ELM..."
+
+msgid "Unknown address: "
+msgstr "Neznámá adresa: "
+
+msgid ""
+"send_can: received first frame only — AT CAF0 may have been reset by AT SP, "
+"or FC failed"
+msgstr ""
+"send_can: přijat pouze první rámec — AT CAF0 mohl být resetován příkazem AT "
+"SP nebo selhalo FC"
+
+#, python-format
+msgid "send_can: unexpected response byte %s — check AT CAF0 is active"
+msgstr ""
+"send_can: neočekávaný bajt odpovědi %s — zkontrolujte, zda je AT CAF0 aktivní"
+
+msgid "Using saved device settings"
+msgstr "Použití uložených nastavení zařízení"
+
+msgid "Using optimal device settings"
+msgstr "Použití optimálního nastavení zařízení"
+
+msgid "Connecting to device at port: "
+msgstr "Připojení k zařízení na portu: "
+
+msgid "Using baudrate: "
+msgstr "Použití přenosové rychlosti: "
+
+msgid "Testing for ELS27 device..."
+msgstr "Testování zařízení ELS27..."
+
+msgid "ELS27 device detected: "
+msgstr "Detekováno zařízení ELS27: "
+
+msgid "Using detected baud rate: "
+msgstr "Použití detekované přenosové rychlosti: "
+
+msgid "Warning: No ELS27 response detected"
+msgstr "Varování: Nebyla detekována žádná odpověď ELS27"
+
+msgid "Will attempt connection anyway..."
+msgstr "Pokus o připojení..."
+
+msgid "Connection failed: "
+msgstr "Připojení se nezdařilo: "
+
+msgid "Testing basic connectivity..."
+msgstr "Testování základní konektivity..."
+
+msgid "Warning: Device may not be ELM327 compatible"
+msgstr "Varování: Zařízení nemusí být kompatibilní s ELM327"
+
+msgid "ELM327 device detected successfully"
+msgstr "Zařízení ELM327 úspěšně detekováno"
+
+msgid "Device version: "
+msgstr "Verze zařízení: "
+
+msgid "Connection error: "
+msgstr "Chyba připojení: "
+
+msgid "FAIL"
+msgstr "SELHALO"
+
+msgid "OK/TIMEOUT"
+msgstr "OK/ČASOVÝ LIMIT"
+
+msgid "OK"
+msgstr "OK"
+
+msgid "Incompatible adapter on ARM core"
+msgstr "Nekompatibilní adaptér na jádru ARM"
+
+msgid "Result: "
+msgstr "Výsledek: "
+
+msgid " succeeded from "
+msgstr " úspěšně z "
+
+msgid "ELM Max version:"
+msgstr "Maximální verze ELM:"
+
+msgid "Using saved settings for"
+msgstr "Použití uložených nastavení pro"
+
+msgid "Using optimal settings for"
+msgstr "Použití optimálního nastavení pro"
+
+msgid "Using settings for"
+msgstr "Použití nastavení pro"
+
+msgid "ELM327 doesn't support DoIP, falling back to serial mode"
+msgstr "ELM327 nepodporuje DoIP, návrat k sériovému režimu"
+
+msgid "Serial port opened"
+msgstr "Otevřen sériový port"
+
+#, python-format
+msgid "Serial connection error: %s"
+msgstr "Chyba sériového připojení: %s"
+
+msgid "ELM not connected or wrong COM port"
+msgstr "ELM není připojen nebo má špatný COM port"
+
+#, python-format
+msgid "Unexpected error: %s"
+msgstr "Neočekávaná chyba: %s"
+
+#, python-format
+msgid "Bluetooth connection attempted: %s"
+msgstr "Pokus o připojení Bluetooth: %s"
+
+#, python-format
+msgid "Serial connection established: %(port)s @ %(baud)s baud"
+msgstr "Sériové spojení navázáno: %(port)s @ %(baud)s baud"
+
+#, python-format
+msgid "Bluetooth connection failed: %s"
+msgstr "Připojení Bluetooth selhalo: %s"
+
+#, python-format
+msgid "DoIP connection failed: %(ip)s:%(port)s"
+msgstr "Připojení DoIP selhalo: %(ip)s:%(port)s"
+
+#, python-format
+msgid "DoIP initialization failed: %s"
+msgstr "Chyba inicializace DoIP: %s"
+
+#, python-format
+msgid "Port closed: %s"
+msgstr "Port uzavřen: %s"
+
+#, python-format
+msgid "Error closing port: %s"
+msgstr "Chyba při uzavírání portu: %s"
+
+#, python-format
+msgid "Connecting to WiFi adapter at %(ip)s:%(port)s"
+msgstr "Připojení k WiFi adaptéru na %(ip)s:%(port)s"
+
+#, python-format
+msgid "WiFi connection established: %(ip)s:%(port)s"
+msgstr "WiFi spojení navázáno: %(ip)s:%(port)s"
+
+#, python-format
+msgid "WiFi connection timeout to %(ip)s:%(port)s"
+msgstr "Časový limit připojení WiFi k %(ip)s:%(port)s"
+
+#, python-format
+msgid "WiFi connection error: %s"
+msgstr "Chyba připojení WiFi: %s"
+
+#, python-format
+msgid "Unexpected WiFi error: %s"
+msgstr "Neočekávaná chyba WiFi: %s"
+
+#, python-format
+msgid "WiFi recv: %s"
+msgstr "Příjem WiFi: %s"
+
+#, python-format
+msgid "WiFi socket timed out %s times in a row; reconnect scheduled"
+msgstr ""
+"Vypršel časový limit soketu WiFi %s-krát za sebou; naplánováno opětovné "
+"připojení"
+
+#, python-format
+msgid "Serial error in read_byte: %s"
+msgstr "Sériová chyba v read_byte: %s"
+
+msgid "Connection to ELM was lost"
+msgstr "Spojení s ELM bylo ztraceno"
+
+#, python-format
+msgid "*       Error: %s"
+msgstr "*       Chyba: %s"
+
+#, python-format
+msgid "Cannot decode bytes %s"
+msgstr "Nelze dekódovat bajty %s"
+
+#, python-format
+msgid "Error in read(): %s"
+msgstr "Chyba při čtení(): %s"
+
+msgid "WiFi connection - baudrate change not applicable"
+msgstr "Připojení WiFi - změna rychlosti přenosu dat neaplikovatelná"
+
+msgid "Attempting WiFi reconnection..."
+msgstr "Pokus o opětovné připojení k WiFi..."
+
+msgid "Port handler is None, cannot write"
+msgstr "Obslužná rutina portu je None, nelze zapisovat"
+
+#, python-format
+msgid "Serial write error: %s"
+msgstr "Sériová chyba při zápisu: %s"
+
+#, python-format
+msgid "*       Write error: %s"
+msgstr "*       Chyba při zápisu: %s"
+
+msgid "TIMEOUT"
+msgstr "ČASOVÝ LIMIT"
+
+msgid "Checking port speed:"
+msgstr "Kontrola rychlosti portu:"
+
+msgid "WiFi connection - skipping baudrate check"
+msgstr "Připojení WiFi - přeskakuje kontrolu rychlosti přenosu dat"
+
+msgid "Bluetooth connection - skipping baudrate check"
+msgstr "Připojení Bluetooth - přeskakuje kontrolu rychlosti přenosu dat"
+
+msgid "Start COM speed: "
+msgstr "Počáteční rychlost COM: "
+
+msgid "ELM not responding"
+msgstr "ELM neodpovídá"
+
+msgid "Cannot zip database, no 'ecus' directory"
+msgstr "Nelze zazipovat databázi, neexistuje adresář 'ecus'"
+
+msgid "Starting conversion"
+msgstr "Zahájení konverze"
+
+msgid "Starting processing "
+msgstr "Zahájení zpracování "
+
+msgid " to "
+msgstr " na "
+
+msgid "Skipping current file (cannot parse it)"
+msgstr "Přeskočení aktuálního souboru (nelze jej zpracovat)"
+
+msgid "Writing database"
+msgstr "Zápis do databáze"
+
+msgid "Writing archive"
+msgstr "Zápis archivu"
+
+msgid "Opening ECU Database..."
+msgstr "Otevírání databáze ECU..."
+
+msgid "DataItem not found"
+msgstr "Datová položka nenalezena"
+
+msgid "parts as: "
+msgstr "části jako: "
+
+msgid " please review dumpVehicles def."
+msgstr " prosím zkontrolujte definici dumpVehicles."
+
+msgid "ELS27 V5 CAN pin configuration complete"
+msgstr "Konfigurace pinů ELS27 V5 CAN dokončena"
+
+msgid "Found USB adapter:"
+msgstr "Nalezen USB adaptér:"
+
+msgid "USB not available"
+msgstr "USB není k dispozici"
+
+msgid "USB Device"
+msgstr "USB zařízení"
+
+msgid "Warning: Could not read string descriptor:"
+msgstr "Varování: Nelze přečíst popisovač řetězce:"
+
+msgid "USB OBD Device"
+msgstr "USB OBD zařízení"
+
+msgid "Warning: Vendor request failed:"
+msgstr "Varování: Požadavek dodavatele selhal:"
+
+msgid "Warning: PyQtWebEngine not available. Some features may be limited."
+msgstr ""
+"Varování: PyQtWebEngine není k dispozici. Některé funkce mohou být omezeny."
+
+msgid "resources/projects.json not found or invalid."
+msgstr "resources/projects.json nenalezeno nebo neplatné."
+
+#, python-format
+msgid "Warning: Could not write version.h: %s"
+msgstr "Varování: Nelze zapsat version.h: %s"
+
+msgid "Using custom DDT database"
+msgstr "Použití vlastní databáze DDT"
+
+msgid "No COM port selected"
+msgstr "Nevybrán žádný COM port"
+
+#, python-format
+msgid "Initializing ELM with speed %i..."
+msgstr "Inicializace ELM rychlostí %i..."
+
+msgid "DoIP connection failed: "
+msgstr "Připojení DoIP selhalo: "
+
+msgid "No ELM327 or OBDLINK-SX detected on COM port "
+msgstr "Na COM portu nebylo detekováno žádné ELM327 nebo OBDLINK-SX "
+
+msgid "AB90 AIRBAG Reset"
+msgstr "Resetování airbagu AB90"
+
+msgid "Airbag Tools"
+msgstr "Nástroje pro airbagy"
+
+msgid ""
+"AB90 (Clio III)/2<br>AIRBAG VIRGINIZER<br><font color='red'>THIS PLUGIN WILL "
+"UNLOCK AIRBAG CRASH DATA<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</"
+"font>"
+msgstr ""
+"AB90 (Clio III)/2<br>AIRBAG VIRGINIZER<br><font color='red'>TENTO PLUGIN "
+"ODEMKNE ÚDAJE O NEHODÁCH AIRBAGŮ<br>POKUD NEMÁTE TUŠENÍ, CO TO ZNAMENÁ, "
+"ODEJDĚTE</font>"
+
+msgid "Check ACU Virgin"
+msgstr "Zkontrolovat ACU Virgin"
+
+msgid "Waiting"
+msgstr "Čekání"
+
+msgid "Virginize ACU"
+msgstr "Uvést ACU do čistého stavu"
+
+msgid "Cannot connect to ECU"
+msgstr "Nelze se připojit k ECU"
+
+msgid "<font color='orange'>UNEXPECTED RESPONSE</font>"
+msgstr "<font color='orange'>NEOČEKÁVANÁ ODPOVĚĎ</font>"
+
+msgid "<font color='red'>CRASH DETECTED</font>"
+msgstr "<font color='red'>NEHODA DETEKOVÁNA</font>"
+
+msgid "<font color='green'>NO CRASH DETECTED</font>"
+msgstr "<font color='green'>NEHODA NEDETEKOVÁNA</font>"
+
+#, python-format
+msgid "SDS stream: %s"
+msgstr "Datový proud SDS: %s"
+
+msgid "<font color='green'>CLEAR EXECUTED</font>"
+msgstr "<font color='green'>CLEAR PROVEDEN</font>"
+
+msgid "<font color='red'>CLEAR FAILED</font>"
+msgstr "<font color='red'>CLEAR SELHAL</font>"
+
+msgid "Megane/Scenic II card programming"
+msgstr "Programování karty Megane/Scenic II"
+
+msgid "Keys"
+msgstr "Klíče"
+
+msgid "ENTER AFTER SALE MODE"
+msgstr "VSTUP DO POPRODEJNÍHO REŽIMU"
+
+msgid ""
+"<font color='red'>MEGANE II CARD PROGRAMMING<br>EXPERIMENTAL : NOT TESTED "
+"YET</font>"
+msgstr ""
+"<font color='red'>PROGRAMOVÁNÍ KARTY MEGANE II<br>EXPERIMENTÁLNÍ : JEŠTĚ "
+"NETESTOVÁNO</font>"
+
+msgid "LEARN"
+msgstr "NAUČIT"
+
+msgid "VALIDATE"
+msgstr "OVĚŘIT"
+
+msgid "CANCEL"
+msgstr "ZRUŠIT"
+
+msgid "Algo 2"
+msgstr "Algoritmus 2"
+
+msgid "ISK"
+msgstr "Kód ISK"
+
+msgid "PIN"
+msgstr "Kód PIN"
+
+msgid "Num key learnt"
+msgstr "Počet naučených klíčů"
+
+msgid "CARD IDE"
+msgstr "Identifikátor karty (IDE)"
+
+msgid "Cannot get ISK, check connections and UCH compatibility"
+msgstr "Nelze získat ISK, zkontrolujte připojení a kompatibilitu UCH"
+
+msgid "<font color='red'>PIN CODE NOT RECOGNIZED</font>"
+msgstr "<font color='red'>PIN KÓD NEBYL ROZPOZNÁN</font>"
+
+msgid "<font color='green'>PIN CODE OK / KEY LEARNING</font>"
+msgstr "<font color='green'>PIN KÓD OK / NAUČENÍ KLÍČE</font>"
+
+msgid "<font color='green'>PIN CODE OK / UCH LEARNING</font>"
+msgstr "<font color='green'>PIN KÓD OK / UČENÍ UCH</font>"
+
+msgid "Modus/Clio III EPS Reset"
+msgstr "Resetování EPS Modus/Clio III"
+
+msgid "EPS Tools"
+msgstr "Nástroje EPS"
+
+msgid ""
+"Modus/Clio III EPS VIRGINIZER<br><font color='red'>THIS PLUGIN WILL RESET "
+"EPS IMMO DATA<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</font>"
+msgstr ""
+"Modus/Clio III EPS VIRGINIZER<br><font color='red'>TENTO PLUGIN RESETUJE "
+"DATA IMMO EPS<br>POKUD NEMÁTE TUŠENÍ, CO TO ZNAMENÁ, ODEJDĚTE</font>"
+
+msgid "BLANK STATUS & VIN READ"
+msgstr "PRÁZDNÝ STAV A ČTENÍ VIN"
+
+msgid "Virginize EPS"
+msgstr "Uvést EPS do čistého stavu"
+
+msgid "VIN - READ"
+msgstr "VIN - ČTENÍ"
+
+msgid "VIN - WRITE"
+msgstr "VIN - ZÁPIS"
+
+msgid "Write VIN"
+msgstr "Zapsat VIN"
+
+msgid "<font color='red'>VIN - INVALID</font>"
+msgstr "<font color='red'>VIN - NEPLATNÝ</font>"
+
+msgid "<font color='red'>VIN - BAD LENGTH</font>"
+msgstr "<font color='red'>VIN - ŠPATNÁ DÉLKA</font>"
+
+msgid "<font color='orange'>VIN WRITE FAILED</font>"
+msgstr "<font color='orange'>ZÁPIS VIN SE NEPODAŘIL</font>"
+
+msgid "<font color='green'>VIN WRITE OK</font>"
+msgstr "<font color='green'>ZÁPIS VIN OK</font>"
+
+msgid "<font color='green'>EPS virgin</font>"
+msgstr "<font color='green'>Čistá EPS</font>"
+
+msgid "<font color='red'>EPS coded</font>"
+msgstr "<font color='red'>EPS kódovaná</font>"
+
+#, python-format
+msgid "SdSC0 stream: %s"
+msgstr "Datový proud SdSC0: %s"
+
+msgid "Clio IV EPS Reset"
+msgstr "Resetování EPS Clio IV"
+
+msgid ""
+"Clio IV EPS VIRGINIZER<br><font color='red'>THIS PLUGIN WILL RESET EPS IMMO "
+"DATA<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</font>"
+msgstr ""
+"Clio IV EPS VIRGINIZER<br><font color='red'>TENTO PLUGIN RESETUJE DATA IMMO "
+"EPS<br>POKUD NEMÁTE TUŠENÍ, CO TO ZNAMENÁ, ODEJDĚTE</font>"
+
+msgid "Check EPS Virgin"
+msgstr "Zkontrolovat EPS Virgin"
+
+msgid "<font color='green'>EPS not operational</font>"
+msgstr "<font color='green'>EPS není funkční</font>"
+
+msgid "<font color='red'>UNEXPECTED RESPONSE</font>"
+msgstr "<font color='red'>NEOČEKÁVANÁ REAKCE</font>"
+
+#, python-format
+msgid "SdSFA stream: %s"
+msgstr "Datový proud SdSFA: %s"
+
+msgid "DDT2000 command macros (.cmd)"
+msgstr "Příkazová makra DDT2000 (.cmd)"
+
+msgid "Macros"
+msgstr "Příkazová makra"
+
+msgid ""
+"ERROR: command should have 5 parameters: \n"
+"    <command> <lid> <rsp_len> <offset> <hex mask> <hex value>\n"
+"        <lid> - ECUs local identifier. Length should be 2 simbols for KWP or "
+"4 for CAN\n"
+"        <rsp_len> - lengt of command response including positive response "
+"bytes, equals MinBytes from ddt db\n"
+"        <offset> - offeset in bytes to first changed byte (starts from 1 not "
+"0) \n"
+"        <hex mask> - bit mask for changed bits, 1 - changable, 0 - "
+"untachable\n"
+"        <hex value> - bit value\n"
+"    <hex mask> and <hex value> should have equal length\n"
+msgstr ""
+"CHYBA: příkaz musí mít 5 parametrů: \n"
+"    <příkaz> <lid> <rsp_len> <posun> <hex maska> <hex hodnota>\n"
+"        <lid> - místní identifikátor ECU. Délka by měla být 2 znaky pro KWP "
+"nebo 4 pro CAN\n"
+"        <rsp_len> - délka odpovědi na příkaz včetně bajtů kladné odpovědi, "
+"odpovídá MinBytes z databáze ddt\n"
+"        <posun> - posun v bajtech k prvnímu změněnému bajtu (začíná od 1, "
+"nikoli od 0) \n"
+"        <hex maska> - bitová maska pro změněné bity, 1 - měnitelný, 0 - "
+"nedotknutelný\n"
+"        <hex hodnota> - hodnota bitu\n"
+"    <hex maska> a <hex hodnota> musí mít stejnou délku\n"
+
+msgid ""
+"ERROR: command should have 6 parameters: \n"
+"    <command> <lid> <rsp_len> <offset> <hex mask> <hex value> <label>\n"
+"        <lid> - ECUs local identifier. Length should be 2 simbols for KWP or "
+"4 for CAN\n"
+"        <rsp_len> - lengt of command response including positive response "
+"bytes, equals MinBytes from ddt db\n"
+"        <offset> - offeset in bytes to first changed byte (starts from 1 not "
+"0) \n"
+"        <hex mask> - bit mask for changed bits, 1 - changable, 0 - "
+"untachable\n"
+"        <hex value> - bit value\n"
+"        <label> - label to go\n"
+"    <hex mask> and <hex value> should have equal length\n"
+msgstr ""
+"CHYBA: příkaz musí mít 6 parametrů: \n"
+"    <příkaz> <lid> <rsp_len> <posun> <hex maska> <hex hodnota> <popisek>\n"
+"        <lid> - místní identifikátor ECU. Délka by měla být 2 znaky pro KWP "
+"nebo 4 pro CAN\n"
+"        <rsp_len> - délka odpovědi na příkaz včetně bajtů kladné odpovědi, "
+"odpovídá MinBytes z databáze ddt\n"
+"        <posun> - posun v bajtech k prvnímu změněnému bajtu (začíná od 1, "
+"nikoli od 0) \n"
+"        <hex maska> - bitová maska pro změněné bity, 1 - měnitelný, 0 - "
+"nedotknutelný\n"
+"        <hex hodnota> - hodnota bitu\n"
+"        <popisek> - cílové návěstí\n"
+"    <hex maska> a <hex hodnota> musí mít stejnou délku\n"
+
+msgid ""
+"ERROR: command should have 4 or 7 parameters: \n"
+"    <command> <lid> <rsp_len> <offset> <hex mask> <hex value> <label>\n"
+"        <lid> - ECUs local identifier. Length should be 2 simbols for KWP or "
+"4 for CAN\n"
+"        <rsp_len> - lengt of command response including positive response "
+"bytes, equals MinBytes from ddt db\n"
+"        <offset> - offeset in bytes to first changed byte (starts from 1 not "
+"0) \n"
+"        <hex mask> - bit mask for changed bits, 1 - changable, 0 - "
+"untachable\n"
+"        <val step> - value step\n"
+"        <val offset> - value offset\n"
+"        <val divider> - value divider\n"
+"\n"
+msgstr ""
+"CHYBA: příkaz musí mít 4 nebo 7 parametrů: \n"
+"    <příkaz> <lid> <rsp_len> <posun> <hex maska> <hex hodnota> <popisek>\n"
+"        <lid> - místní identifikátor ECU. Délka by měla být 2 znaky pro KWP "
+"nebo 4 pro CAN\n"
+"        <rsp_len> - délka odpovědi na příkaz včetně bajtů kladné odpovědi, "
+"odpovídá MinBytes z databáze ddt\n"
+"        <posun> - posun v bajtech k prvnímu změněnému bajtu (začíná od 1, "
+"nikoli od 0) \n"
+"        <hex maska> - bitová maska pro změněné bity, 1 - měnitelný, 0 - "
+"nedotknutelný\n"
+"        <krok hodnoty> - krok hodnoty\n"
+"        <posun hodnoty> - posun hodnoty\n"
+"        <dělitel hodnoty> - dělitel hodnoty\n"
+"\n"
+
+msgid "No ELM connection (plugin need_hw=True ?)"
+msgstr "Žádné připojení k ELM (vyžaduje plugin need_hw=True ?)"
+
+#, python-format
+msgid "guard: %(limit)d steps exceeded (infinite loop?)"
+msgstr "pojistka: překročeno %(limit)d kroků (nekonečná smyčka?)"
+
+msgid "# abort requested"
+msgstr "# požadováno přerušení"
+
+#, python-format
+msgid "openning file: %(file)s"
+msgstr "otevírání souboru: %(file)s"
+
+#, python-format
+msgid "%(file)s:%(line)d: empty macro name"
+msgstr "%(file)s:%(line)d: prázdný název makra"
+
+#, python-format
+msgid "%(file)s:%(line)d: unexpected end of macro"
+msgstr "%(file)s:%(line)d: neočekávaný konec makra"
+
+#, python-format
+msgid "%(file)s: includes are nested too deeply (%(limit)d levels)"
+msgstr "%(file)s: vnoření zahrnutí je příliš hluboké (%(limit)d úrovní)"
+
+#, python-format
+msgid "Cannot read %(file)s: %(error)s"
+msgstr "Nelze číst %(file)s: %(error)s"
+
+#, python-format
+msgid "%(file)s: included file not found: %(target)s"
+msgstr "%(file)s: zahrnutý soubor nebyl nalezen: %(target)s"
+
+#, python-format
+msgid "include loop: %(target)s"
+msgstr "smyčka zahrnutí: %(target)s"
+
+#, python-format
+msgid "# include %(file)s"
+msgstr "# zahrnutí souboru %(file)s"
+
+#, python-format
+msgid "  %(name)s = %(value)s"
+msgstr "  %(name)s = %(value)s"
+
+#, python-format
+msgid "  %(macro)s"
+msgstr "  %(macro)s"
+
+msgid "[h]elp                 - this help"
+msgstr "[h]elp                 - tato nápověda"
+
+msgid "[q]uit, [e]xit, end    - exit from terminal"
+msgstr "[q]uit, [e]xit, end    - ukončit terminál"
+
+msgid "wait|sleep x           - wait x seconds"
+msgstr "wait|sleep x           - čekat x sekund"
+
+msgid "include <file>         - play another .cmd here"
+msgstr "include <soubor>         - spustit jiný .cmd zde"
+
+msgid "Variables:"
+msgstr "Proměnné:"
+
+msgid "Macros:"
+msgstr "Příkazová makra:"
+
+#, python-format
+msgid "Error: unknown macro name: %(macro)s"
+msgstr "Chyba: neznámý název makra: %(macro)s"
+
+#, python-format
+msgid "Error: recursion prohibited: %(macro)s"
+msgstr "Chyba: rekurze je zakázána: %(macro)s"
+
+#, python-format
+msgid "### %(file)s : %(count)d lines"
+msgstr "### %(file)s: %(count)d řádků"
+
+msgid "# end of command file"
+msgstr "# konec příkazového souboru"
+
+#, python-format
+msgid "> %(line)s"
+msgstr "> %(line)s"
+
+#, python-format
+msgid "Error: unknown label '%(label)s'"
+msgstr "Chyba: neznámé návěstí '%(label)s'"
+
+msgid "###### Variables #####"
+msgstr "###### Proměnné #####"
+
+#, python-format
+msgid "# %(name)20s = %(value)s"
+msgstr "# %(name)20s = %(value)s"
+
+#, python-format
+msgid "Error: unknown variable %(name)s"
+msgstr "Chyba: neznámá proměnná %(name)s"
+
+msgid "Error: too many variables in one line"
+msgstr "Chyba: příliš mnoho proměnných na jednom řádku"
+
+msgid "#(subst)"
+msgstr "#(subst)"
+
+#, python-format
+msgid "# delay: %(seconds)s"
+msgstr "# zpoždění: %(seconds)s"
+
+#, python-format
+msgid "Unrecognized init command: %(name)s"
+msgstr "Nerozpoznaný inicializační příkaz: %(name)s"
+
+msgid "ERROR: Unknown function"
+msgstr "CHYBA: Neznámá funkce"
+
+msgid "read  value: "
+msgstr "přečtená hodnota: "
+
+msgid "ERROR: Length is unexpected"
+msgstr "CHYBA: Neočekávaná délka"
+
+msgid "ERROR: Wrong simbol in response"
+msgstr "CHYBA: Nesprávný symbol v odpovědi"
+
+msgid "ERROR: Not positive response"
+msgstr "CHYBA: Odpověď není kladná"
+
+msgid "Match. Exit"
+msgstr "Shoda nalezena. Konec"
+
+msgid "Not match. Continue"
+msgstr "Bez shody. Pokračovat"
+
+msgid "Not match. Exit"
+msgstr "Bez shody. Konec"
+
+msgid "Match. Continue"
+msgstr "Shoda nalezena. Pokračovat"
+
+msgid "Match. goto: "
+msgstr "Shoda nalezena. Přejít na: "
+
+msgid "Not match. goto: "
+msgstr "Bez shody. Přejít na: "
+
+#, python-format
+msgid ""
+"# LID(%(lid)s) $rawValue = %(raw)s  $scaledValue = %(scaled)s  $hexValue = "
+"%(hex)s"
+msgstr ""
+"# LID(%(lid)s) $rawValue = %(raw)s  $scaledValue = %(scaled)s  $hexValue = "
+"%(hex)s"
+
+#, python-format
+msgid "ERROR: unexpected positive response: %(rsp)s"
+msgstr "CHYBA: neočekávaná kladná odpověď: %(rsp)s"
+
+msgid "write value: "
+msgstr "zapsaná hodnota: "
+
+msgid "ELM connected"
+msgstr "ELM připojeno"
+
+msgid "ELM not connected"
+msgstr "ELM nepřipojeno"
+
+msgid "installed copy (cmd_macros_lib/macros)"
+msgstr "nainstalovaná kopie (cmd_macros_lib/macros)"
+
+msgid "manually chosen folder"
+msgstr "ručně zvolená složka"
+
+#, python-format
+msgid "ddt4all tables (%(count)d addresses)"
+msgstr "tabulky ddt4all (%(count)d adres)"
+
+#, python-format
+msgid "pyren3 fallback (%(count)d addresses)"
+msgstr "záložní pyren3 (%(count)d adres)"
+
+msgid "no table"
+msgstr "žádná tabulka"
+
+msgid "pyren3 fallback: disabled"
+msgstr "záložní pyren3: zakázáno"
+
+msgid "pyren3 fallback: no entry"
+msgstr "záložní pyren3: žádná položka"
+
+#, python-format
+msgid ""
+"pyren3 fallback: %(count)d addresses as a fallback, used only for the "
+"addresses missing from the ddt4all tables"
+msgstr ""
+"záložní pyren3: %(count)d adres jako záloha, použito pouze pro adresy "
+"chybějící v tabulkách ddt4all"
+
+#, python-format
+msgid "pyren3 fallback: %(count)d addresses (source in use)"
+msgstr "záložní pyren3: %(count)d adres (zdroj se používá)"
+
+msgid "Done"
+msgstr "Hotovo"
+
+#, python-format
+msgid "ERROR: %(error)s"
+msgstr "CHYBA: %(error)s"
+
+msgid "Error"
+msgstr "Chyba"
+
+msgid "DDT2000 command macros"
+msgstr "Příkazová makra DDT2000"
+
+msgid "Macro folder (.cmd and *.txt)"
+msgstr "Složka maker (.cmd a *.txt)"
+
+msgid "Browse"
+msgstr "Procházet"
+
+msgid "Refresh"
+msgstr "Obnovit"
+
+msgid "Macro folder:"
+msgstr "Složka maker:"
+
+msgid "Log ELM traffic to file"
+msgstr "Zaznamenávat provoz ELM do souboru"
+
+msgid "Log file name:"
+msgstr "Název souboru protokolu:"
+
+msgid ".cmd files (by ECU)"
+msgstr "Soubory .cmd (podle ECU)"
+
+msgid "Named macros (by *.txt)"
+msgstr "Pojmenovaná makra (podle *.txt)"
+
+msgid "Macros by ECU (.cmd)"
+msgstr "Makra podle ECU (.cmd)"
+
+msgid "Named macros (*.txt)"
+msgstr "Pojmenovaná makra (*.txt)"
+
+msgid "Send key"
+msgstr "Odeslat klávesu"
+
+msgid "Key for 'if_key':"
+msgstr "Klávesa pro 'if_key':"
+
+msgid "Execute .cmd"
+msgstr "Spustit .cmd"
+
+msgid "Execute macro"
+msgstr "Spustit makro"
+
+msgid "Stop"
+msgstr "Zastavit"
+
+msgid "Close"
+msgstr "Zavřít"
+
+msgid "Log"
+msgstr "Protokol"
+
+msgid "Macro folder"
+msgstr "Složka maker"
+
+#, python-format
+msgid "Parsing error %(file)s: %(error)s"
+msgstr "Chyba analýzy v %(file)s: %(error)s"
+
+#, python-format
+msgid "%(macro)s (defined in %(file)s)"
+msgstr "%(macro)s (definováno v %(file)s)"
+
+#, python-format
+msgid "Host: %(host)s"
+msgstr "Hostitel: %(host)s"
+
+#, python-format
+msgid "Addresses: %(legacy)s"
+msgstr "Adresy: %(legacy)s"
+
+msgid ""
+"Format: DDT2000 command macros (pyren3); the bundled macros target Renault "
+"ECUs, address resolution follows the vehicle loaded in ddt4all."
+msgstr ""
+"Formát: příkazová makra DDT2000 (pyren3); přibalená makra jsou určena pro "
+"ECU Renault, překlad adres se řídí podle vozidla načteného v ddt4all."
+
+#, python-format
+msgid "Folder: %(folder)s"
+msgstr "Složka: %(folder)s"
+
+msgid "(none)"
+msgstr "(žádné)"
+
+#, python-format
+msgid "Source: %(source)s"
+msgstr "Zdroj: %(source)s"
+
+#, python-format
+msgid ""
+"%(groups)d ECU group(s), %(files)d .cmd file(s), %(named)d named macro(s) in "
+"%(txt)d .txt file(s)"
+msgstr ""
+"%(groups)d skupin ECU, %(files)d souborů .cmd, %(named)d pojmenovaných maker "
+"v %(txt)d souborech .txt"
+
+#, python-format
+msgid "Journal files: %(elm)s and %(ecu)s"
+msgstr "Soubory deníku: %(elm)s a %(ecu)s"
+
+msgid "No ELM connection: the journal is not written."
+msgstr "Žádné připojení k ELM: deník se nezapisuje."
+
+#, python-format
+msgid "Cannot write the journal (%(error)s)"
+msgstr "Deník nelze zapsat (%(error)s)"
+
+#, python-format
+msgid "Journal: %(elm)s"
+msgstr "Deník: %(elm)s"
+
+#, python-format
+msgid "Journal: %(ecu)s"
+msgstr "Deník: %(ecu)s"
+
+msgid "ddt4all not found (console mode only)"
+msgstr "ddt4all nenalezen (pouze konzolový režim)"
+
+#, python-format
+msgid "ddt4all %(flavor)s | %(elm)s | addressing: %(addressing)s"
+msgstr "ddt4all %(flavor)s | %(elm)s | adresování: %(addressing)s"
+
+#, python-format
+msgid "%(elm)s | %(files)d .cmd (%(groups)d ECU) | %(named)d named macro(s)"
+msgstr ""
+"%(elm)s | %(files)d .cmd (%(groups)d ECU) | %(named)d pojmenovaných maker"
+
+#, python-format
+msgid ""
+"%(host)s\n"
+"Addresses: %(legacy)s\n"
+"%(detail)s\n"
+"Folder: %(folder)s\n"
+"Source: %(source)s\n"
+"%(journal)s"
+msgstr ""
+"%(host)s\n"
+"Adresy: %(legacy)s\n"
+"%(detail)s\n"
+"Složka: %(folder)s\n"
+"Zdroj: %(source)s\n"
+"%(journal)s"
+
+msgid "Journal: disabled"
+msgstr "Deník: zakázán"
+
+msgid "A macro is already running."
+msgstr "Makro již běží."
+
+msgid "ddt4all is not available: this plugin must be started from ddt4all."
+msgstr "ddt4all není k dispozici: tento plugin musí být spuštěn z ddt4all."
+
+msgid "No ELM connection: connect ddt4all to the ELM before running a macro."
+msgstr "Žádné připojení k ELM: před spuštěním makra připojte ddt4all k ELM."
+
+#, python-format
+msgid "--- START %(kind)s: %(macro)s ---"
+msgstr "--- SPUŠTĚNÍ %(kind)s: %(macro)s ---"
+
+msgid "Select a .cmd file (double-click to run)."
+msgstr "Vyberte soubor .cmd (dvojklikem spusťte)."
+
+msgid "Select a named macro (double-click to run)."
+msgstr "Vyberte pojmenované makro (dvojklikem spusťte)."
+
+#, python-format
+msgid "# key '%(key)s' sent"
+msgstr "# klávesa '%(key)s' odeslána"
+
+msgid "# stop requested..."
+msgstr "# požadováno zastavení..."
+
+#, python-format
+msgid "--- END: %(status)s ---"
+msgstr "--- KONEC: %(status)s ---"
+
+#, python-format
+msgid ""
+"WARNING: address %(addr)s resolves to %(tx)s/%(rx)s (ddt4all) but pyren3 "
+"uses %(pltx)s/%(plrx)s"
+msgstr ""
+"VAROVÁNÍ: adresa %(addr)s odpovídá %(tx)s/%(rx)s (ddt4all), ale pyren3 "
+"používá %(pltx)s/%(plrx)s"
+
+msgid "Laguna II UCH Reset"
+msgstr "Resetování UCH Laguna II"
+
+msgid "UCH Tools"
+msgstr "Nástroje UCH"
+
+msgid ""
+"LAGUNA II UCH VIRGINIZER<br><font color='red'>THIS PLUGIN WILL ERASE YOUR "
+"UCH<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</font>"
+msgstr ""
+"LAGUNA II UCH VIRGINIZER<br><font color='red'>TENTO PLUGIN SMAŽE VAŠE "
+"UCH<br>POKUD NEMÁTE TUŠENÍ, CO TO ZNAMENÁ, ODEJDĚTE</font>"
+
+msgid "Check UCH Virgin"
+msgstr "Zkontrolovat UCH Virgin"
+
+msgid "Virginize UCH"
+msgstr "Uvést UCH do čistého stavu"
+
+msgid "<font color='green'>UCH virgin</font>"
+msgstr "<font color='green'>Čistá UCH</font>"
+
+msgid "<font color='red'>UCH coded</font>"
+msgstr "<font color='red'>UCH kódovaná</font>"
+
+msgid "Laguna III UCH Reset"
+msgstr "Resetování UCH Laguna III"
+
+msgid ""
+"LAGUNA III UCH VIRGINIZER<br><font color='red'>THIS PLUGIN WILL ERASE YOUR "
+"UCH<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</font>"
+msgstr ""
+"LAGUNA III UCH VIRGINIZER<br><font color='red'>TENTO PLUGIN SMAŽE VAŠE "
+"UCH<br>POKUD NEMÁTE TUŠENÍ, CO TO ZNAMENÁ, ODEJDĚTE</font>"
+
+msgid "Megane/Scenic II UCH Reset"
+msgstr "Resetování UCH Megane/Scenic II"
+
+msgid ""
+"MEGANE II UCH VIRGINIZER<br><font color='red'>THIS PLUGIN WILL ERASE YOUR "
+"UCH<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</font>"
+msgstr ""
+"MEGANE II UCH VIRGINIZER<br><font color='red'>TENTO PLUGIN SMAŽE VAŠE "
+"UCH<br>POKUD NEMÁTE TUŠENÍ, CO TO ZNAMENÁ, ODEJDĚTE</font>"
+
+msgid "Megane3 AIRBAG Reset"
+msgstr "Resetování airbagu Megane3"
+
+msgid ""
+"Megane III<br>AIRBAG VIRGINIZER<br><font color='red'>THIS PLUGIN WILL UNLOCK "
+"AIRBAG CRASH DATA<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</font>"
+msgstr ""
+"Megane III<br>AIRBAG VIRGINIZER<br><font color='red'>TENTO PLUGIN ODEMKNE "
+"ÚDAJE O NEHODÁCH AIRBAGŮ<br>POKUD NEMÁTE TUŠENÍ, CO TO ZNAMENÁ, ODEJDĚTE</"
+"font>"
+
+#, python-format
+msgid "SDS FA stream: %s"
+msgstr "Datový proud SDS FA: %s"
+
+msgid "ZOE/FLENCE/Megane III/Scenic III EPS Reset"
+msgstr "Resetování EPS ZOE/FLENCE/Megane III/Scenic III"
+
+msgid ""
+"ZOE/FLENCE/Megane III/Scenic III EPS VIRGINIZER<br><font color='red'>THIS "
+"PLUGIN WILL RESET EPS IMMO DATA<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT "
+"MEANS</font>"
+msgstr ""
+"ZOE/FLENCE/Megane III/Scenic III EPS VIRGINIZER<br><font color='red'>TENTO "
+"PLUGIN RESETUJE DATA IMMO EPS<br>POKUD NEMÁTE TUŠENÍ, CO TO ZNAMENÁ, "
+"ODEJDĚTE</font>"
+
+msgid "Megane/Scenic III UCH Reset"
+msgstr "Resetování UCH Megane/Scenic III"
+
+msgid ""
+"MEGANE III UCH VIRGINIZER<br><font color='red'>THIS PLUGIN WILL ERASE YOUR "
+"UCH<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</font>"
+msgstr ""
+"MEGANE III UCH VIRGINIZER<br><font color='red'>TENTO PLUGIN SMAŽE VAŠE "
+"UCH<br>POKUD NEMÁTE TUŠENÍ, CO TO ZNAMENÁ, ODEJDĚTE</font>"
+
+msgid "RSAT4 AIRBAG Reset"
+msgstr "Resetování airbagu RSAT4"
+
+msgid ""
+"TWINGO III/ZOE/DOKKER/DUSTER ph2/TRAFIC III/CAPTUR/LODGY ph1/2<br>AIRBAG "
+"VIRGINIZER<br><font color='red'>THIS PLUGIN WILL UNLOCK AIRBAG CRASH "
+"DATA<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</font>"
+msgstr ""
+"TWINGO III/ZOE/DOKKER/DUSTER ph2/TRAFIC III/CAPTUR/LODGY ph1/2<br>AIRBAG "
+"VIRGINIZER<br><font color='red'>TENTO PLUGIN ODEMKNE ÚDAJE O NEHODÁCH "
+"AIRBAGŮ<br>POKUD NEMÁTE TUŠENÍ, CO TO ZNAMENÁ, ODEJDĚTE</font>"
+
+#, python-format
+msgid "SdSEX stream: %s"
+msgstr "Datový proud SdSEX: %s"
+
+msgid "CRC calculator"
+msgstr "Kalkulačka CRC"
+
+msgid "VIN"
+msgstr "Číslo VIN"
+
+msgid "CRC Calculator"
+msgstr "Kalkulačka CRC"
+
+msgid "CRC CALCULATOR"
+msgstr "KALKULAČKA CRC"
+
+msgid "Zoe water pump Reset"
+msgstr "Reset vodní pumpy Zoe"
+
+msgid "EVC Tools"
+msgstr "Nástroje EVC"
+
+msgid "Water pump counters"
+msgstr "Počítadla vodní pumpy"
+
+msgid "Name"
+msgstr "Název"
+
+msgid "Values"
+msgstr "Hodnoty"
+
+msgid "Action"
+msgstr "Akce"
+
+msgid "Low Speed"
+msgstr "Nízká rychlost"
+
+msgid "Middle Speed"
+msgstr "Střední rychlost"
+
+msgid "High Speed"
+msgstr "Vysoká rychlost"
+
+msgid "V_Timer_DrivWEP_ON"
+msgstr "V_Timer_DrivWEP_ON"
+
+msgid "Reset"
+msgstr "Resetovat"
+
+msgid ""
+"Zoe water pump counters<br><font color='red'>THIS PLUGIN WILL ERASE WATER "
+"PUMP COUNTERS<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</font>"
+msgstr ""
+"Zoe počítadla vodní pumpy<br><font color='red'>TENTO PLUGIN VYMAŽE POČÍTADLA "
+"VODNÍ PUMPY<br>POKUD NEMÁTE TUŠENÍ, CO TO ZNAMENÁ, ODEJDĚTE</font>"
+
+msgid "Check values"
+msgstr "Zkontrolovat hodnoty"
+
+msgid "Waiting action"
+msgstr "Čekání na akci"
+
+msgid "Reset all counters"
+msgstr "Resetovat všechny počítadla"
+
+msgid ""
+"<h1>TIPS</h1><ul><li>Insert key CARD</li><li>Put D position</li><li>Press/"
+"Stay START until <b>Remove card</b> message</li><li>Put P position</"
+"li><li>Keep key card inserted</li></ul>"
+msgstr ""
+"<h1>TIPY</h1><ul><li>Vložte klíčovou KARTU</li><li>Postavte na pozici D</"
+"li><li>Stiskněte/Držte START dokud se Neobjeví zpráva <b>Odeberte kartu</b></"
+"li><li>Postavte na pozici P</li><li>Ponechte klíčovou kartu vloženou</li></"
+"ul>"
+
+msgid "<font color='green'>Values read</font>"
+msgstr "<font color='green'>Hodnoty přečteny</font>"
+
+msgid "Reading Low speed"
+msgstr "Čtení nízké rychlosti"
+
+msgid "Reading Middle speed"
+msgstr "Čtení střední rychlosti"
+
+msgid "Reading High speed"
+msgstr "Čtení vysoké rychlosti"
+
+msgid "<font color='green'>CLEAR V_Timer_DrivWEP_ON EXECUTED</font>"
+msgstr "<font color='green'>VYMAZÁNÍ V_Timer_DrivWEP_ON PROVEDENO</font>"
+
+msgid "<font color='red'>CLEAR V_Timer_DrivWEP_ON FAILED</font>"
+msgstr "<font color='red'>VYMAZÁNÍ V_Timer_DrivWEP_ON SE NEPODAŘILO</font>"
+
+msgid "<font color='green'>CLEAR Low EXECUTED</font>"
+msgstr "<font color='green'>VYMAZÁNÍ NÍZKÉ RYCHLOSTI PROVEDENO</font>"
+
+msgid "<font color='red'>CLEAR Low FAILED</font>"
+msgstr "<font color='red'>VYMAZÁNÍ NÍZKÉ RYCHLOSTI SELHALO</font>"
+
+msgid "<font color='green'>CLEAR Medium EXECUTED</font>"
+msgstr "<font color='green'>VYMAZÁNÍ STŘEDNÍ RYCHLOSTI PROVEDENO</font>"
+
+msgid "<font color='red'>CLEAR Medium FAILED</font>"
+msgstr "<font color='red'>VYMAZÁNÍ STŘEDNÍ RYCHLOSTI SELHALO</font>"
+
+msgid "<font color='green'>CLEAR HIGH EXECUTED</font>"
+msgstr "<font color='green'>VYMAZÁNÍ VYSOKÉ RYCHLOSTI PROVEDENO</font>"
+
+msgid "<font color='red'>CLEAR HIGH FAILED</font>"
+msgstr "<font color='red'>VYMAZÁNÍ VYSOKÉ RYCHLOSTI SELHALO</font>"
+
+msgid "Add"
+msgstr "Přidat"
+
+msgid "Del"
+msgstr "Smazat"
+
+msgid "Move up"
+msgstr "Posunout nahoru"
+
+msgid "Check"
+msgstr "Zkontrolovat"
+
+#, python-format
+msgid "Request %s not found"
+msgstr "Požadavek %s nebyl nalezen"
+
+#, python-format
+msgid ""
+"<font color=green>Request</font><font color=blue>'%s'</font> has no missing "
+"input values"
+msgstr ""
+"<font color=green>Požadavek</font><font color=blue>'%s'</font> nemá "
+"chybějící vstupní hodnoty"
+
+#, python-format
+msgid ""
+"<font color=red>Request</font><font color=blue>'%s'</font> has missing inputs"
+msgstr ""
+"<font color=red>Požadavek</font><font color=blue>'%s'</font> má chybějící "
+"vstupy"
+
+#, python-format
+msgid "<font color=orange> - '%s'</font>"
+msgstr "<font color=orange> - '%s'</font>"
+
+msgid "Delay;Request"
+msgstr "Zpoždění;Požadavek"
+
+msgid "Screen initialization"
+msgstr "Inicializace obrazovky"
+
+msgid "Requests to send before screen drawing"
+msgstr "Požadavky k odeslání před vykreslením obrazovky"
+
+msgid "Button name;Unique name"
+msgstr "Název tlačítka;Jedinečný název"
+
+msgid "New"
+msgstr "Nový"
+
+msgid "Duplicate selected"
+msgstr "Duplikovat vybrané"
+
+msgid "Remove selected"
+msgstr "Odstranit vybrané"
+
+msgid "Reload"
+msgstr "Znovu načíst"
+
+msgid "Validate changes"
+msgstr "Ověřit změny"
+
+msgid "Description"
+msgstr "Popis"
+
+msgid "Data type"
+msgstr "Datový typ"
+
+msgid "Numeric"
+msgstr "Číselný"
+
+msgid "Numeric items"
+msgstr "Číselné položky"
+
+msgid "Hex"
+msgstr "Hexadecimální"
+
+#, python-format
+msgid "Data is used by request %s"
+msgstr "Data jsou používána požadavkem %s"
+
+msgid "New data"
+msgstr "Nová data"
+
+msgid "Replace me with request description"
+msgstr "Nahradit mě popisem požadavku"
+
+msgid "Data name;Description"
+msgstr "Název dat;Popis"
+
+msgid "Goto data"
+msgstr "Přejít na data"
+
+msgid "Remove"
+msgstr "Odstranit"
+
+msgid "Add to screen"
+msgstr "Přidat na obrazovku"
+
+msgid "ECU Function address"
+msgstr "Adresa funkce ECU"
+
+msgid "ECU Protocol"
+msgstr "Protokol ECU"
+
+msgid "Tool > Ecu ID (Hex)"
+msgstr "Nástroj > ID ECU (Hex)"
+
+msgid "Ecu > Tool ID (Hex)"
+msgstr "ECU > ID nástroje (Hex)"
+
+msgid "Coding"
+msgstr "Kódování"
+
+msgid "ECU Auto identification"
+msgstr "Automatická identifikace ECU"
+
+msgid "Add new"
+msgstr "Přidat nový"
+
+msgid "Delete selected"
+msgstr "Smazat vybrané"
+
+msgid "Number of bits"
+msgstr "Počet bitů"
+
+msgid "Signed"
+msgstr "Znaménkový"
+
+msgid "Add item"
+msgstr "Přidat položku"
+
+msgid "Del item"
+msgstr "Smazat položku"
+
+msgid "New item"
+msgstr "Nová položka"
+
+msgid "Value;Text"
+msgstr "Hodnota;Text"
+
+msgid "Number of bit"
+msgstr "Počet bitů"
+
+msgid "Unit"
+msgstr "Jednotka"
+
+msgid "Format"
+msgstr "Formát"
+
+msgid "Value = (AX+B) / C"
+msgstr "Hodnota = (AX+B) / C"
+
+msgid "Number of bytes"
+msgstr "Počet bajtů"
+
+msgid "Send request bytes (HEX)"
+msgstr "Odeslat požadavek bajtů (HEX)"
+
+msgid "Receive bytes (HEX)"
+msgstr "Přijaté bajty (HEX)"
+
+msgid "Data length"
+msgstr "Délka dat"
+
+msgid "Shift byte count"
+msgstr "Počet bajtů posunu"
+
+msgid "Data name;Start byte;Bit offset;Bit count;Endianess"
+msgstr "Název dat;Počáteční bajt;Bitový posun;Počet bitů;Endianita"
+
+msgid "Little"
+msgstr "Little-endian"
+
+msgid "Big"
+msgstr "Big-endian"
+
+msgid "Inherits globals"
+msgstr "Dědí globální proměnné"
+
+msgid "No SDS"
+msgstr "Bez SDS"
+
+msgid "Plant"
+msgstr "Závod"
+
+msgid "After Sale"
+msgstr "Po prodeji"
+
+msgid "Engineering"
+msgstr "Inženýrství"
+
+msgid "Supplier"
+msgstr "Dodavatel"
+
+msgid "Reload requests"
+msgstr "Znovu načíst požadavky"
+
+msgid "Add request"
+msgstr "Přidat požadavek"
+
+msgid "Send bytes"
+msgstr "Odeslat bajty"
+
+msgid "Receive bytes"
+msgstr "Příjem bajtů"
+
+msgid "Request name;Bytes;Manual"
+msgstr "Název požadavku;Bajty;Manuální"
+
+msgid "No request named"
+msgstr "Není uveden žádný požadavek"
+
+msgid "Found similar"
+msgstr "Bylo nalezeno podobné"
+
+msgid "Cannot find data "
+msgstr "Nelze najít data "
+
+msgid " vs "
+msgstr " proti "
+
+msgid "Cannot draw input "
+msgstr "Nelze nakreslit vstup "
+
+msgid "No Value"
+msgstr "Žádná hodnota"
+
+msgid ""
+"<center>This Software is free, but I need money to buy cables/ECUs and make "
+"this application more reliable</center>"
+msgstr ""
+"<center>Tento software je zdarma, ale potřebuji peníze na nákup kabelů/ECU a "
+"zajištění spolehlivosti této aplikace</center>"
+
+msgid "Yes I contribute"
+msgstr "Ano, přispívám"
+
+msgid "No, I don't"
+msgstr "Ne, nemám"
+
+msgid "Thank you for you contribution, if nothing happens, please go to"
+msgstr "Děkujeme za váš příspěvek. Pokud se nic neděje, přejděte prosím na"
+
+msgid "ECU Finder"
+msgstr "Hledač ECU"
+
+msgid "Address :"
+msgstr "Adresa:"
+
+msgid "ID frame :"
+msgstr "ID rám:"
+
+msgid "Search vehicle"
+msgstr "Hledat vozidlo"
+
+msgid "No vehicles available"
+msgstr "Nejsou k dispozici žádná vozidla"
+
+#, python-format
+msgid "%d loaded ECUs in database."
+msgstr "%d načtených řídicích jednotek (ECU) v databázi."
+
+msgid "No ECU database is installed"
+msgstr "Není nainstalována žádná databáze ECU"
+
+msgid "Restart DDT4ALL after installing or updating the database."
+msgstr "Po instalaci nebo aktualizaci databáze restartujte DDT4ALL."
+
+msgid ""
+"Download the ECU database separately and copy the file (`ecu.zip` or the "
+"original DDT2000 XML database (`DDT2000DATA`)) to:\n"
+msgstr ""
+"Stáhněte databázi ECU samostatně a zkopírujte soubor (`ecu.zip` nebo původní "
+"databázi XML DDT2000 (`DDT2000DATA`)) do:\n"
+
+msgid "DDT4All Documentation"
+msgstr "Dokumentace DDT4All"
+
+msgid "WebEngine not available."
+msgstr "WebEngine není k dispozici."
+
+msgid ""
+"For full documentation with web browsing capability, install PyQtWebEngine:"
+msgstr ""
+"Pro kompletní dokumentaci s možností prohlížení webu si nainstalujte "
+"PyQtWebEngine:"
+
+msgid "Visit the online documentation at:"
+msgstr "Navštivte online dokumentaci na adrese:"
+
+msgid "This basic view will still show ECU documentation when available."
+msgstr ""
+"Toto základní zobrazení bude i nadále zobrazovat dokumentaci ECU, pokud bude "
+"k dispozici."
+
+msgid "Refresh rate (ms):"
+msgstr "Rychlost obnovení (ms):"
+
+msgid "Can timeout (ms) [0:AUTO] :"
+msgstr "Časový limit CAN (ms) [0:AUTO]:"
+
+msgid "Documentation"
+msgstr "Dokumentace"
+
+msgid "Screen"
+msgstr "Obrazovka"
+
+msgid "CAN Sniffer"
+msgstr "Analyzátor CAN"
+
+msgid "Requests"
+msgstr "Požadavky"
+
+msgid "Data"
+msgstr "Údaje"
+
+msgid "Buttons"
+msgstr "Tlačítka"
+
+msgid "Ecu parameters"
+msgstr "Parametry ECU"
+
+msgid "Screen Window"
+msgstr "Okno obrazovky"
+
+msgid "Screens"
+msgstr "Obrazovky"
+
+msgid "Logs Window"
+msgstr "Okno protokolů"
+
+msgid "Ecu Window"
+msgstr "Okno ECU"
+
+msgid "Ecu List Window"
+msgstr "Okno seznamu ECU"
+
+msgid "ToolBar"
+msgstr "Panel nástrojů"
+
+msgid "Read DTC"
+msgstr "Přečíst DTC"
+
+msgid "Full log"
+msgstr "Celý protokol"
+
+msgid "Expert mode (enable writing)"
+msgstr "Expertní režim (povolit psaní)"
+
+msgid "Auto refresh"
+msgstr "Automatické obnovení"
+
+msgid "Refresh (one shot)"
+msgstr "Obnovení (jednorázové)"
+
+msgid "Manual command"
+msgstr "Manuální příkaz"
+
+msgid "Manual request"
+msgstr "Ruční požadavek"
+
+msgid "Software flow control"
+msgstr "Softwarové řízení toku"
+
+msgid "Zoom In"
+msgstr "Přiblížit"
+
+msgid "Zoom Out"
+msgstr "Oddálit"
+
+msgid "UI Edit"
+msgstr "Upravit UI"
+
+msgid "File"
+msgstr "Soubor"
+
+msgid "Open XML"
+msgstr "Otevřít XML"
+
+msgid "Save current ECU"
+msgstr "Uložit aktuální ECU"
+
+msgid "Save last record"
+msgstr "Uložit poslední záznam"
+
+msgid "Save ECU list"
+msgstr "Uložit seznam ECU"
+
+msgid "Exit"
+msgstr "Konec"
+
+msgid "Tools"
+msgstr "Nástroje"
+
+msgid "Identify ECU"
+msgstr "Identifikovat ECU"
+
+msgid "Create New ECU"
+msgstr "Vytvořit novou ECU"
+
+msgid "Zip database"
+msgstr "Zazipovat databázi"
+
+msgid "Clear DDT4ALL History"
+msgstr "Vymazat historii DDT4ALL"
+
+msgid "Reset DDT4ALL Settings"
+msgstr "Resetovat nastavení DDT4ALL"
+
+msgid "View"
+msgstr "Zobrazit"
+
+msgid "CarList Order"
+msgstr "Řazení CarList"
+
+msgid "By Project Code"
+msgstr "Podle kódu projektu"
+
+msgid "By Car Name"
+msgstr "Podle názvu auta"
+
+msgid "Theme"
+msgstr "Téma"
+
+msgid "Dark Theme"
+msgstr "Tmavé téma"
+
+msgid "Light Theme"
+msgstr "Světlé téma"
+
+msgid "Panels"
+msgstr "Panely"
+
+msgid "New Category"
+msgstr "Nová kategorie"
+
+msgid "New Screen"
+msgstr "Nová obrazovka"
+
+msgid "Rename"
+msgstr "Přejmenovat"
+
+msgid "Plugins"
+msgstr "Pluginy"
+
+msgid "Cannot load plugin "
+msgstr "Nelze načíst plugin "
+
+msgid "Help"
+msgstr "Nápověda"
+
+msgid "Web Wiki"
+msgstr "Webová Wiki"
+
+msgid "About Developers"
+msgstr "O vývojářích"
+
+msgid "Get Git update"
+msgstr "Získat aktualizaci Git"
+
+msgid "About"
+msgstr "O aplikaci"
+
+msgid "About DDT4ALL"
+msgstr "O DDT4ALL"
+
+msgid " version:"
+msgstr " verze:"
+
+msgid "Created by:"
+msgstr "Vytvořil:"
+
+msgid "History cleared"
+msgstr "Historie vymazána"
+
+msgid "Last selected vehicle and ECU history has been cleared."
+msgstr "Historie posledního vybraného vozidla a ECU byla vymazána."
+
+msgid "Configuration Reset"
+msgstr "Reset konfigurace"
+
+msgid "The configuration has been reset."
+msgstr "Konfigurace byla resetována."
+
+msgid "Options"
+msgstr "Možnosti"
+
+#, python-format
+msgid "Error updating menu bar: %s"
+msgstr "Chyba aktualizace menu lišty: %s"
+
+msgid "CAN Line 1 Auto"
+msgstr "CAN linka 1 Auto"
+
+msgid "CAN Line 1@500K"
+msgstr "CAN linka 1@500K"
+
+msgid "CAN Line 1@250K"
+msgstr "CAN linka 1@250K"
+
+msgid "CAN Line 2@500K"
+msgstr "CAN linka 2@500K"
+
+msgid "CAN Line 2@250K"
+msgstr "CAN linka 2@250K"
+
+msgid "CAN Line 2@125K"
+msgstr "CAN linka 2@125K"
+
+msgid "KWP2000"
+msgstr "Protokol KWP2000"
+
+msgid "ISO8"
+msgstr "Protokol ISO8"
+
+msgid "Save database (keep '.zip' extension)"
+msgstr "Uložit databázi (s příponou '.zip')"
+
+msgid "Zipping XML database... (this can take a few minutes)"
+msgstr "Zabalování XML databáze... (může to trvat několik minut)"
+
+msgid "Zip job finished"
+msgstr "Úloha zipu dokončena"
+
+msgid "No database found"
+msgstr "Databáze nenalezena"
+
+msgid "Check documentation"
+msgstr "Zkontrolovat dokumentaci"
+
+msgid "Enter new name"
+msgstr "Zadejte nový název"
+
+msgid "Enter category name"
+msgstr "Zadejte název kategorie"
+
+msgid "Please select a category before creating new screen"
+msgstr "Před vytvořením nové obrazovky vyberte kategorii"
+
+msgid "Enter screen name"
+msgstr "Zadejte název obrazovky"
+
+msgid "Scanning CAN"
+msgstr "Skenování CAN"
+
+msgid "Scanning KWP"
+msgstr "Skenování KWP"
+
+msgid "Scanning DoIP"
+msgstr "Skenování DoIP"
+
+msgid "Scan options"
+msgstr "Možnosti skenování"
+
+msgid "EDITION MODE"
+msgstr "REŽIM ÚPRAV"
+
+msgid "CONNECTED"
+msgstr "PŘIPOJENO"
+
+msgid "DISCONNECTED"
+msgstr "ODPOJENO"
+
+msgid "Save vehicule (keep '.ecu' extension)"
+msgstr "Uložit vozidlo (ponechat příponu '.ecu')"
+
+msgid "Save ECU (keep '.json' extension)"
+msgstr "Uložit ECU (ponechat příponu '.json')"
+
+msgid "Save record (keep '.txt' extension)"
+msgstr "Uložit záznam (ponechat příponu '.txt')"
+
+msgid "Recorded "
+msgstr "Zaznamenáno "
+
+msgid " entries"
+msgstr " položky"
+
+#, python-format
+msgid "Invalid DoIP ECU address: %s"
+msgstr "Neplatná adresa ECU DoIP: %s"
+
+msgid "No"
+msgstr "Ne"
+
+msgid "ELM port selection"
+msgstr "Výběr portu ELM"
+
+msgid "USB"
+msgstr "USB"
+
+msgid "WiFi"
+msgstr "WiFi"
+
+msgid "Bluetooth"
+msgstr "Bluetooth"
+
+msgid "OBDLINK SX/EX"
+msgstr "Adaptér OBDLINK SX/EX"
+
+msgid "ELS27/ELS27 V5 - May appear as FTDI/CH340/CP210x device"
+msgstr "ELS27/ELS27 V5 - Může se zobrazovat jako zařízení FTDI/CH340/CP210x"
+
+msgid "Vlinker FS/MC"
+msgstr "Adaptér Vlinker FS/MC"
+
+msgid "DERLEK USB-DIAG2/3"
+msgstr "Adaptér DERLEK USB-DIAG2/3"
+
+msgid "VGate (High-Speed)"
+msgstr "VGate (Vysoká rychlost)"
+
+msgid "DoIP (Diagnostics over IP)"
+msgstr "DoIP (Diagnostika přes IP)"
+
+msgid "Interface language"
+msgstr "Jazyk rozhraní"
+
+msgid "Port speed"
+msgstr "Rychlost portu"
+
+msgid "Connected mode"
+msgstr "Režim připojení"
+
+msgid "Edition mode"
+msgstr "REŽIM ÚPRAV"
+
+msgid "ELM benchmark"
+msgstr "ELM benchmark"
+
+msgid "WiFi port : "
+msgstr "WiFi port: "
+
+msgid "I acknowledge that improper use may cause damage to my vehicle."
+msgstr "Jsem si vědom/a toho, že při špatném používání můžu své auto poškodit."
+
+msgid "Enable CAN2"
+msgstr "Povolit CAN2"
+
+msgid "Dark style"
+msgstr "Tmavý styl"
+
+msgid "WiFi Socket-TimeOut"
+msgstr "Časový limit WiFi socketu"
+
+msgid "Enable DoIP Scan"
+msgstr "Povolit skenování DoIP"
+
+msgid "DoIP (Diagnostics over IP) Configuration (Experimental)"
+msgstr "Konfigurace DoIP (Diagnostika přes IP) (Experimentální)"
+
+msgid "Device Preset : "
+msgstr "Předvolba zařízení: "
+
+msgid "Custom"
+msgstr "Vlastní"
+
+msgid "Bosch MTS"
+msgstr "Zařízení Bosch MTS"
+
+msgid "VXDIAG VCX Nano"
+msgstr "Zařízení VXDIAG VCX Nano"
+
+msgid "VAG ODIS"
+msgstr "Rozhraní VAG ODIS"
+
+msgid "JLR DoIP VCI"
+msgstr "Rozhraní JLR DoIP VCI"
+
+msgid "Generic DoIP"
+msgstr "Obecný DoIP"
+
+msgid "DoIP Target IP : "
+msgstr "Cílová IP DoIP: "
+
+msgid "DoIP Port : "
+msgstr "Port DoIP: "
+
+msgid "DoIP Timeout (seconds) : "
+msgstr "Timeout DoIP (sekundy): "
+
+msgid "Enable Vehicle Announcement Discovery"
+msgstr "Povolit objevování oznámení vozidla"
+
+msgid "Auto-reconnect on connection loss"
+msgstr "Automatické znovupřipojení při ztrátě spojení"
+
+msgid "Change UART speed"
+msgstr "Změňte rychlost UART"
+
+#, python-format
+msgid "DoIP device added to list: %(ip)s:%(port)s"
+msgstr "Zařízení DoIP přidáno do seznamu: %(ip)s:%(port)s"
+
+#, python-format
+msgid "Error adding DoIP device to list: %s"
+msgstr "Chyba při přidávání zařízení DoIP do seznamu: %s"
+
+msgid "DoIP device removed from list"
+msgstr "Zařízení DoIP odstraněno ze seznamu"
+
+#, python-format
+msgid "Error removing DoIP device from list: %s"
+msgstr "Chyba při odebírání zařízení DoIP ze seznamu: %s"
+
+msgid "Checking..."
+msgstr "Kontrola..."
+
+msgid "Please enter WiFi adapter IP address"
+msgstr "Zadejte prosím IP adresu WiFi adaptéru"
+
+msgid "Invalid WiFi format. Use IP:PORT (e.g., 192.168.0.10:35000)"
+msgstr "Neplatný formát WiFi. Použijte IP:PORT (např. 192.168.0.10:35000)"
+
+msgid "Please select a serial port"
+msgstr "Vyberte prosím komunikační port"
+
+msgid "Selected port is no longer available"
+msgstr "Vybraný port již není k dispozici"
+
+msgid "Attempting connection..."
+msgstr "Pokus o připojení..."
+
+msgid "Port: "
+msgstr "Port: "
+
+msgid "Speed: "
+msgstr "Rychlost: "
+
+msgid "Connection test failed"
+msgstr "Test připojení se nezdařil"
+
+msgid "Troubleshooting suggestions:"
+msgstr "Návrhy na odstraňování problémů:"
+
+msgid "1. Check device is properly connected"
+msgstr "1. Zkontrolujte, zda je zařízení správně připojeno"
+
+msgid "2. Try different baud rates"
+msgstr "2. Vyzkoušejte různé přenosové rychlosti"
+
+msgid "3. Ensure device drivers are installed"
+msgstr "3. Ujistěte se, že jsou nainstalovány ovladače zařízení"
+
+msgid "4. Check port permissions (Linux/macOS)"
+msgstr "4. Zkontrolujte oprávnění portů (Linux/macOS)"
+
+msgid "Connection test successful!"
+msgstr "Test připojení byl úspěšný!"
+
+msgid "Error during connection test: "
+msgstr "Chyba během testu připojení: "
+
+msgid "Reset and Recheck"
+msgstr "Resetovat a znovu zkontrolovat"
+
+#, python-format
+msgid "Error updating port list: %s"
+msgstr "Chyba aktualizace seznamu portů: %s"
+
+msgid "VGate iCar Pro selected - Enhanced STN/STPX support enabled"
+msgstr "Vybráno VGate iCar Pro – povolena rozšířená podpora STN/STPX"
+
+msgid "Long command support and high-speed communication available"
+msgstr "Podpora dlouhých příkazů a vysokorychlostní komunikace k dispozici"
+
+#, python-format
+msgid "DoIP preset applied: %(name)s -> %(ip)s"
+msgstr "Přednastavení DoIP aplikováno: %(name)s -> %(ip)s"
+
+#, python-format
+msgid "DoIP preset applied: %(name)s (IP unchanged)"
+msgstr "Přednastavení DoIP aplikováno: %(name)s (IP nezměněno)"
+
+#, python-format
+msgid "Error preparing DoIP update: %s"
+msgstr "Chyba při přípravě aktualizace DoIP: %s"
+
+#, python-format
+msgid "Applied %s preset:"
+msgstr "Aplikováno %s přednastavení:"
+
+#, python-format
+msgid "  IP: %s"
+msgstr "  IP adresa: %s"
+
+#, python-format
+msgid "  Port: %s"
+msgstr "  Port rozhraní: %s"
+
+#, python-format
+msgid "  Timeout: %ss"
+msgstr "  Časový limit: %ss"
+
+msgid "  Configuration saved and device list reloaded"
+msgstr "  Konfigurace uložena a seznam zařízení znovu načten"
+
+#, python-format
+msgid "Error in force DoIP update: %s"
+msgstr "Chyba při vynucené aktualizaci DoIP: %s"
+
+#, python-format
+msgid "Error in delayed DoIP update: %s"
+msgstr "Chyba v odložené aktualizaci DoIP: %s"
+
+#, python-format
+msgid "DoIP device updated: %(ip)s:%(port)s"
+msgstr "Zařízení DoIP aktualizováno: %(ip)s:%(port)s"
+
+msgid "DoIP device removed from list (scan disabled)"
+msgstr "Zařízení DoIP odstraněno ze seznamu (skenování zakázáno)"
+
+#, python-format
+msgid "Error in targeted DoIP update: %s"
+msgstr "Chyba v cílené aktualizaci DoIP: %s"
+
+msgid "N/A"
+msgstr "Nedostupné"
+
+msgid "DoIP (Diagnostics over IP) selected"
+msgstr "DoIP (Diagnostika přes IP) vybráno"
+
+msgid "Ethernet-based diagnostic communication"
+msgstr "Diagnostická komunikace založená na Ethernetu"
+
+msgid "Select an ISO 13400 DoIP entity by its IP address"
+msgstr "Vyberte entitu DoIP ISO 13400 podle její IP adresy"
+
+msgid "You must check the recommandations"
+msgstr "Musíte si ověřit doporučení"
+
+msgid "Please select a communication port"
+msgstr "Vyberte prosím komunikační port"
+
+msgid "ECU Command"
+msgstr "Příkaz ECU"
+
+msgid "Start diagnostic session"
+msgstr "Spustit diagnostickou relaci"
+
+msgid "Request"
+msgstr "Požadavek"
+
+msgid "Data to send"
+msgstr "Data k odeslání"
+
+msgid "Computed ISOTP Frame"
+msgstr "Vypočítaný ISOTP rámec"
+
+msgid "Compute frame"
+msgstr "Vypočítat rámec"
+
+msgid "Data received"
+msgstr "Data přijata"
+
+msgid "Execute"
+msgstr "Spustit"
+
+msgid ""
+"<center>This feature is experimental</center>\n"
+"<center>Use it at your own risk</center>\n"
+"<center>and if you know exactely what you do</center>\n"
+msgstr ""
+"<center>Tato funkce je experimentální</center>\n"
+"<center>Používejte ji na vlastní nebezpečí</center>\n"
+"<center>a pokud přesně víte, co děláte</center>\n"
+
+msgid "Err, cannot rename "
+msgstr "Chyba, nelze přejmenovat "
+
+msgid "To be able to edit your screen, first export it in JSON format"
+msgstr ""
+"Abyste mohli upravovat obrazovku, nejprve ji exportujte do formátu JSON"
+
+msgid "Enter label name"
+msgstr "Zadejte název popisku"
+
+msgid "Add button"
+msgstr "Přidat tlačítko"
+
+msgid "Add label"
+msgstr "Přidat popisek"
+
+msgid "Rename label"
+msgstr "Přejmenovat popisek"
+
+msgid "Change color"
+msgstr "Změnit barvu"
+
+msgid "Remove element"
+msgstr "Odstranit prvek"
+
+msgid "Diagnotic session"
+msgstr "Diagnostická relace"
+
+msgid "Input"
+msgstr "Vstup"
+
+msgid "Output"
+msgstr "Výstup"
+
+msgid "Protocol not supported"
+msgstr "Protokol není podporován"
+
+msgid "Protocol not supported: "
+msgstr "Protokol není podporován: "
+
+msgid "XML file not found : "
+msgstr "XML soubor nenalezen: "
+
+msgid "Invalid DDT file"
+msgstr "Neplatný soubor DDT"
+
+msgid "Connection to ELM lost, trying to reconnect..."
+msgstr "Spojení s ELM bylo ztraceno, pokus o opětovné připojení..."
+
+msgid "Cannot reconnect..."
+msgstr "Nelze znovu připojit..."
+
+msgid "Switching to session mode"
+msgstr "Přepínání do režimu relace"
+
+msgid "Sending ELM request :"
+msgstr "Odesílání požadavku ELM:"
+
+msgid "Blocked ELM request :"
+msgstr "Blokovaný požadavek ELM:"
+
+msgid "Sending ELM request:"
+msgstr "Odesílání požadavku ELM:"
+
+msgid "Sending simulated ELM request :"
+msgstr "Odesílání simulovaného požadavku ELM:"
+
+msgid "Bad ELM response :"
+msgstr "Špatná odpověď ELM:"
+
+msgid "ELM response : "
+msgstr "Odpověď ELM: "
+
+msgid "Button request not found : "
+msgstr "Požadavek na tlačítko nenalezen: "
+
+msgid "Sending request :"
+msgstr "Odesílání požadavku:"
+
+msgid "Unknown request "
+msgstr "Neznámý požadavek "
+
+msgid "Command aborted "
+msgstr "Příkaz zrušen "
+
+msgid "Value error of this stuff need a bypass gateway maybe."
+msgstr "Chyba hodnoty u této funkce: možná je potřeba bypassová brána."
+
+msgid "Request aborted (look at red paramters entries): "
+msgstr "Požadavek přerušen (podívejte se na červené položky parametrů): "
+
+msgid "Delay"
+msgstr "Zpoždění"
+
+msgid "For your safety"
+msgstr "Pro vaši bezpečnost"
+
+msgid ""
+"<center>BLOCKED COMMAND</center>\n"
+"Activate expert mode to unlock"
+msgstr ""
+"<center>BLOKOVANÝ PŘÍKAZ</center>\n"
+"Aktivujte expertní režim pro odblokování"
+
+msgid "Writing parameter"
+msgstr "Zápis parametru"
+
+msgid "Blocked writing parameter"
+msgstr "Blokovaný zápis parametru"
+
+msgid "Invalid"
+msgstr "Neplatný"
+
+msgid "ECU uses SDS "
+msgstr "ECU používá SDS "
+
+msgid "Cannot call request "
+msgstr "Nelze vyvolat požadavek "
+
+msgid "Update time"
+msgstr "Čas aktualizace"
+
+msgid "Clearing DTC information"
+msgstr "Vymazání informací o DTC"
+
+msgid "No ClearDTC request for that ECU, will send default 14FF00"
+msgstr ""
+"Pro danou řídicí jednotku (ECU) neexistuje požadavek ClearDTC, odešle se "
+"výchozí 14FF00"
+
+msgid "<center>You are about to clear diagnostic troubles codes</center>"
+msgstr "<center>Chystáte se vymazat diagnostické chybové kódy</center>"
+
+msgid "<center>Ae you sure this is what you want.</center>"
+msgstr "<center>Jsi si jistý/á, že tohle je to, co chceš.</center>"
+
+msgid "Clear DTC failed"
+msgstr "Vymazání DTC se nezdařilo"
+
+msgid "Clear DTC successfully done"
+msgstr "Vymazání DTC úspěšně dokončeno"
+
+msgid "No ReadDTC request for that ECU"
+msgstr "Žádný požadavek ReadDTC pro danou řídicí jednotku (ECU)"
+
+msgid "Invalid response for ReadDTC command"
+msgstr "Neplatná odpověď pro příkaz ReadDTC"
+
+msgid "Read DTC returned an error"
+msgstr "Čtení DTC vrátilo chybu"
+
+msgid "No DTC"
+msgstr "Žádný kód DTC"
+
+msgid "Invalid DTC response: "
+msgstr "Neplatná odpověď DTC: "
+
+msgid "DTC parsing error - response: "
+msgstr "Chyba analýzy DTC - odpověď: "
+
+msgid "Diagnostic Trouble Codes"
+msgstr "Chybové kódy diagnostiky"
+
+msgid "Clear ALL DTC"
+msgstr "Vymazat VŠECHNY DTC"
+
+msgid "ECU trouble codes"
+msgstr "Chybové kódy ECU"
+
+msgid "Parsing screen "
+msgstr "Analýza obrazovky "
+
+msgid "found request in input "
+msgstr "nalezený požadavek ve vstupu "
+
+msgid "found in display "
+msgstr "nalezeno v displeji "
+
+msgid "found in button "
+msgstr "nalezen v tlačítku "
+
+msgid "found in presend "
+msgstr "nalezeno v presend "
+
+msgid "found data in input "
+msgstr "data nalezena ve vstupu "
+
+msgid "found data in display "
+msgstr "data nalezena v displeji "
+
+msgid "Waiting..."
+msgstr "Čekání..."
+
+msgid "Frame length error: "
+msgstr "Chyba délky rámce: "
+
+msgid "Frame hex error: "
+msgstr "Chyba hex rámce: "

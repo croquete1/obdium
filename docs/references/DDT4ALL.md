@@ -82,3 +82,7 @@ Planning and source mapping only; no runtime feature or physical verification is
 ## Vendored reference files
 
 Only the five synthetic XML/JSON fixtures, original GPL license and provenance manifest remain in [vendor/ddt4all](vendor/ddt4all/README.md). Previously copied Python modules were removed from the proposed tree at the maintainer's request; their original source remains accessible through the pinned links above. Actual OEM database and project catalog remain excluded pending data-specific rights verification; see manifest.
+
+## Translation resources
+
+All 15 source PO catalogs and English POT template have been copied unmodified as offline data under [locales](vendor/ddt4all/locales). Use their translations as reference for OBDium's own stable message keys and UTF-8 JSON resources. No Python, Polib, gettext runtime/build tool, compiled MO catalogs, or dependency from the reference stack. English fallback and PT-PT linguistic review first; adapt other languages progressively. Never render imported markup directly or execute plural expressions; use validated typed placeholders, explicit plural rules, safe text rendering and tests for missing keys, interpolation, encoding, locale fallback and safety-sensitive messages. Keep original headers and attribution. These catalogs do not establish actual OBDium UI translation coverage.

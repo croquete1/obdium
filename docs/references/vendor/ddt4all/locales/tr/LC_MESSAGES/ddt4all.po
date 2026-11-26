@@ -1,0 +1,2520 @@
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# Abdullah YILMAZ (TA1GI) <h.abdullahyilmaz@hotmail.com>, 2022.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: DDT4ALL\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-24 00:02+0100\n"
+"PO-Revision-Date: 2026-05-07 13:13+0200\n"
+"Last-Translator: Furtif <msntchat@hotmail.fr>\n"
+"Language-Team: TURKISH\n"
+"Language: tr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Generator: Poedit 3.9\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+
+#, python-format
+msgid "Failed to connect to DoIP entity: %s"
+msgstr "DoIP varlığına bağlanılamadı: %s"
+
+#, python-format
+msgid "DoIP routing activated for %(ip)s:%(port)s"
+msgstr "DoIP yönlendirme %(ip)s:%(port)s için etkinleştirildi"
+
+msgid "No vehicle-identification response was received"
+msgstr "Araç tanımlama yanıtı alınmadı"
+
+#, python-format
+msgid "Vehicle VIN=%(vin)s logical address=0x%(address)04X EID=%(eid)s"
+msgstr "Araç VIN=%(vin)s mantıksal adres=0x%(address)04X EID=%(eid)s"
+
+#, python-format
+msgid "DoIP connection failed: %s"
+msgstr "DoIP bağlantısı başarısız: %s"
+
+msgid "Not connected to DoIP device"
+msgstr "DoIP cihazına bağlı değil"
+
+msgid "No DoIP ECU logical address is selected"
+msgstr "DoIP ECU mantıksal adresi seçilmedi"
+
+#, python-format
+msgid "Invalid hex request format: %s"
+msgstr "Geçersiz hex istek formatı: %s"
+
+msgid "ELM AT commands are not supported over DoIP"
+msgstr "ELM AT komutları DoIP üzerinden desteklenmiyor"
+
+msgid "K-line initialization is not supported over DoIP"
+msgstr "K-line başlatma DoIP üzerinden desteklenmiyor"
+
+msgid "K-line addressing is not supported over DoIP"
+msgstr "K-line adresleme DoIP üzerinden desteklenmiyor"
+
+msgid "Warning, cannot get signed value for"
+msgstr "Uyarı, işaretli değer alınamıyor"
+
+msgid "Division by zero, please check data item: "
+msgstr "Sıfıra bölme, lütfen veri öğesini kontrol edin: "
+
+msgid "Adding group "
+msgstr "Grup ekleniyor "
+
+msgid "Unable to find eculist"
+msgstr "Eculist bulunamadı"
+
+msgid "Cannot find file "
+msgstr "Dosya bulunamadı "
+
+msgid "Cannot load ECU file"
+msgstr "ECU dosyası yüklenemiyor"
+
+msgid "XML not found"
+msgstr "XML bulunamadı"
+
+msgid "Cannot retrieve functionnal address of ECU"
+msgstr "ECU'nun işlevsel adresi alınamıyor"
+
+msgid "Generated stream "
+msgstr "Oluşturulan akış "
+
+msgid "Send request stream "
+msgstr "İstek akışını gönder "
+
+msgid "Received stream "
+msgstr "Alınan akış "
+
+msgid "Request ECU Error"
+msgstr "ECU isteği hatası"
+
+msgid "Decoded values"
+msgstr "Çözümlenmiş değerler"
+
+msgid "Found: "
+msgstr "Bulunan: "
+
+msgid "Identified ECU"
+msgstr "Tanımlanmış ECU"
+
+msgid "Found ECU"
+msgstr "Bulunan ECU"
+
+msgid "(not perfect match)"
+msgstr "(mükemmel bir eşleşme değil)"
+
+msgid "(no relevant ECU file found)"
+msgstr "(ilgili ECU dosyası bulunamadı)"
+
+msgid "Warning, address"
+msgstr "Uyarı, adres"
+
+msgid "is not mapped"
+msgstr "eşleştirilmemiş"
+
+msgid "Scanning address: "
+msgstr "Adres taranıyor: "
+
+#, python-format
+msgid "# check_ecu: empty response for addr %(addr)s protocol %(protocol)s"
+msgstr "# check_ecu: addr %(addr)s protokol %(protocol)s için boş yanıt"
+
+#, python-format
+msgid ""
+"# check_ecu: invalid hex response for addr %(addr)s protocol %(protocol)s: "
+"%(err)s"
+msgstr ""
+"# check_ecu: addr %(addr)s protokol %(protocol)s için geçersiz hex yanıtı: "
+"%(err)s"
+
+#, python-format
+msgid ""
+"# check_ecu: response too short (%(bytes)d bytes) for addr %(addr)s protocol "
+"%(protocol)s"
+msgstr ""
+"# check_ecu: yanıt çok kısa (%(bytes)d bayt), addr %(addr)s protokol "
+"%(protocol)s için"
+
+msgid "No DoIP addresses available for scanning"
+msgstr "Tarama için mevcut DoIP adresi yok"
+
+#, python-format
+msgid "Initializing DoIP connection to %(ip)s:%(port)s"
+msgstr "%(ip)s:%(port)s adresine DoIP bağlantısı başlatılıyor"
+
+#, python-format
+msgid "DoIP connection established: %(ip)s:%(port)s"
+msgstr "DoIP bağlantısı kuruldu: %(ip)s:%(port)s"
+
+#, python-format
+msgid "DoIP vehicle discovered: VIN=%(vin)s address=%(addr)04X"
+msgstr "DoIP aracı algılandı: VIN=%(vin)s adres=%(addr)04X"
+
+#, python-format
+msgid "DoIP reconnection failed: %s"
+msgstr "DoIP yeniden bağlanma başarısız: %s"
+
+msgid "unmapped ECU"
+msgstr "Eşlenmemiş ECU"
+
+#, python-format
+msgid "Scanning DoIP address %(addr)s ECU: %(name)s"
+msgstr "DoIP adresi %(addr)s ECU taranıyor: %(name)s"
+
+#, python-format
+msgid "Simulation mode: DoIP address %s was not queried"
+msgstr "Simülasyon modu: DoIP adresi %s sorgulanmadı"
+
+#, python-format
+msgid "Skipping invalid DoIP address %(addr)s: %(error)s"
+msgstr "Geçersiz DoIP adresi %(addr)s atlanıyor: %(error)s"
+
+#, python-format
+msgid "DoIP scan failed at %(addr)s: %(error)s"
+msgstr "DoIP taraması %(addr)s konumunda başarısız: %(error)s"
+
+#, python-format
+msgid "Could not start DoIP UDS session at %(addr)s: %(error)s"
+msgstr "DoIP UDS oturumu %(addr)s konumunda başlatılamadı: %(error)s"
+
+#, python-format
+msgid "DoIP UDS identification failed at %(addr)s: %(error)s"
+msgstr "DoIP UDS tanımlaması %(addr)s konumunda başarısız: %(error)s"
+
+#, python-format
+msgid "Could not close DoIP diagnostic session at %(addr)s: %(error)s"
+msgstr "DoIP tanılama oturumu %(addr)s konumunda kapatılamadı: %(error)s"
+
+#, python-format
+msgid "Could not start DoIP legacy session at %(addr)s: %(error)s"
+msgstr "DoIP eski oturum %(addr)s konumunda başlatılamadı: %(error)s"
+
+#, python-format
+msgid "DoIP legacy identification failed at %(addr)s: %(error)s"
+msgstr "DoIP eski tanımlama %(addr)s konumunda başarısız: %(error)s"
+
+#, python-format
+msgid "Could not close DoIP legacy session at %(addr)s: %(error)s"
+msgstr "DoIP eski oturum %(addr)s konumunda kapatılamadı: %(error)s"
+
+#, python-format
+msgid "Device detection error: %s"
+msgstr "Cihaz algılama hatası: %s"
+
+#, python-format
+msgid "Device initialization error: %s"
+msgstr "Cihaz başlatma hatası: %s"
+
+msgid "Found USB device:"
+msgstr "USB cihazı bulundu:"
+
+msgid "USB device detection error:"
+msgstr "USB cihaz algılama hatası:"
+
+msgid ""
+"Note: This error does not affect serial communication or bypass cable "
+"functionality."
+msgstr ""
+"Not: Bu hata seri iletişimi veya atlatma kablosu işlevselliğini etkilemez."
+
+msgid "Trying to open port "
+msgstr "Port açılmaya çalışılıyor "
+
+msgid "Port initialization failed"
+msgstr "Port başlatma başarısız"
+
+msgid "Port connection failed - port object is invalid"
+msgstr "Port bağlantısı başarısız - port nesnesi geçersiz"
+
+msgid "STN connection established"
+msgstr "STN bağlantısı kuruldu"
+
+msgid "Version: "
+msgstr "Sürüm: "
+
+#, python-format
+msgid "STPX/STN configuration warning: %s"
+msgstr "STPX/STN yapılandırma uyarısı: %s"
+
+msgid "No ELM interface on port"
+msgstr "Bağlantısı noktasında ELM arayüzü yok"
+
+msgid "OBDLink Connection OK, attempting full speed UART switch"
+msgstr "OBDLink Bağlantısı TAMAM, tam hız UART geçişi deneniyor"
+
+msgid "Failed to switch OBDLink to "
+msgstr "OBDLink şuna geçirilemedi: "
+
+msgid "OBDLink Connection OK, using optimal settings"
+msgstr "OBDLink Bağlantısı TAMAM, optimal ayarlar kullanılıyor"
+
+msgid "Connection established successfully"
+msgstr "Bağlantı başarıyla kuruldu"
+
+msgid "Configuring ELS27 V5 CAN pins (12-13)"
+msgstr "ELS27 V5 CAN pinleri yapılandırılıyor (12-13)"
+
+msgid "ELS27 V5 CAN configuration complete"
+msgstr "ELS27 V5 CAN yapılandırması tamamlandı"
+
+#, python-format
+msgid "ELS27 V5 configuration warning: %s"
+msgstr "ELS27 V5 yapılandırma uyarısı: %s"
+
+msgid "Port is None - cannot switch speed"
+msgstr "Port yok - hız değiştirilemiyor"
+
+#, python-format
+msgid "%s switched baudrate OK, changing UART speed now..."
+msgstr "%s baud hızı değişimi tamam, UART hızı şimdi değiştiriliyor..."
+
+#, python-format
+msgid "%s baudrate switched OK, changing UART speed now..."
+msgstr "%s baudrate değiştirildi OK, UART hızı şimdi değiştiriliyor..."
+
+#, python-format
+msgid "Not supported baudrate %s"
+msgstr "Desteklenmeyen baud hızı %s"
+
+msgid "ELM reset..."
+msgstr "ELM sıfırlandı..."
+
+msgid "Unknown address: "
+msgstr "Bilinmeyen adres: "
+
+msgid ""
+"send_can: received first frame only — AT CAF0 may have been reset by AT SP, "
+"or FC failed"
+msgstr ""
+"send_can: sadece ilk kare alındı — AT CAF0 AT SP tarafından sıfırlanmış "
+"olabilir veya FC başarısız oldu"
+
+#, python-format
+msgid "send_can: unexpected response byte %s — check AT CAF0 is active"
+msgstr ""
+"send_can: beklenmeyen yanıt baytı %s — AT CAF0'ın aktif olup olmadığını "
+"kontrol edin"
+
+msgid "Using saved device settings"
+msgstr "Kayıtlı cihaz ayarları kullanılıyor"
+
+msgid "Using optimal device settings"
+msgstr "Optimal cihaz ayarları kullanılıyor"
+
+msgid "Connecting to device at port: "
+msgstr "Cihaza bağlanılıyor, port: "
+
+msgid "Using baudrate: "
+msgstr "Baud hızı kullanılıyor: "
+
+msgid "Testing for ELS27 device..."
+msgstr "ELS27 cihazı test ediliyor..."
+
+msgid "ELS27 device detected: "
+msgstr "ELS27 cihazı algılandı: "
+
+msgid "Using detected baud rate: "
+msgstr "Algılanan baud hızı kullanılıyor: "
+
+msgid "Warning: No ELS27 response detected"
+msgstr "Uyarı: ELS27 yanıtı algılanamadı"
+
+msgid "Will attempt connection anyway..."
+msgstr "Bağlantı yine de denenecek..."
+
+msgid "Connection failed: "
+msgstr "Bağlantısı başarısız: "
+
+msgid "Testing basic connectivity..."
+msgstr "Temel bağlantı test ediliyor..."
+
+msgid "Warning: Device may not be ELM327 compatible"
+msgstr "Uyarı: Cihaz ELM327 uyumlu olmayabilir"
+
+msgid "ELM327 device detected successfully"
+msgstr "ELM327 cihazı başarıyla algılandı"
+
+msgid "Device version: "
+msgstr "Cihaz sürümü: "
+
+msgid "Connection error: "
+msgstr "Bağlantı hatası: "
+
+msgid "FAIL"
+msgstr "BAŞARISIZ"
+
+msgid "OK/TIMEOUT"
+msgstr "TAMAM/ZAMAN AŞIMI"
+
+msgid "OK"
+msgstr "Tamam"
+
+msgid "Incompatible adapter on ARM core"
+msgstr "ARM çekirdeğinde uyumsuz adaptör"
+
+msgid "Result: "
+msgstr "Sonuç: "
+
+msgid " succeeded from "
+msgstr " başarılı / "
+
+msgid "ELM Max version:"
+msgstr "ELM Max sürümü:"
+
+msgid "Using saved settings for"
+msgstr "Kayıtlı ayarlar kullanılıyor"
+
+msgid "Using optimal settings for"
+msgstr "Optimal ayarlar kullanılıyor"
+
+msgid "Using settings for"
+msgstr "Ayarlar kullanılıyor"
+
+msgid "ELM327 doesn't support DoIP, falling back to serial mode"
+msgstr "ELM327 DoIP desteklemiyor, seri moda geçiliyor"
+
+msgid "Serial port opened"
+msgstr "Seri port açıldı"
+
+#, python-format
+msgid "Serial connection error: %s"
+msgstr "Seri bağlantı hatası: %s"
+
+msgid "ELM not connected or wrong COM port"
+msgstr "ELM bağlı değil veya yanlış COM port"
+
+#, python-format
+msgid "Unexpected error: %s"
+msgstr "Beklenmeyen hata: %s"
+
+#, python-format
+msgid "Bluetooth connection attempted: %s"
+msgstr "Bluetooth bağlantısı denendi: %s"
+
+#, python-format
+msgid "Serial connection established: %(port)s @ %(baud)s baud"
+msgstr "Seri bağlantısı kuruldu: %(port)s @ %(baud)s baud"
+
+#, python-format
+msgid "Bluetooth connection failed: %s"
+msgstr "Bluetooth bağlantısı başarısız: %s"
+
+#, python-format
+msgid "DoIP connection failed: %(ip)s:%(port)s"
+msgstr "DoIP bağlantısı başarısız: %(ip)s:%(port)s"
+
+#, python-format
+msgid "DoIP initialization failed: %s"
+msgstr "DoIP başlatma başarısız: %s"
+
+#, python-format
+msgid "Port closed: %s"
+msgstr "Port kapalı: %s"
+
+#, python-format
+msgid "Error closing port: %s"
+msgstr "Port kapatma hatası: %s"
+
+#, python-format
+msgid "Connecting to WiFi adapter at %(ip)s:%(port)s"
+msgstr "%(ip)s:%(port)s adresindeki WiFi adaptörüne bağlanılıyor"
+
+#, python-format
+msgid "WiFi connection established: %(ip)s:%(port)s"
+msgstr "WiFi bağlantısı kuruldu: %(ip)s:%(port)s"
+
+#, python-format
+msgid "WiFi connection timeout to %(ip)s:%(port)s"
+msgstr "%(ip)s:%(port)s adresine WiFi bağlantı zaman aşımı"
+
+#, python-format
+msgid "WiFi connection error: %s"
+msgstr "WiFi bağlantı hatası: %s"
+
+#, python-format
+msgid "Unexpected WiFi error: %s"
+msgstr "Beklenmeyen WiFi hatası: %s"
+
+#, python-format
+msgid "WiFi recv: %s"
+msgstr "WiFi alma: %s"
+
+#, python-format
+msgid "WiFi socket timed out %s times in a row; reconnect scheduled"
+msgstr ""
+"WiFi soketi arka arkaya %s kez zaman aşımına uğradı; yeniden bağlanma "
+"planlandı"
+
+#, python-format
+msgid "Serial error in read_byte: %s"
+msgstr "Read_byte'ta seri iletişim hatası: %s"
+
+msgid "Connection to ELM was lost"
+msgstr "ELM ile bağlantısı kesildi"
+
+#, python-format
+msgid "*       Error: %s"
+msgstr "*       Hata: %s"
+
+#, python-format
+msgid "Cannot decode bytes %s"
+msgstr "%s baytları çözülemiyor"
+
+#, python-format
+msgid "Error in read(): %s"
+msgstr "Read() içinde hata: %s"
+
+msgid "WiFi connection - baudrate change not applicable"
+msgstr "WiFi bağlantısı - baudrate değişikliği uygulanamaz"
+
+msgid "Attempting WiFi reconnection..."
+msgstr "WiFi yeniden bağlantısı deneniyor..."
+
+msgid "Port handler is None, cannot write"
+msgstr "Port işleyicisi Yok, yazılamıyor"
+
+#, python-format
+msgid "Serial write error: %s"
+msgstr "Seri yazma hatası: %s"
+
+#, python-format
+msgid "*       Write error: %s"
+msgstr "*       Yazma hatası: %s"
+
+msgid "TIMEOUT"
+msgstr "ZAMAN AŞIMI"
+
+msgid "Checking port speed:"
+msgstr "Port hızı kontrol ediliyor:"
+
+msgid "WiFi connection - skipping baudrate check"
+msgstr "WiFi bağlantısı - baudrate kontrolü atlanıyor"
+
+msgid "Bluetooth connection - skipping baudrate check"
+msgstr "Bluetooth bağlantısı - baudrate kontrolü atlanıyor"
+
+msgid "Start COM speed: "
+msgstr "Başlangıç COM hızı: "
+
+msgid "ELM not responding"
+msgstr "ELM yanıt vermiyor"
+
+msgid "Cannot zip database, no 'ecus' directory"
+msgstr "Veritabanı sıkıştırılamıyor, 'ecus' dizini yok"
+
+msgid "Starting conversion"
+msgstr "Dönüşüm başlatılıyor"
+
+msgid "Starting processing "
+msgstr "İşleme başlanıyor "
+
+msgid " to "
+msgstr " dan "
+
+msgid "Skipping current file (cannot parse it)"
+msgstr "Mevcut dosya atlanıyor (ayrıştırılamıyor)"
+
+msgid "Writing database"
+msgstr "Veritabanı yazılıyor"
+
+msgid "Writing archive"
+msgstr "Arşiv yazılıyor"
+
+msgid "Opening ECU Database..."
+msgstr "ECU Veritabanı açılıyor..."
+
+msgid "DataItem not found"
+msgstr "Veri Öğesi bulunamadı"
+
+msgid "parts as: "
+msgstr "parçalar olarak: "
+
+msgid " please review dumpVehicles def."
+msgstr " lütfen dumpVehicles tanımını gözden geçirin."
+
+msgid "ELS27 V5 CAN pin configuration complete"
+msgstr "ELS27 V5 CAN pin yapılandırması tamamlandı"
+
+msgid "Found USB adapter:"
+msgstr "USB adaptörü bulundu:"
+
+msgid "USB not available"
+msgstr "USB mevcut değil"
+
+msgid "USB Device"
+msgstr "USB Cihazı"
+
+msgid "Warning: Could not read string descriptor:"
+msgstr "Uyarı: Dize tanımlayıcı okunamadı:"
+
+msgid "USB OBD Device"
+msgstr "USB OBD Cihazı"
+
+msgid "Warning: Vendor request failed:"
+msgstr "Uyarı: Satıcı isteği başarısız:"
+
+msgid "Warning: PyQtWebEngine not available. Some features may be limited."
+msgstr "Uyarı: PyQtWebEngine mevcut değil. Bazı özellikler sınırlı olabilir."
+
+msgid "resources/projects.json not found or invalid."
+msgstr "resources/projects.json bulunamadı veya geçersiz."
+
+#, python-format
+msgid "Warning: Could not write version.h: %s"
+msgstr "Uyarı: version.h yazılamadı: %s"
+
+msgid "Using custom DDT database"
+msgstr "Özel DDT veritabanı kullanılıyor"
+
+msgid "No COM port selected"
+msgstr "COM port seçilmedi"
+
+#, python-format
+msgid "Initializing ELM with speed %i..."
+msgstr "ELM %i hızıyla başlatılıyor..."
+
+msgid "DoIP connection failed: "
+msgstr "DoIP bağlantısı başarısız: "
+
+msgid "No ELM327 or OBDLINK-SX detected on COM port "
+msgstr "COM portta ELM327 veya OBDLINK-SX algılanmadı "
+
+msgid "AB90 AIRBAG Reset"
+msgstr "AB90 Hava Yastığı Sıfırlama"
+
+msgid "Airbag Tools"
+msgstr "Airbag Araçları"
+
+msgid ""
+"AB90 (Clio III)/2<br>AIRBAG VIRGINIZER<br><font color='red'>THIS PLUGIN WILL "
+"UNLOCK AIRBAG CRASH DATA<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</"
+"font>"
+msgstr ""
+"AB90 (Clio III)/2<br>AIRBAG VİRGİNİZER<br><font color='red'>BU EKLENTİ "
+"AIRBAG ÇARPMASI VERİLERİNİ KİLİDİNİ AÇACAK<br>NE ANLAMA GELDİĞİNİ "
+"BİLMİYORSANIZ UZAK DURUN</font>"
+
+msgid "Check ACU Virgin"
+msgstr "ACU Virgin Kontrolü"
+
+msgid "Waiting"
+msgstr "Bekleniyor"
+
+msgid "Virginize ACU"
+msgstr "ACU'yu ham yap (sıfır durum)"
+
+msgid "Cannot connect to ECU"
+msgstr "ECU'ya bağlanılamıyor"
+
+msgid "<font color='orange'>UNEXPECTED RESPONSE</font>"
+msgstr "<font color='orange'>BEKLENMEYEN YANIT</font>"
+
+msgid "<font color='red'>CRASH DETECTED</font>"
+msgstr "<font color='red'>KAZA TESPİT EDİLDİ</font>"
+
+msgid "<font color='green'>NO CRASH DETECTED</font>"
+msgstr "<font color='green'>KAZA TESPİT EDİLMEDİ</font>"
+
+#, python-format
+msgid "SDS stream: %s"
+msgstr "SDS akışı: %s"
+
+msgid "<font color='green'>CLEAR EXECUTED</font>"
+msgstr "<font color='green'>CLEAR UYGULANDI</font>"
+
+msgid "<font color='red'>CLEAR FAILED</font>"
+msgstr "<font color='red'>CLEAR BAŞARISIZ</font>"
+
+msgid "Megane/Scenic II card programming"
+msgstr "Megane/Scenic II kart programlama"
+
+msgid "Keys"
+msgstr "Anahtarlar"
+
+msgid "ENTER AFTER SALE MODE"
+msgstr "SATIŞ SONRASI MODUNA GİR"
+
+msgid ""
+"<font color='red'>MEGANE II CARD PROGRAMMING<br>EXPERIMENTAL : NOT TESTED "
+"YET</font>"
+msgstr ""
+"<font color='red'>MEGANE II KART PROGRAMLAMA<br>EXPERİMENTAL: HENÜZ TEST "
+"EDİLMEDİ</font>"
+
+msgid "LEARN"
+msgstr "ÖĞREN"
+
+msgid "VALIDATE"
+msgstr "DOĞRULA"
+
+msgid "CANCEL"
+msgstr "İPTAL"
+
+msgid "Algo 2"
+msgstr "Algoritma 2"
+
+msgid "ISK"
+msgstr "ISK Kodu"
+
+msgid "PIN"
+msgstr "PIN Kodu"
+
+msgid "Num key learnt"
+msgstr "Öğrenilen anahtar sayısı"
+
+msgid "CARD IDE"
+msgstr "Kart Kimliği (IDE)"
+
+msgid "Cannot get ISK, check connections and UCH compatibility"
+msgstr "ISK alınamıyor, bağlantıları ve UCH uyumluluğunu kontrol edin"
+
+msgid "<font color='red'>PIN CODE NOT RECOGNIZED</font>"
+msgstr "<font color='red'>PIN KODU TANINMADI</font>"
+
+msgid "<font color='green'>PIN CODE OK / KEY LEARNING</font>"
+msgstr "<font color='green'>PIN KODU TAMAM / ANAHTAR ÖĞRENİMİ</font>"
+
+msgid "<font color='green'>PIN CODE OK / UCH LEARNING</font>"
+msgstr "<font color='green'>PIN KODU TAMAM / UCH ÖĞRENİMİ</font>"
+
+msgid "Modus/Clio III EPS Reset"
+msgstr "Modus/Clio III EPS Sıfırlama"
+
+msgid "EPS Tools"
+msgstr "EPS Araçları"
+
+msgid ""
+"Modus/Clio III EPS VIRGINIZER<br><font color='red'>THIS PLUGIN WILL RESET "
+"EPS IMMO DATA<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</font>"
+msgstr ""
+"Modus/Clio III EPS VİRGİNİZER<br><font color='red'>BU EKLENTİ EPS IMMO "
+"VERİLERİNİ SIFIRLAYACAK<br>NE ANLAMA GELDİĞİNİ BİLMİYORSANIZ UZAK DURUN</"
+"font>"
+
+msgid "BLANK STATUS & VIN READ"
+msgstr "BOŞ DURUM & VIN OKUMA"
+
+msgid "Virginize EPS"
+msgstr "EPS'yi ham yap (sıfır durum)"
+
+msgid "VIN - READ"
+msgstr "VIN - OKU"
+
+msgid "VIN - WRITE"
+msgstr "VIN - YAZ"
+
+msgid "Write VIN"
+msgstr "VIN Yaz"
+
+msgid "<font color='red'>VIN - INVALID</font>"
+msgstr "<font color='red'>VIN - GEÇERSİZ</font>"
+
+msgid "<font color='red'>VIN - BAD LENGTH</font>"
+msgstr "<font color='red'>VIN - KÖTÜ UZUNLUK</font>"
+
+msgid "<font color='orange'>VIN WRITE FAILED</font>"
+msgstr "<font color='orange'>VIN YAZMA BAŞARISIZ</font>"
+
+msgid "<font color='green'>VIN WRITE OK</font>"
+msgstr "<font color='green'>VIN YAZMA TAMAMLANDI</font>"
+
+msgid "<font color='green'>EPS virgin</font>"
+msgstr "<font color='green'>Ham EPS (sıfır)</font>"
+
+msgid "<font color='red'>EPS coded</font>"
+msgstr "<font color='red'>EPS kodlanmış</font>"
+
+#, python-format
+msgid "SdSC0 stream: %s"
+msgstr "SdSC0 akışı: %s"
+
+msgid "Clio IV EPS Reset"
+msgstr "Clio IV EPS Sıfırlama"
+
+msgid ""
+"Clio IV EPS VIRGINIZER<br><font color='red'>THIS PLUGIN WILL RESET EPS IMMO "
+"DATA<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</font>"
+msgstr ""
+"Clio IV EPS VİRGİNİZER<br><font color='red'>BU EKLENTİ EPS IMMO VERİLERİNİ "
+"SIFIRLAYACAK<br>NE ANLAMA GELDİĞİNİ BİLMİYORSANIZ UZAK DURUN</font>"
+
+msgid "Check EPS Virgin"
+msgstr "EPS Virgin Kontrolü"
+
+msgid "<font color='green'>EPS not operational</font>"
+msgstr "<font color='green'>EPS çalışmıyor</font>"
+
+msgid "<font color='red'>UNEXPECTED RESPONSE</font>"
+msgstr "<font color='red'>BEKLENMEYEN YANIT</font>"
+
+#, python-format
+msgid "SdSFA stream: %s"
+msgstr "SdSFA akışı: %s"
+
+msgid "DDT2000 command macros (.cmd)"
+msgstr "DDT2000 komut makroları (.cmd)"
+
+msgid "Macros"
+msgstr "Komut makroları"
+
+msgid ""
+"ERROR: command should have 5 parameters: \n"
+"    <command> <lid> <rsp_len> <offset> <hex mask> <hex value>\n"
+"        <lid> - ECUs local identifier. Length should be 2 simbols for KWP or "
+"4 for CAN\n"
+"        <rsp_len> - lengt of command response including positive response "
+"bytes, equals MinBytes from ddt db\n"
+"        <offset> - offeset in bytes to first changed byte (starts from 1 not "
+"0) \n"
+"        <hex mask> - bit mask for changed bits, 1 - changable, 0 - "
+"untachable\n"
+"        <hex value> - bit value\n"
+"    <hex mask> and <hex value> should have equal length\n"
+msgstr ""
+"HATA: komut 5 parametreye sahip olmalıdır: \n"
+"    <komut> <lid> <rsp_len> <ofset> <hex maske> <hex değer>\n"
+"        <lid> - ECU yerel tanımlayıcısı. Uzunluk KWP için 2 veya CAN için 4 "
+"sembol olmalıdır\n"
+"        <rsp_len> - olumlu yanıt baytları dahil komut yanıtının uzunluğu, "
+"ddt veritabanındaki MinBytes değerine eşittir\n"
+"        <ofset> - ilk değiştirilen bayta bayt cinsinden ofset (0'dan değil "
+"1'den başlar) \n"
+"        <hex maske> - değiştirilen bitler için bit maskesi, 1 - "
+"değiştirilebilir, 0 - dokunulamaz\n"
+"        <hex değer> - bit değeri\n"
+"    <hex maske> ve <hex değer> eşit uzunlukta olmalıdır\n"
+
+msgid ""
+"ERROR: command should have 6 parameters: \n"
+"    <command> <lid> <rsp_len> <offset> <hex mask> <hex value> <label>\n"
+"        <lid> - ECUs local identifier. Length should be 2 simbols for KWP or "
+"4 for CAN\n"
+"        <rsp_len> - lengt of command response including positive response "
+"bytes, equals MinBytes from ddt db\n"
+"        <offset> - offeset in bytes to first changed byte (starts from 1 not "
+"0) \n"
+"        <hex mask> - bit mask for changed bits, 1 - changable, 0 - "
+"untachable\n"
+"        <hex value> - bit value\n"
+"        <label> - label to go\n"
+"    <hex mask> and <hex value> should have equal length\n"
+msgstr ""
+"HATA: komut 6 parametreye sahip olmalıdır: \n"
+"    <komut> <lid> <rsp_len> <ofset> <hex maske> <hex değer> <etiket>\n"
+"        <lid> - ECU yerel tanımlayıcısı. Uzunluk KWP için 2 veya CAN için 4 "
+"sembol olmalıdır\n"
+"        <rsp_len> - olumlu yanıt baytları dahil komut yanıtının uzunluğu, "
+"ddt veritabanındaki MinBytes değerine eşittir\n"
+"        <ofset> - ilk değiştirilen bayta bayt cinsinden ofset (0'dan değil "
+"1'den başlar) \n"
+"        <hex maske> - değiştirilen bitler için bit maskesi, 1 - "
+"değiştirilebilir, 0 - dokunulamaz\n"
+"        <hex değer> - bit değeri\n"
+"        <etiket> - gidilecek etiket\n"
+"    <hex maske> ve <hex değer> eşit uzunlukta olmalıdır\n"
+
+msgid ""
+"ERROR: command should have 4 or 7 parameters: \n"
+"    <command> <lid> <rsp_len> <offset> <hex mask> <hex value> <label>\n"
+"        <lid> - ECUs local identifier. Length should be 2 simbols for KWP or "
+"4 for CAN\n"
+"        <rsp_len> - lengt of command response including positive response "
+"bytes, equals MinBytes from ddt db\n"
+"        <offset> - offeset in bytes to first changed byte (starts from 1 not "
+"0) \n"
+"        <hex mask> - bit mask for changed bits, 1 - changable, 0 - "
+"untachable\n"
+"        <val step> - value step\n"
+"        <val offset> - value offset\n"
+"        <val divider> - value divider\n"
+"\n"
+msgstr ""
+"HATA: komut 4 veya 7 parametreye sahip olmalıdır: \n"
+"    <komut> <lid> <rsp_len> <ofset> <hex maske> <hex değer> <etiket>\n"
+"        <lid> - ECU yerel tanımlayıcısı. Uzunluk KWP için 2 veya CAN için 4 "
+"sembol olmalıdır\n"
+"        <rsp_len> - olumlu yanıt baytları dahil komut yanıtının uzunluğu, "
+"ddt veritabanındaki MinBytes değerine eşittir\n"
+"        <ofset> - ilk değiştirilen bayta bayt cinsinden ofset (0'dan değil "
+"1'den başlar) \n"
+"        <hex maske> - değiştirilen bitler için bit maskesi, 1 - "
+"değiştirilebilir, 0 - dokunulamaz\n"
+"        <değer adımı> - değer adımı\n"
+"        <değer ofseti> - değer ofseti\n"
+"        <değer böleni> - değer bölücüsü\n"
+"\n"
+
+msgid "No ELM connection (plugin need_hw=True ?)"
+msgstr "ELM bağlantısı yok (eklenti need_hw=True gerektiriyor mu ?)"
+
+#, python-format
+msgid "guard: %(limit)d steps exceeded (infinite loop?)"
+msgstr "koruma: %(limit)d adım aşıldı (sonsuz döngü?)"
+
+msgid "# abort requested"
+msgstr "# iptal istendi"
+
+#, python-format
+msgid "openning file: %(file)s"
+msgstr "dosya açılıyor: %(file)s"
+
+#, python-format
+msgid "%(file)s:%(line)d: empty macro name"
+msgstr "%(file)s:%(line)d: boş makro adı"
+
+#, python-format
+msgid "%(file)s:%(line)d: unexpected end of macro"
+msgstr "%(file)s:%(line)d: makronun beklenmeyen sonu"
+
+#, python-format
+msgid "%(file)s: includes are nested too deeply (%(limit)d levels)"
+msgstr "%(file)s: içermeler çok derin iç içe geçmiş (%(limit)d seviye)"
+
+#, python-format
+msgid "Cannot read %(file)s: %(error)s"
+msgstr "%(file)s okunamıyor: %(error)s"
+
+#, python-format
+msgid "%(file)s: included file not found: %(target)s"
+msgstr "%(file)s: dahil edilen dosya bulunamadı: %(target)s"
+
+#, python-format
+msgid "include loop: %(target)s"
+msgstr "içerme döngüsü: %(target)s"
+
+#, python-format
+msgid "# include %(file)s"
+msgstr "# %(file)s dahil ediliyor"
+
+#, python-format
+msgid "  %(name)s = %(value)s"
+msgstr "  %(name)s = %(value)s"
+
+#, python-format
+msgid "  %(macro)s"
+msgstr "  %(macro)s"
+
+msgid "[h]elp                 - this help"
+msgstr "[h]elp                 - bu yardım"
+
+msgid "[q]uit, [e]xit, end    - exit from terminal"
+msgstr "[q]uit, [e]xit, end    - terminalden çık"
+
+msgid "wait|sleep x           - wait x seconds"
+msgstr "wait|sleep x           - x saniye bekle"
+
+msgid "include <file>         - play another .cmd here"
+msgstr "include <dosya>         - burada başka bir .cmd çalıştır"
+
+msgid "Variables:"
+msgstr "Değişkenler:"
+
+msgid "Macros:"
+msgstr "Komut makroları:"
+
+#, python-format
+msgid "Error: unknown macro name: %(macro)s"
+msgstr "Hata: bilinmeyen makro adı: %(macro)s"
+
+#, python-format
+msgid "Error: recursion prohibited: %(macro)s"
+msgstr "Hata: özyineleme yasaktır: %(macro)s"
+
+#, python-format
+msgid "### %(file)s : %(count)d lines"
+msgstr "### %(file)s : %(count)d satır"
+
+msgid "# end of command file"
+msgstr "# komut dosyasının sonu"
+
+#, python-format
+msgid "> %(line)s"
+msgstr "> %(line)s"
+
+#, python-format
+msgid "Error: unknown label '%(label)s'"
+msgstr "Hata: bilinmeyen etiket '%(label)s'"
+
+msgid "###### Variables #####"
+msgstr "###### Değişkenler #####"
+
+#, python-format
+msgid "# %(name)20s = %(value)s"
+msgstr "# %(name)20s = %(value)s"
+
+#, python-format
+msgid "Error: unknown variable %(name)s"
+msgstr "Hata: bilinmeyen değişken %(name)s"
+
+msgid "Error: too many variables in one line"
+msgstr "Hata: tek satırda çok fazla değişken"
+
+msgid "#(subst)"
+msgstr "#(subst)"
+
+#, python-format
+msgid "# delay: %(seconds)s"
+msgstr "# gecikme: %(seconds)s"
+
+#, python-format
+msgid "Unrecognized init command: %(name)s"
+msgstr "Tanınmayan başlatma komutu: %(name)s"
+
+msgid "ERROR: Unknown function"
+msgstr "HATA: Bilinmeyen fonksiyon"
+
+msgid "read  value: "
+msgstr "okunan değer: "
+
+msgid "ERROR: Length is unexpected"
+msgstr "HATA: Beklenmeyen uzunluk"
+
+msgid "ERROR: Wrong simbol in response"
+msgstr "HATA: Yanıtta yanlış sembol"
+
+msgid "ERROR: Not positive response"
+msgstr "HATA: Olumlu yanıt değil"
+
+msgid "Match. Exit"
+msgstr "Eşleşti. Çıkış"
+
+msgid "Not match. Continue"
+msgstr "Eşleşmedi. Devam et"
+
+msgid "Not match. Exit"
+msgstr "Eşleşmedi. Çıkış"
+
+msgid "Match. Continue"
+msgstr "Eşleşti. Devam et"
+
+msgid "Match. goto: "
+msgstr "Eşleşti. Şuraya git: "
+
+msgid "Not match. goto: "
+msgstr "Eşleşmedi. Şuraya git: "
+
+#, python-format
+msgid ""
+"# LID(%(lid)s) $rawValue = %(raw)s  $scaledValue = %(scaled)s  $hexValue = "
+"%(hex)s"
+msgstr ""
+"# LID(%(lid)s) $rawValue = %(raw)s  $scaledValue = %(scaled)s  $hexValue = "
+"%(hex)s"
+
+#, python-format
+msgid "ERROR: unexpected positive response: %(rsp)s"
+msgstr "HATA: beklenmeyen olumlu yanıt: %(rsp)s"
+
+msgid "write value: "
+msgstr "yazılan değer: "
+
+msgid "ELM connected"
+msgstr "ELM bağlandı"
+
+msgid "ELM not connected"
+msgstr "ELM bağlı değil"
+
+msgid "installed copy (cmd_macros_lib/macros)"
+msgstr "yüklü kopya (cmd_macros_lib/macros)"
+
+msgid "manually chosen folder"
+msgstr "manuel seçilen klasör"
+
+#, python-format
+msgid "ddt4all tables (%(count)d addresses)"
+msgstr "ddt4all tabloları (%(count)d adres)"
+
+#, python-format
+msgid "pyren3 fallback (%(count)d addresses)"
+msgstr "pyren3 yedeği (%(count)d adres)"
+
+msgid "no table"
+msgstr "tablo yok"
+
+msgid "pyren3 fallback: disabled"
+msgstr "pyren3 yedeği: devre dışı"
+
+msgid "pyren3 fallback: no entry"
+msgstr "pyren3 yedeği: girdi yok"
+
+#, python-format
+msgid ""
+"pyren3 fallback: %(count)d addresses as a fallback, used only for the "
+"addresses missing from the ddt4all tables"
+msgstr ""
+"pyren3 yedeği: yedek olarak %(count)d adres, yalnızca ddt4all tablolarında "
+"eksik olan adresler için kullanılır"
+
+#, python-format
+msgid "pyren3 fallback: %(count)d addresses (source in use)"
+msgstr "pyren3 yedeği: %(count)d adres (kullanımdaki kaynak)"
+
+msgid "Done"
+msgstr "Tamamlandı"
+
+#, python-format
+msgid "ERROR: %(error)s"
+msgstr "HATA: %(error)s"
+
+msgid "Error"
+msgstr "Hata"
+
+msgid "DDT2000 command macros"
+msgstr "DDT2000 komut makroları"
+
+msgid "Macro folder (.cmd and *.txt)"
+msgstr "Makro klasörü (.cmd ve *.txt)"
+
+msgid "Browse"
+msgstr "Gözat"
+
+msgid "Refresh"
+msgstr "Yenile"
+
+msgid "Macro folder:"
+msgstr "Makro klasörü:"
+
+msgid "Log ELM traffic to file"
+msgstr "ELM trafiğini dosyaya kaydet"
+
+msgid "Log file name:"
+msgstr "Günlük dosyası adı:"
+
+msgid ".cmd files (by ECU)"
+msgstr ".cmd dosyaları (ECU'ya göre)"
+
+msgid "Named macros (by *.txt)"
+msgstr "Adlandırılmış makrolar (*.txt'ye göre)"
+
+msgid "Macros by ECU (.cmd)"
+msgstr "ECU'ya göre makrolar (.cmd)"
+
+msgid "Named macros (*.txt)"
+msgstr "Adlandırılmış makrolar (*.txt)"
+
+msgid "Send key"
+msgstr "Tuş gönder"
+
+msgid "Key for 'if_key':"
+msgstr "'if_key' için tuş:"
+
+msgid "Execute .cmd"
+msgstr ".cmd çalıştır"
+
+msgid "Execute macro"
+msgstr "Makroyu çalıştır"
+
+msgid "Stop"
+msgstr "Durdur"
+
+msgid "Close"
+msgstr "Kapat"
+
+msgid "Log"
+msgstr "Günlük"
+
+msgid "Macro folder"
+msgstr "Makro klasörü"
+
+#, python-format
+msgid "Parsing error %(file)s: %(error)s"
+msgstr "%(file)s içinde ayrıştırma hatası: %(error)s"
+
+#, python-format
+msgid "%(macro)s (defined in %(file)s)"
+msgstr "%(macro)s (%(file)s içinde tanımlandı)"
+
+#, python-format
+msgid "Host: %(host)s"
+msgstr "Ana bilgisayar: %(host)s"
+
+#, python-format
+msgid "Addresses: %(legacy)s"
+msgstr "Adresler: %(legacy)s"
+
+msgid ""
+"Format: DDT2000 command macros (pyren3); the bundled macros target Renault "
+"ECUs, address resolution follows the vehicle loaded in ddt4all."
+msgstr ""
+"Biçim: DDT2000 komut makroları (pyren3); birlikte verilen makrolar Renault "
+"ECU'larını hedefler, adres çözümleme ddt4all'a yüklenen aracı takip eder."
+
+#, python-format
+msgid "Folder: %(folder)s"
+msgstr "Klasör: %(folder)s"
+
+msgid "(none)"
+msgstr "(yok)"
+
+#, python-format
+msgid "Source: %(source)s"
+msgstr "Kaynak: %(source)s"
+
+#, python-format
+msgid ""
+"%(groups)d ECU group(s), %(files)d .cmd file(s), %(named)d named macro(s) in "
+"%(txt)d .txt file(s)"
+msgstr ""
+"%(groups)d ECU grubu, %(files)d .cmd dosyası, %(txt)d .txt dosyasında "
+"%(named)d adlandırılmış makro"
+
+#, python-format
+msgid "Journal files: %(elm)s and %(ecu)s"
+msgstr "Günlük dosyaları: %(elm)s ve %(ecu)s"
+
+msgid "No ELM connection: the journal is not written."
+msgstr "ELM bağlantısı yok: günlük yazılmadı."
+
+#, python-format
+msgid "Cannot write the journal (%(error)s)"
+msgstr "Günlük yazılamıyor (%(error)s)"
+
+#, python-format
+msgid "Journal: %(elm)s"
+msgstr "Günlük: %(elm)s"
+
+#, python-format
+msgid "Journal: %(ecu)s"
+msgstr "Günlük: %(ecu)s"
+
+msgid "ddt4all not found (console mode only)"
+msgstr "ddt4all bulunamadı (yalnızca konsol modu)"
+
+#, python-format
+msgid "ddt4all %(flavor)s | %(elm)s | addressing: %(addressing)s"
+msgstr "ddt4all %(flavor)s | %(elm)s | adresleme: %(addressing)s"
+
+#, python-format
+msgid "%(elm)s | %(files)d .cmd (%(groups)d ECU) | %(named)d named macro(s)"
+msgstr ""
+"%(elm)s | %(files)d .cmd (%(groups)d ECU) | %(named)d adlandırılmış makro"
+
+#, python-format
+msgid ""
+"%(host)s\n"
+"Addresses: %(legacy)s\n"
+"%(detail)s\n"
+"Folder: %(folder)s\n"
+"Source: %(source)s\n"
+"%(journal)s"
+msgstr ""
+"%(host)s\n"
+"Adresler: %(legacy)s\n"
+"%(detail)s\n"
+"Klasör: %(folder)s\n"
+"Kaynak: %(source)s\n"
+"%(journal)s"
+
+msgid "Journal: disabled"
+msgstr "Günlük: devre dışı"
+
+msgid "A macro is already running."
+msgstr "Zaten çalışan bir makro var."
+
+msgid "ddt4all is not available: this plugin must be started from ddt4all."
+msgstr "ddt4all mevcut değil: bu eklenti ddt4all içinden başlatılmalıdır."
+
+msgid "No ELM connection: connect ddt4all to the ELM before running a macro."
+msgstr ""
+"ELM bağlantısı yok: bir makro çalıştırmadan önce ddt4all'ı ELM'ye bağlayın."
+
+#, python-format
+msgid "--- START %(kind)s: %(macro)s ---"
+msgstr "--- BAŞLANGIÇ %(kind)s: %(macro)s ---"
+
+msgid "Select a .cmd file (double-click to run)."
+msgstr "Bir .cmd dosyası seçin (çalıştırmak için çift tıklayın)."
+
+msgid "Select a named macro (double-click to run)."
+msgstr "Adlandırılmış bir makro seçin (çalıştırmak için çift tıklayın)."
+
+#, python-format
+msgid "# key '%(key)s' sent"
+msgstr "# '%(key)s' tuşu gönderildi"
+
+msgid "# stop requested..."
+msgstr "# durdurma istendi..."
+
+#, python-format
+msgid "--- END: %(status)s ---"
+msgstr "--- SON: %(status)s ---"
+
+#, python-format
+msgid ""
+"WARNING: address %(addr)s resolves to %(tx)s/%(rx)s (ddt4all) but pyren3 "
+"uses %(pltx)s/%(plrx)s"
+msgstr ""
+"UYARI: %(addr)s adresi %(tx)s/%(rx)s (ddt4all) olarak çözümleniyor ancak "
+"pyren3 %(pltx)s/%(plrx)s kullanıyor"
+
+msgid "Laguna II UCH Reset"
+msgstr "Laguna II UCH Sıfırlama"
+
+msgid "UCH Tools"
+msgstr "UCH Araçları"
+
+msgid ""
+"LAGUNA II UCH VIRGINIZER<br><font color='red'>THIS PLUGIN WILL ERASE YOUR "
+"UCH<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</font>"
+msgstr ""
+"LAGUNA II UCH VİRGİNİZER<br><font color='red'>BU EKLENTİ UCH'NİZİ "
+"SİLECEK<br>NE ANLAMA GELDİĞİNİ BİLMİYORSANIZ UZAK DURUN</font>"
+
+msgid "Check UCH Virgin"
+msgstr "UCH Virgin Kontrolü"
+
+msgid "Virginize UCH"
+msgstr "UCH'yi ham yap (sıfır durum)"
+
+msgid "<font color='green'>UCH virgin</font>"
+msgstr "<font color='green'>Ham UCH (sıfır)</font>"
+
+msgid "<font color='red'>UCH coded</font>"
+msgstr "<font color='red'>UCH kodlanmış</font>"
+
+msgid "Laguna III UCH Reset"
+msgstr "Laguna III UCH Sıfırlama"
+
+msgid ""
+"LAGUNA III UCH VIRGINIZER<br><font color='red'>THIS PLUGIN WILL ERASE YOUR "
+"UCH<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</font>"
+msgstr ""
+"LAGUNA III UCH VİRGİNİZER<br><font color='red'>BU EKLENTİ UCH'NİZİ "
+"SİLECEK<br>NE ANLAMA GELDİĞİNİ BİLMİYORSANIZ UZAK DURUN</font>"
+
+msgid "Megane/Scenic II UCH Reset"
+msgstr "Megane/Scenic II UCH Sıfırlama"
+
+msgid ""
+"MEGANE II UCH VIRGINIZER<br><font color='red'>THIS PLUGIN WILL ERASE YOUR "
+"UCH<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</font>"
+msgstr ""
+"MEGANE II UCH VİRGİNİZER<br><font color='red'>BU EKLENTİ UCH'NİZİ "
+"SİLECEK<br>NE ANLAMA GELDİĞİNİ BİLMİYORSANIZ UZAK DURUN</font>"
+
+msgid "Megane3 AIRBAG Reset"
+msgstr "Megane3 Hava Yastığı Sıfırlama"
+
+msgid ""
+"Megane III<br>AIRBAG VIRGINIZER<br><font color='red'>THIS PLUGIN WILL UNLOCK "
+"AIRBAG CRASH DATA<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</font>"
+msgstr ""
+"Megane III<br>AIRBAG VİRGİNİZER<br><font color='red'>BU EKLENTİ AIRBAG "
+"ÇARPMASI VERİLERİNİ KİLİDİNİ AÇACAK<br>NE ANLAMA GELDİĞİNİ BİLMİYORSANIZ "
+"UZAK DURUN</font>"
+
+#, python-format
+msgid "SDS FA stream: %s"
+msgstr "SDS FA akışı: %s"
+
+msgid "ZOE/FLENCE/Megane III/Scenic III EPS Reset"
+msgstr "ZOE/FLENCE/Megane III/Scenic III EPS Sıfırlama"
+
+msgid ""
+"ZOE/FLENCE/Megane III/Scenic III EPS VIRGINIZER<br><font color='red'>THIS "
+"PLUGIN WILL RESET EPS IMMO DATA<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT "
+"MEANS</font>"
+msgstr ""
+"ZOE/FLENCE/Megane III/Scenic III EPS VİRGİNİZER<br><font color='red'>BU "
+"EKLENTİ EPS IMMO VERİLERİNİ SIFIRLAYACAK<br>NE ANLAMA GELDİĞİNİ "
+"BİLMİYORSANIZ UZAK DURUN</font>"
+
+msgid "Megane/Scenic III UCH Reset"
+msgstr "Megane/Scenic III UCH Sıfırlama"
+
+msgid ""
+"MEGANE III UCH VIRGINIZER<br><font color='red'>THIS PLUGIN WILL ERASE YOUR "
+"UCH<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</font>"
+msgstr ""
+"MEGANE III UCH VİRGİNİZER<br><font color='red'>BU EKLENTİ UCH'NİZİ "
+"SİLECEK<br>NE ANLAMA GELDİĞİNİ BİLMİYORSANIZ UZAK DURUN</font>"
+
+msgid "RSAT4 AIRBAG Reset"
+msgstr "RSAT4 Hava Yastığı Sıfırlama"
+
+msgid ""
+"TWINGO III/ZOE/DOKKER/DUSTER ph2/TRAFIC III/CAPTUR/LODGY ph1/2<br>AIRBAG "
+"VIRGINIZER<br><font color='red'>THIS PLUGIN WILL UNLOCK AIRBAG CRASH "
+"DATA<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</font>"
+msgstr ""
+"TWINGO III/ZOE/DOKKER/DUSTER ph2/TRAFIC III/CAPTUR/LODGY ph1/2<br>AIRBAG "
+"VİRGİNİZER<br><font color='red'>BU EKLENTİ AIRBAG ÇARPMASI VERİLERİNİ "
+"KİLİDİNİ AÇACAK<br>NE ANLAMA GELDİĞİNİ BİLMİYORSANIZ UZAK DURUN</font>"
+
+#, python-format
+msgid "SdSEX stream: %s"
+msgstr "SdSEX akışı: %s"
+
+msgid "CRC calculator"
+msgstr "CRC Hesaplayıcı"
+
+msgid "VIN"
+msgstr "VIN Numarası"
+
+msgid "CRC Calculator"
+msgstr "CRC Hesaplayıcı"
+
+msgid "CRC CALCULATOR"
+msgstr "CRC HESAPLAYICI"
+
+msgid "Zoe water pump Reset"
+msgstr "Zoe su pompası Sıfırlama"
+
+msgid "EVC Tools"
+msgstr "EVC Araçları"
+
+msgid "Water pump counters"
+msgstr "Su pompası sayaçları"
+
+msgid "Name"
+msgstr "Ad"
+
+msgid "Values"
+msgstr "Değerler"
+
+msgid "Action"
+msgstr "Eylem"
+
+msgid "Low Speed"
+msgstr "Düşük Hız"
+
+msgid "Middle Speed"
+msgstr "Orta Hız"
+
+msgid "High Speed"
+msgstr "Yüksek Hız"
+
+msgid "V_Timer_DrivWEP_ON"
+msgstr "V_Timer_DrivWEP_ON"
+
+msgid "Reset"
+msgstr "Sıfırla"
+
+msgid ""
+"Zoe water pump counters<br><font color='red'>THIS PLUGIN WILL ERASE WATER "
+"PUMP COUNTERS<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</font>"
+msgstr ""
+"Zoe su pompası sayaçları<br><font color='red'>BU EKLENTİ SU POMPASI "
+"SAYAÇLARINI SİLECEK<br>NE ANLAMA GELDİĞİNİ BİLMİYORSANIZ UZAK DURUN</font>"
+
+msgid "Check values"
+msgstr "Değerleri kontrol et"
+
+msgid "Waiting action"
+msgstr "Eylem bekleniyor"
+
+msgid "Reset all counters"
+msgstr "Tüm sayaçları sıfırla"
+
+msgid ""
+"<h1>TIPS</h1><ul><li>Insert key CARD</li><li>Put D position</li><li>Press/"
+"Stay START until <b>Remove card</b> message</li><li>Put P position</"
+"li><li>Keep key card inserted</li></ul>"
+msgstr ""
+"<h1>İPUÇLARI</h1><ul><li>Anahtar KART'ı Takın</li><li>D konumuna Alın</"
+"li><li><b>Kartı çıkarın</b> mesajı görünene kadar START'a Basılı Tutun</"
+"li><li>P konumuna Alın</li><li>Anahtar kartı Takılı Tutun</li></ul>"
+
+msgid "<font color='green'>Values read</font>"
+msgstr "<font color='green'>Değerler okundu</font>"
+
+msgid "Reading Low speed"
+msgstr "Düşük hız okunuyor"
+
+msgid "Reading Middle speed"
+msgstr "Orta hız okunuyor"
+
+msgid "Reading High speed"
+msgstr "Yüksek hız okunuyor"
+
+msgid "<font color='green'>CLEAR V_Timer_DrivWEP_ON EXECUTED</font>"
+msgstr "<font color='green'>V_Timer_DrivWEP_ON TEMİZLEME UYGULANDI</font>"
+
+msgid "<font color='red'>CLEAR V_Timer_DrivWEP_ON FAILED</font>"
+msgstr "<font color='red'>V_Timer_DrivWEP_ON TEMİZLEME BAŞARISIZ</font>"
+
+msgid "<font color='green'>CLEAR Low EXECUTED</font>"
+msgstr "<font color='green'>Düşük Hız TEMİZLEME UYGULANDI</font>"
+
+msgid "<font color='red'>CLEAR Low FAILED</font>"
+msgstr "<font color='red'>Düşük Hız TEMİZLEME BAŞARISIZ</font>"
+
+msgid "<font color='green'>CLEAR Medium EXECUTED</font>"
+msgstr "<font color='green'>Orta Hız TEMİZLEME UYGULANDI</font>"
+
+msgid "<font color='red'>CLEAR Medium FAILED</font>"
+msgstr "<font color='red'>Orta Hız TEMİZLEME BAŞARISIZ</font>"
+
+msgid "<font color='green'>CLEAR HIGH EXECUTED</font>"
+msgstr "<font color='green'>Yüksek Hız TEMİZLEME UYGULANDI</font>"
+
+msgid "<font color='red'>CLEAR HIGH FAILED</font>"
+msgstr "<font color='red'>Yüksek Hız TEMİZLEME BAŞARISIZ</font>"
+
+msgid "Add"
+msgstr "Ekle"
+
+msgid "Del"
+msgstr "Sil"
+
+msgid "Move up"
+msgstr "Yukarı Taşı"
+
+msgid "Check"
+msgstr "Kontrol"
+
+#, python-format
+msgid "Request %s not found"
+msgstr "%s isteği bulunamadı"
+
+#, python-format
+msgid ""
+"<font color=green>Request</font><font color=blue>'%s'</font> has no missing "
+"input values"
+msgstr ""
+"<font color=green>İstek</font><font color=blue>'%s'</font> için eksik giriş "
+"değeri içermiyor"
+
+#, python-format
+msgid ""
+"<font color=red>Request</font><font color=blue>'%s'</font> has missing inputs"
+msgstr ""
+"<font color=red>İstek</font><font color=blue>'%s'</font> eksik girişlere "
+"sahip"
+
+#, python-format
+msgid "<font color=orange> - '%s'</font>"
+msgstr "<font color=orange> - '%s'</font>"
+
+msgid "Delay;Request"
+msgstr "Gecikme; İstek"
+
+msgid "Screen initialization"
+msgstr "Ekran başlatma"
+
+msgid "Requests to send before screen drawing"
+msgstr "Ekran çizilmeden önce gönderilecek istekler"
+
+msgid "Button name;Unique name"
+msgstr "Buton adı;Benzersiz ad"
+
+msgid "New"
+msgstr "Yeni"
+
+msgid "Duplicate selected"
+msgstr "Seçilenleri Çoğalt"
+
+msgid "Remove selected"
+msgstr "Seçilenleri Sil"
+
+msgid "Reload"
+msgstr "Tekrar yükle"
+
+msgid "Validate changes"
+msgstr "Değişiklikleri Doğrula"
+
+msgid "Description"
+msgstr "Açıklama"
+
+msgid "Data type"
+msgstr "Veri Türü"
+
+msgid "Numeric"
+msgstr "Sayısal"
+
+msgid "Numeric items"
+msgstr "Sayısal Parçalar"
+
+msgid "Hex"
+msgstr "Onaltılık"
+
+#, python-format
+msgid "Data is used by request %s"
+msgstr "Veriler %s isteği tarafından kullanılıyor"
+
+msgid "New data"
+msgstr "Yeni Veri"
+
+msgid "Replace me with request description"
+msgstr "Beni istek açıklamasıyla değiştir"
+
+msgid "Data name;Description"
+msgstr "Veri adı;Açıklama"
+
+msgid "Goto data"
+msgstr "Veriye Git"
+
+msgid "Remove"
+msgstr "Kaldır"
+
+msgid "Add to screen"
+msgstr "Ekrana ekle"
+
+msgid "ECU Function address"
+msgstr "ECU İşlev adresi"
+
+msgid "ECU Protocol"
+msgstr "ECU Protokolü"
+
+msgid "Tool > Ecu ID (Hex)"
+msgstr "Araç > ECU Kimliği (Hex)"
+
+msgid "Ecu > Tool ID (Hex)"
+msgstr "ECU > Araç Kimliği (Hex)"
+
+msgid "Coding"
+msgstr "Kodlama"
+
+msgid "ECU Auto identification"
+msgstr "ECU Otomatik tanımlama"
+
+msgid "Add new"
+msgstr "Yeni Ekle"
+
+msgid "Delete selected"
+msgstr "Seçilenleri Sil"
+
+msgid "Number of bits"
+msgstr "Bit sayısı"
+
+msgid "Signed"
+msgstr "İşaretli"
+
+msgid "Add item"
+msgstr "Parça Ekle"
+
+msgid "Del item"
+msgstr "Öğeyi sil"
+
+msgid "New item"
+msgstr "Yeni parça"
+
+msgid "Value;Text"
+msgstr "Değer;Metin"
+
+msgid "Number of bit"
+msgstr "Bit Sayısı"
+
+msgid "Unit"
+msgstr "Birim"
+
+msgid "Format"
+msgstr "Biçim"
+
+msgid "Value = (AX+B) / C"
+msgstr "Değer = (AX+B) / C"
+
+msgid "Number of bytes"
+msgstr "Bayt sayısı"
+
+msgid "Send request bytes (HEX)"
+msgstr "Gönderilecek istek baytları (HEX)"
+
+msgid "Receive bytes (HEX)"
+msgstr "Alınan bayt (HEX)"
+
+msgid "Data length"
+msgstr "Veri uzunluğu"
+
+msgid "Shift byte count"
+msgstr "Bayt kaydırma sayısı"
+
+msgid "Data name;Start byte;Bit offset;Bit count;Endianess"
+msgstr "Veri adı;Başlangıç baytı;Bit ofseti;Bit sayısı;Endianness"
+
+msgid "Little"
+msgstr "Little-endian"
+
+msgid "Big"
+msgstr "Big-endian"
+
+msgid "Inherits globals"
+msgstr "Genelleri devralır"
+
+msgid "No SDS"
+msgstr "SDS yok"
+
+msgid "Plant"
+msgstr "Fabrika"
+
+msgid "After Sale"
+msgstr "Satış Sonrası"
+
+msgid "Engineering"
+msgstr "Mühendislik"
+
+msgid "Supplier"
+msgstr "Tedarikçi"
+
+msgid "Reload requests"
+msgstr "İstekleri yeniden yükle"
+
+msgid "Add request"
+msgstr "İstek Ekle"
+
+msgid "Send bytes"
+msgstr "Gönderilen bayt"
+
+msgid "Receive bytes"
+msgstr "Alınan bayt"
+
+msgid "Request name;Bytes;Manual"
+msgstr "İstek adı;Bayt;Manuel"
+
+msgid "No request named"
+msgstr "Adlandırılmış istek yok"
+
+msgid "Found similar"
+msgstr "Benzer bulundu"
+
+msgid "Cannot find data "
+msgstr "Veri bulunamıyor "
+
+msgid " vs "
+msgstr " karşılık "
+
+msgid "Cannot draw input "
+msgstr "Giriş görüntülenemiyor "
+
+msgid "No Value"
+msgstr "Değer Yok"
+
+msgid ""
+"<center>This Software is free, but I need money to buy cables/ECUs and make "
+"this application more reliable</center>"
+msgstr ""
+"<center>Bu Yazılım ücretsizdir, ancak kablolar/ECU'lar Satın Almak ve Bu "
+"Uygulamayı daha Güvenilir Hale Getirmek için paraya ihtiyacım Var</center>"
+
+msgid "Yes I contribute"
+msgstr "Evet katkıda bulunurum"
+
+msgid "No, I don't"
+msgstr "Hayır, yapmam"
+
+msgid "Thank you for you contribution, if nothing happens, please go to"
+msgstr ""
+"Katkılarınız için teşekkürler, eğer hiçbir şey olmazsa lütfen şuraya gidin"
+
+msgid "ECU Finder"
+msgstr "ECU Bulucu"
+
+msgid "Address :"
+msgstr "Adres:"
+
+msgid "ID frame :"
+msgstr "Kimlik Çerçevesi:"
+
+msgid "Search vehicle"
+msgstr "Araç ara"
+
+msgid "No vehicles available"
+msgstr "Araç bulunamadı"
+
+#, python-format
+msgid "%d loaded ECUs in database."
+msgstr "Veritabanına %d adet ECU yüklendi."
+
+msgid "No ECU database is installed"
+msgstr "ECU veritabanı yüklü değil"
+
+msgid "Restart DDT4ALL after installing or updating the database."
+msgstr ""
+"Veritabanını yükledikten veya güncelledikten sonra DDT4ALL'ı yeniden "
+"başlatın."
+
+msgid ""
+"Download the ECU database separately and copy the file (`ecu.zip` or the "
+"original DDT2000 XML database (`DDT2000DATA`)) to:\n"
+msgstr ""
+"ECU veritabanını ayrı olarak indirin ve dosyayı (`ecu.zip` veya orijinal "
+"DDT2000 XML veritabanını (`DDT2000DATA`)) şuraya kopyalayın:\n"
+
+msgid "DDT4All Documentation"
+msgstr "DDT4All Belgeleri"
+
+msgid "WebEngine not available."
+msgstr "WebEngine kullanılamıyor."
+
+msgid ""
+"For full documentation with web browsing capability, install PyQtWebEngine:"
+msgstr "Web tarama özellikli tam belgeleme için PyQtWebEngine kurun:"
+
+msgid "Visit the online documentation at:"
+msgstr "Çevrimiçi belgeleri ziyaret edin:"
+
+msgid "This basic view will still show ECU documentation when available."
+msgstr ""
+"Bu temel görünüm, mevcut olduğunda ECU belgelerini göstermeye devam edecek."
+
+msgid "Refresh rate (ms):"
+msgstr "Yenileme hızı (ms):"
+
+msgid "Can timeout (ms) [0:AUTO] :"
+msgstr "Zaman aşımı (ms) [0:AUTO] :"
+
+msgid "Documentation"
+msgstr "Belgeler"
+
+msgid "Screen"
+msgstr "Ekran"
+
+msgid "CAN Sniffer"
+msgstr "CAN Dinleyici"
+
+msgid "Requests"
+msgstr "İstekler"
+
+msgid "Data"
+msgstr "Veri"
+
+msgid "Buttons"
+msgstr "Butonlar"
+
+msgid "Ecu parameters"
+msgstr "ECU parametreleri"
+
+msgid "Screen Window"
+msgstr "Ekran Penceresi"
+
+msgid "Screens"
+msgstr "Ekranlar"
+
+msgid "Logs Window"
+msgstr "Kayıt Penceresi"
+
+msgid "Ecu Window"
+msgstr "Ecu Penceresi"
+
+msgid "Ecu List Window"
+msgstr "Ecu Liste Penceresi"
+
+msgid "ToolBar"
+msgstr "Araç Çubuğu"
+
+msgid "Read DTC"
+msgstr "DTC oku"
+
+msgid "Full log"
+msgstr "Tam günlük"
+
+msgid "Expert mode (enable writing)"
+msgstr "Uzman modu (yazmayı etkinleştir)"
+
+msgid "Auto refresh"
+msgstr "Otomatik yenileme"
+
+msgid "Refresh (one shot)"
+msgstr "Yenile (bir sefer)"
+
+msgid "Manual command"
+msgstr "Manuel komut"
+
+msgid "Manual request"
+msgstr "Manuel istek"
+
+msgid "Software flow control"
+msgstr "Yazılımsal akış kontrolü"
+
+msgid "Zoom In"
+msgstr "Yakınlaştır"
+
+msgid "Zoom Out"
+msgstr "Uzaklaştır"
+
+msgid "UI Edit"
+msgstr "UI Düzenle"
+
+msgid "File"
+msgstr "Dosya"
+
+msgid "Open XML"
+msgstr "XML aç"
+
+msgid "Save current ECU"
+msgstr "Mevcut ECU'yu kaydet"
+
+msgid "Save last record"
+msgstr "Son kaydı kaydet"
+
+msgid "Save ECU list"
+msgstr "ECU listesini kaydet"
+
+msgid "Exit"
+msgstr "Çıkış"
+
+msgid "Tools"
+msgstr "Araçlar"
+
+msgid "Identify ECU"
+msgstr "ECU tanımla"
+
+msgid "Create New ECU"
+msgstr "Yeni ECU Oluştur"
+
+msgid "Zip database"
+msgstr "Veritabanını sıkıştır"
+
+msgid "Clear DDT4ALL History"
+msgstr "DDT4ALL Geçmişini Temizle"
+
+msgid "Reset DDT4ALL Settings"
+msgstr "DDT4ALL Ayarlarını Sıfırla"
+
+msgid "View"
+msgstr "Görünüm"
+
+msgid "CarList Order"
+msgstr "Araç Listesi Sıralaması"
+
+msgid "By Project Code"
+msgstr "Proje Koduna Göre"
+
+msgid "By Car Name"
+msgstr "Araç Adına Göre"
+
+msgid "Theme"
+msgstr "Tema"
+
+msgid "Dark Theme"
+msgstr "Karanlık Tema"
+
+msgid "Light Theme"
+msgstr "Açık Tema"
+
+msgid "Panels"
+msgstr "Paneller"
+
+msgid "New Category"
+msgstr "Yeni kategori"
+
+msgid "New Screen"
+msgstr "Yeni Ekran"
+
+msgid "Rename"
+msgstr "Yeniden Adlandır"
+
+msgid "Plugins"
+msgstr "Eklentiler"
+
+msgid "Cannot load plugin "
+msgstr "Eklenti yüklenemiyor "
+
+msgid "Help"
+msgstr "Yardım"
+
+msgid "Web Wiki"
+msgstr "Web Vikisi"
+
+msgid "About Developers"
+msgstr "Geliştiriciler Hakkında"
+
+msgid "Get Git update"
+msgstr "Git güncellemesini alın"
+
+msgid "About"
+msgstr "Hakkında"
+
+msgid "About DDT4ALL"
+msgstr "DDT4ALL Hakkında"
+
+msgid " version:"
+msgstr " sürüm:"
+
+msgid "Created by:"
+msgstr "Oluşturan:"
+
+msgid "History cleared"
+msgstr "Geçmiş temizlendi"
+
+msgid "Last selected vehicle and ECU history has been cleared."
+msgstr "En son seçilen araç ve ECU geçmişi temizlendi."
+
+msgid "Configuration Reset"
+msgstr "Yapılandırma temizlendi"
+
+msgid "The configuration has been reset."
+msgstr "Yapılandırma temizlendi."
+
+msgid "Options"
+msgstr "Seçenekler"
+
+#, python-format
+msgid "Error updating menu bar: %s"
+msgstr "Menü çubuğu güncelleme hatası: %s"
+
+msgid "CAN Line 1 Auto"
+msgstr "CAN Hat 1 Otomatik"
+
+msgid "CAN Line 1@500K"
+msgstr "CAN Hat 1@500K"
+
+msgid "CAN Line 1@250K"
+msgstr "CAN Hat 1@250K"
+
+msgid "CAN Line 2@500K"
+msgstr "CAN Hat 2@500K"
+
+msgid "CAN Line 2@250K"
+msgstr "CAN Hat 2@250K"
+
+msgid "CAN Line 2@125K"
+msgstr "CAN Hat 2@125K"
+
+msgid "KWP2000"
+msgstr "KWP2000 Protokolü"
+
+msgid "ISO8"
+msgstr "ISO8 Protokolü"
+
+msgid "Save database (keep '.zip' extension)"
+msgstr "Veritabanını kaydet ('.zip' uzantısını koru)"
+
+msgid "Zipping XML database... (this can take a few minutes)"
+msgstr "XML veritabanı sıkıştırılıyor... (bu işlem birkaç dakika sürebilir)"
+
+msgid "Zip job finished"
+msgstr "Sıkıştırma işlemi tamamlandı"
+
+msgid "No database found"
+msgstr "Veritabanı bulunamadı"
+
+msgid "Check documentation"
+msgstr "Belgeleri kontrol edin"
+
+msgid "Enter new name"
+msgstr "Yeni ad girin"
+
+msgid "Enter category name"
+msgstr "Kategori adını girin"
+
+msgid "Please select a category before creating new screen"
+msgstr "Lütfen yeni ekran oluşturmadan önce bir kategori seçin"
+
+msgid "Enter screen name"
+msgstr "Ekran adını girin"
+
+msgid "Scanning CAN"
+msgstr "CAN Taranıyor"
+
+msgid "Scanning KWP"
+msgstr "KWP Taranıyor"
+
+msgid "Scanning DoIP"
+msgstr "DoIP Taranıyor"
+
+msgid "Scan options"
+msgstr "Tarama seçenekleri"
+
+msgid "EDITION MODE"
+msgstr "DÜZENLEME MODU"
+
+msgid "CONNECTED"
+msgstr "BAĞLANDI"
+
+msgid "DISCONNECTED"
+msgstr "BAĞLANTI KESİLDİ"
+
+msgid "Save vehicule (keep '.ecu' extension)"
+msgstr "Aracı kaydet ('.ecu' uzantısını koru)"
+
+msgid "Save ECU (keep '.json' extension)"
+msgstr "ECU'yu kaydet ('.json' uzantısını koru)"
+
+msgid "Save record (keep '.txt' extension)"
+msgstr "Kaydı kaydet ('.txt' uzantısını koru)"
+
+msgid "Recorded "
+msgstr "Kaydedildi "
+
+msgid " entries"
+msgstr " girişler"
+
+#, python-format
+msgid "Invalid DoIP ECU address: %s"
+msgstr "Geçersiz DoIP ECU adresi: %s"
+
+msgid "No"
+msgstr "Hayır"
+
+msgid "ELM port selection"
+msgstr "ELM bağlantı noktası (port) seçimi"
+
+msgid "USB"
+msgstr "USB Bağlantısı"
+
+msgid "WiFi"
+msgstr "Wi-Fi Bağlantısı"
+
+msgid "Bluetooth"
+msgstr "Bluetooth Bağlantısı"
+
+msgid "OBDLINK SX/EX"
+msgstr "OBDLINK SX/EX Adaptörü"
+
+msgid "ELS27/ELS27 V5 - May appear as FTDI/CH340/CP210x device"
+msgstr "ELS27/ELS27 V5 - FTDI/CH340/CP210x cihazı olarak görünebilir"
+
+msgid "Vlinker FS/MC"
+msgstr "Vlinker FS/MC Adaptörü"
+
+msgid "DERLEK USB-DIAG2/3"
+msgstr "DERLEK USB-DIAG2/3 Adaptörü"
+
+msgid "VGate (High-Speed)"
+msgstr "VGate (Yüksek Hızlı)"
+
+msgid "DoIP (Diagnostics over IP)"
+msgstr "DoIP (IP Üzerinden Tanılama)"
+
+msgid "Interface language"
+msgstr "Arayüz dili"
+
+msgid "Port speed"
+msgstr "Bağlantı noktası (port) hızı"
+
+msgid "Connected mode"
+msgstr "Bağlantı modu"
+
+msgid "Edition mode"
+msgstr "Düzenleme modu"
+
+msgid "ELM benchmark"
+msgstr "ELM değerlendirme testi"
+
+msgid "WiFi port : "
+msgstr "WiFi bağlantı noktası : "
+
+msgid "I acknowledge that improper use may cause damage to my vehicle."
+msgstr "Hatalı kullanırsam arabama zarar verebileceğimin farkındayım"
+
+msgid "Enable CAN2"
+msgstr "CAN2'yi etkinleştir"
+
+msgid "Dark style"
+msgstr "Karanlık mod"
+
+msgid "WiFi Socket-TimeOut"
+msgstr "WiFi socket zaman aşımı"
+
+msgid "Enable DoIP Scan"
+msgstr "DoIP taramasını etkinleştir"
+
+msgid "DoIP (Diagnostics over IP) Configuration (Experimental)"
+msgstr "DoIP (IP Üzerinden Tanılama) Yapılandırması (Deneysel)"
+
+msgid "Device Preset : "
+msgstr "Cihaz Önayarı : "
+
+msgid "Custom"
+msgstr "Özel"
+
+msgid "Bosch MTS"
+msgstr "Bosch MTS Cihazı"
+
+msgid "VXDIAG VCX Nano"
+msgstr "VXDIAG VCX Nano Cihazı"
+
+msgid "VAG ODIS"
+msgstr "VAG ODIS Arayüzü"
+
+msgid "JLR DoIP VCI"
+msgstr "JLR DoIP VCI Arayüzü"
+
+msgid "Generic DoIP"
+msgstr "Genel DoIP"
+
+msgid "DoIP Target IP : "
+msgstr "DoIP Hedef IP : "
+
+msgid "DoIP Port : "
+msgstr "DoIP Bağlantı Noktası: "
+
+msgid "DoIP Timeout (seconds) : "
+msgstr "DoIP Zaman Aşımı (saniye) : "
+
+msgid "Enable Vehicle Announcement Discovery"
+msgstr "Araç Duyurusu Keşfini Etkinleştir"
+
+msgid "Auto-reconnect on connection loss"
+msgstr "Bağlantı kesildiğinde otomatik yeniden bağlan"
+
+msgid "Change UART speed"
+msgstr "UART hızını değiştir"
+
+#, python-format
+msgid "DoIP device added to list: %(ip)s:%(port)s"
+msgstr "DoIP cihazı listeye eklendi: %(ip)s:%(port)s"
+
+#, python-format
+msgid "Error adding DoIP device to list: %s"
+msgstr "DoIP cihazını listeye eklerken hata oluştu: %s"
+
+msgid "DoIP device removed from list"
+msgstr "DoIP cihazı listeden kaldırıldı"
+
+#, python-format
+msgid "Error removing DoIP device from list: %s"
+msgstr "DoIP cihazını listeden kaldırırken hata oluştu: %s"
+
+msgid "Checking..."
+msgstr "Kontrol ediliyor..."
+
+msgid "Please enter WiFi adapter IP address"
+msgstr "Lütfen WiFi adaptörü IP adresini girin"
+
+msgid "Invalid WiFi format. Use IP:PORT (e.g., 192.168.0.10:35000)"
+msgstr "Geçersiz WiFi biçimi. IP:PORT kullanın (örn: 192.168.0.10:35000)"
+
+msgid "Please select a serial port"
+msgstr "Lütfen bir seri port seçin"
+
+msgid "Selected port is no longer available"
+msgstr "Seçilen port artık mevcut değil"
+
+msgid "Attempting connection..."
+msgstr "Bağlantı deneniyor..."
+
+msgid "Port: "
+msgstr "Bağlantı Noktası: "
+
+msgid "Speed: "
+msgstr "Hız: "
+
+msgid "Connection test failed"
+msgstr "Bağlantı testi başarısız"
+
+msgid "Troubleshooting suggestions:"
+msgstr "Sorun giderme önerileri:"
+
+msgid "1. Check device is properly connected"
+msgstr "1. Cihazın düzgün bağlandığını kontrol edin"
+
+msgid "2. Try different baud rates"
+msgstr "2. Farklı baud hızları deneyin"
+
+msgid "3. Ensure device drivers are installed"
+msgstr "3. Cihaz sürücülerinin kurulu olduğundan emin olun"
+
+msgid "4. Check port permissions (Linux/macOS)"
+msgstr "4. Port izinlerini kontrol edin (Linux/macOS)"
+
+msgid "Connection test successful!"
+msgstr "Bağlantı testi başarılı!"
+
+msgid "Error during connection test: "
+msgstr "Bağlantı testi sırasında hata: "
+
+msgid "Reset and Recheck"
+msgstr "Sıfırla ve Yeniden Kontrol Et"
+
+#, python-format
+msgid "Error updating port list: %s"
+msgstr "Port listesi güncelleme hatası: %s"
+
+msgid "VGate iCar Pro selected - Enhanced STN/STPX support enabled"
+msgstr "VGate iCar Pro seçildi - Gelişmiş STN/STPX desteği etkin"
+
+msgid "Long command support and high-speed communication available"
+msgstr "Uzun komut desteği ve yüksek hızlı iletişim mevcut"
+
+#, python-format
+msgid "DoIP preset applied: %(name)s -> %(ip)s"
+msgstr "DoIP ön ayarı uygulandı: %(name)s -> %(ip)s"
+
+#, python-format
+msgid "DoIP preset applied: %(name)s (IP unchanged)"
+msgstr "DoIP ön ayarı uygulandı: %(name)s (IP değişmedi)"
+
+#, python-format
+msgid "Error preparing DoIP update: %s"
+msgstr "DoIP güncellemesi hazırlama hatası: %s"
+
+#, python-format
+msgid "Applied %s preset:"
+msgstr "%s ön ayarı uygulandı:"
+
+#, python-format
+msgid "  IP: %s"
+msgstr "  IP Adresi: %s"
+
+#, python-format
+msgid "  Port: %s"
+msgstr "  Bağlantı Noktası: %s"
+
+#, python-format
+msgid "  Timeout: %ss"
+msgstr "  Zaman aşımı: %ss"
+
+msgid "  Configuration saved and device list reloaded"
+msgstr "  Yapılandırma kaydedildi ve cihaz listesi yeniden yüklendi"
+
+#, python-format
+msgid "Error in force DoIP update: %s"
+msgstr "Zorunlu DoIP güncelleme hatası: %s"
+
+#, python-format
+msgid "Error in delayed DoIP update: %s"
+msgstr "Gecikmeli DoIP güncelleme hatası: %s"
+
+#, python-format
+msgid "DoIP device updated: %(ip)s:%(port)s"
+msgstr "DoIP cihazı güncellendi: %(ip)s:%(port)s"
+
+msgid "DoIP device removed from list (scan disabled)"
+msgstr "DoIP cihazı listeden kaldırıldı (tarama devre dışı)"
+
+#, python-format
+msgid "Error in targeted DoIP update: %s"
+msgstr "Hedeflenmiş DoIP güncelleme hatası: %s"
+
+msgid "N/A"
+msgstr "Yok"
+
+msgid "DoIP (Diagnostics over IP) selected"
+msgstr "DoIP (IP Üzerinden Tanılama) seçildi"
+
+msgid "Ethernet-based diagnostic communication"
+msgstr "Ethernet tabanlı tanılama iletişimi"
+
+msgid "Select an ISO 13400 DoIP entity by its IP address"
+msgstr "ISO 13400 DoIP varlığını IP adresiyle seçin"
+
+msgid "You must check the recommandations"
+msgstr "Önerileri kontrol etmelisiniz"
+
+msgid "Please select a communication port"
+msgstr "Lütfen bir bağlantı noktası (port) seçin"
+
+msgid "ECU Command"
+msgstr "ECU Komutu"
+
+msgid "Start diagnostic session"
+msgstr "Tanılama oturumunu başlat"
+
+msgid "Request"
+msgstr "İstek"
+
+msgid "Data to send"
+msgstr "Gönderilecek veri"
+
+msgid "Computed ISOTP Frame"
+msgstr "Hesaplanmış ISOTP Çerçevesi"
+
+msgid "Compute frame"
+msgstr "Çerçeve hesapla"
+
+msgid "Data received"
+msgstr "Veri alındı"
+
+msgid "Execute"
+msgstr "Yürüt"
+
+msgid ""
+"<center>This feature is experimental</center>\n"
+"<center>Use it at your own risk</center>\n"
+"<center>and if you know exactely what you do</center>\n"
+msgstr ""
+"<center>Bu özellik deneyseldir</center>\n"
+"<center>Kendi sorumluluğunuzda kullanın</center>\n"
+"<center>ve tam olarak ne yaptığınızı biliyorsanız</center>\n"
+
+msgid "Err, cannot rename "
+msgstr "Hata, yeniden adlandıramıyorum "
+
+msgid "To be able to edit your screen, first export it in JSON format"
+msgstr "Ekranınızı düzenleyebilmek için önce JSON formatında dışa aktarın"
+
+msgid "Enter label name"
+msgstr "Etiket adını girin"
+
+msgid "Add button"
+msgstr "Buton ekle"
+
+msgid "Add label"
+msgstr "Etiket ekle"
+
+msgid "Rename label"
+msgstr "Etiketi yeniden adlandır"
+
+msgid "Change color"
+msgstr "Rengi değiştir"
+
+msgid "Remove element"
+msgstr "Öğeyi kaldır"
+
+msgid "Diagnotic session"
+msgstr "Tanılama oturumu"
+
+msgid "Input"
+msgstr "Giriş"
+
+msgid "Output"
+msgstr "Çıkış"
+
+msgid "Protocol not supported"
+msgstr "Protokol desteklenmiyor"
+
+msgid "Protocol not supported: "
+msgstr "Protokol desteklenmiyor: "
+
+msgid "XML file not found : "
+msgstr "XML dosyası bulunamadı: "
+
+msgid "Invalid DDT file"
+msgstr "Geçersiz DDT dosyası"
+
+msgid "Connection to ELM lost, trying to reconnect..."
+msgstr "ELM ile bağlantı kesildi, yeniden bağlanmaya çalışılıyor..."
+
+msgid "Cannot reconnect..."
+msgstr "Yeniden bağlanılamıyor..."
+
+msgid "Switching to session mode"
+msgstr "Oturum moduna geçiş"
+
+msgid "Sending ELM request :"
+msgstr "ELM isteği gönderiliyor:"
+
+msgid "Blocked ELM request :"
+msgstr "Engellenen ELM isteği:"
+
+msgid "Sending ELM request:"
+msgstr "Gönderilen ELM isteği:"
+
+msgid "Sending simulated ELM request :"
+msgstr "Simüle ELM isteği gönderiliyor:"
+
+msgid "Bad ELM response :"
+msgstr "Kötü ELM yanıtı:"
+
+msgid "ELM response : "
+msgstr "ELM yanıtı: "
+
+msgid "Button request not found : "
+msgstr "Buton isteği bulunamadı: "
+
+msgid "Sending request :"
+msgstr "Gönderilen istek :"
+
+msgid "Unknown request "
+msgstr "Bilinmeyen istek "
+
+msgid "Command aborted "
+msgstr "Komut iptal edildi "
+
+msgid "Value error of this stuff need a bypass gateway maybe."
+msgstr "Bu değerin işlenmesi için bypass ağ geçidi gerekli olabilir."
+
+msgid "Request aborted (look at red paramters entries): "
+msgstr "İstek iptal edildi (kırmızı parametre girişlerine bakın): "
+
+msgid "Delay"
+msgstr "Gecikme"
+
+msgid "For your safety"
+msgstr "Güvenliğiniz için"
+
+msgid ""
+"<center>BLOCKED COMMAND</center>\n"
+"Activate expert mode to unlock"
+msgstr ""
+"<center>ENGELLENMİŞ KOMUT</center>\n"
+"Kilidi açmak için uzman modunu etkinleştirin"
+
+msgid "Writing parameter"
+msgstr "Parametre yazma"
+
+msgid "Blocked writing parameter"
+msgstr "Engellenen yazma parametresi"
+
+msgid "Invalid"
+msgstr "Geçersiz"
+
+msgid "ECU uses SDS "
+msgstr "ECU, SDS kullanır "
+
+msgid "Cannot call request "
+msgstr "İstek çağrılamıyor "
+
+msgid "Update time"
+msgstr "Güncelleme zamanı"
+
+msgid "Clearing DTC information"
+msgstr "DTC bilgileri temizleniyor"
+
+msgid "No ClearDTC request for that ECU, will send default 14FF00"
+msgstr "Bu ECU için ClearDTC isteği yok, varsayılan 14FF00 gönderilecek"
+
+msgid "<center>You are about to clear diagnostic troubles codes</center>"
+msgstr "<center>Tanılama arıza kodlarını temizlemek üzeresiniz</center>"
+
+msgid "<center>Ae you sure this is what you want.</center>"
+msgstr "<center>Bunu istediğinizden emin misiniz?</center>"
+
+msgid "Clear DTC failed"
+msgstr "DTC temizleme başarısız oldu"
+
+msgid "Clear DTC successfully done"
+msgstr "DTC temizliği başarıyla tamamlandı"
+
+msgid "No ReadDTC request for that ECU"
+msgstr "Bu ECU için ReadDTC isteği yok"
+
+msgid "Invalid response for ReadDTC command"
+msgstr "ReadDTC komutu için geçersiz yanıt"
+
+msgid "Read DTC returned an error"
+msgstr "DTC'yi oku bir hata ile karşılaştı"
+
+msgid "No DTC"
+msgstr "DTC yok"
+
+msgid "Invalid DTC response: "
+msgstr "Geçersiz DTC yanıtı: "
+
+msgid "DTC parsing error - response: "
+msgstr "DTC ayrıştırma hatası - yanıt: "
+
+msgid "Diagnostic Trouble Codes"
+msgstr "Tanılama Arıza Kodları"
+
+msgid "Clear ALL DTC"
+msgstr "TÜM DTC'leri Temizle"
+
+msgid "ECU trouble codes"
+msgstr "ECU arıza kodları"
+
+msgid "Parsing screen "
+msgstr "Ekran ayrıştırılıyor "
+
+msgid "found request in input "
+msgstr "girişte istek bulundu "
+
+msgid "found in display "
+msgstr "ekranda bulundu "
+
+msgid "found in button "
+msgstr "düğmede bulunan "
+
+msgid "found in presend "
+msgstr "presend içinde bulundu "
+
+msgid "found data in input "
+msgstr "girişte veri bulundu "
+
+msgid "found data in display "
+msgstr "ekranda veri bulundu "
+
+msgid "Waiting..."
+msgstr "Bekleniyor..."
+
+msgid "Frame length error: "
+msgstr "Çerçeve uzunluk hatası: "
+
+msgid "Frame hex error: "
+msgstr "Çerçeve hex hatası: "
