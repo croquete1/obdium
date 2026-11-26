@@ -976,10 +976,9 @@ impl OBD {
         }
         let selection = ProtocolSelection::try_from(self.protocol)
             .map_err(|_| Error::InvalidProtocol(self.protocol))?;
-        if let ProtocolSelection::Manual(protocol) = selection {
-            if protocol.can_parameters().is_none() {
-                return Err(Error::InvalidResponse);
-            }
+        if matches!(selection, ProtocolSelection::Manual(protocol) if protocol.can_parameters().is_none())
+        {
+            return Err(Error::InvalidResponse);
         }
         self.send_command(&mut Command::new_pid(b"0100"))?;
         let raw = self.read_until(b'>')?;
@@ -1438,6 +1437,17 @@ mod serial_prompt_tests {
             Err(Error::InvalidResponse)
         ));
         assert_eq!(state.lock().unwrap().written, b"0100\r");
+    }
+
+    #[test]
+    fn manual_legacy_selection_does_not_start_can_probe() {
+        let (mut obd, state) = fixture_obd(FixtureState::default());
+        obd.protocol = 3;
+        assert!(matches!(
+            obd.probe_can_protocol(),
+            Err(Error::InvalidResponse)
+        ));
+        assert!(state.lock().unwrap().written.is_empty());
     }
 
     #[test]
