@@ -74,3 +74,7 @@ DDT4All is GPL-3.0-or-later; OBDium GPL-3.0. Reuse ideas/specifications and orig
 ## Status
 
 Planning and source mapping only; no runtime feature or physical verification is claimed. Existing demo and OBD-II functions remain untouched. See canonical roadmap for individual TODO/BLOCKED/REVIEW statuses and evidence.
+
+## Vendored reference files
+
+A selective snapshot of GPL code and synthetic XML/JSON fixtures is stored in [vendor/ddt4all](vendor/ddt4all/README.md). It is documentation/test reference only, not a runtime dependency. Actual OEM database and project catalog remain excluded pending data-specific rights verification; see manifest.
