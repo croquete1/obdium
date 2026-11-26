@@ -130,7 +130,7 @@ pub fn validate_selection_ack(reply: &str) -> Result<(), ProtocolError> {
 /// Other valid adapter layouts are deliberately unverified here.
 pub fn can_probe_identifier_width(reply: &str) -> Result<u8, ProtocolError> {
     let mut width = None;
-    for line in reply.lines().map(str::trim_ascii) {
+    for line in reply.split(['\r', '\n']).map(str::trim_ascii) {
         if line.is_empty() || line == "SEARCHING..." {
             continue;
         }
