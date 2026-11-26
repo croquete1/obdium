@@ -10,24 +10,71 @@ use std::{
 use tauri::{EventId, Listener, WebviewWindow};
 
 pub static ACTIVE_OBD: Lazy<Mutex<Option<Arc<Mutex<OBD>>>>> = Lazy::new(|| Mutex::new(None));
-pub static USER_COMMAND_LISTENER: Lazy<Mutex<Option<EventId>>> = Lazy::new(|| Mutex::new(None));
-pub static READINESS_TESTS_LISTENER: Lazy<Mutex<Option<EventId>>> = Lazy::new(|| Mutex::new(None));
+// Serialize connection installation and teardown, not ordinary sensor reads.
+pub static SESSION_TRANSITION: Mutex<()> = Mutex::new(());
+pub static SESSION_LISTENERS: Mutex<Vec<EventId>> = Mutex::new(Vec::new());
+
+fn take_matching<T>(active: &mut Option<Arc<T>>, expected: &Arc<T>) -> Option<Arc<T>> {
+    if active.as_ref().is_some_and(|current| Arc::ptr_eq(current, expected)) {
+        active.take()
+    } else {
+        None
+    }
+}
+
+pub fn is_current_session(expected: &Arc<Mutex<OBD>>) -> bool {
+    ACTIVE_OBD
+        .lock()
+        .unwrap()
+        .as_ref()
+        .is_some_and(|current| Arc::ptr_eq(current, expected))
+}
+
+pub fn take_current_session(expected: &Arc<Mutex<OBD>>) -> Option<Arc<Mutex<OBD>>> {
+    take_matching(&mut ACTIVE_OBD.lock().unwrap(), expected)
+}
 
 pub(crate) static CUSTOM_PIDS_TRACKED: Lazy<Mutex<HashMap<String, CustomPid>>> =
     Lazy::new(|| Mutex::new(HashMap::new()));
 
 pub fn unlisten_events(window: &Arc<WebviewWindow>) {
-    {
-        let mut handler = USER_COMMAND_LISTENER.lock().unwrap();
-        if let Some(id) = handler.take() {
-            window.unlisten(id);
-        }
+    let listeners = std::mem::take(&mut *SESSION_LISTENERS.lock().unwrap());
+    for id in listeners {
+        window.unlisten(id);
     }
-    {
-        let mut handler = READINESS_TESTS_LISTENER.lock().unwrap();
-        if let Some(id) = handler.take() {
-            window.unlisten(id);
-        }
+}
+
+#[cfg(test)]
+mod session_tests {
+    use super::*;
+
+    #[test]
+    fn stale_session_cannot_remove_replacement() {
+        let old = Arc::new(1);
+        let replacement = Arc::new(2);
+        let mut active = Some(Arc::clone(&replacement));
+        assert!(take_matching(&mut active, &old).is_none());
+        assert!(Arc::ptr_eq(active.as_ref().unwrap(), &replacement));
+    }
+
+    #[test]
+    fn current_session_can_be_removed_only_once() {
+        let session = Arc::new(1);
+        let mut active = Some(Arc::clone(&session));
+        assert!(Arc::ptr_eq(
+            &take_matching(&mut active, &session).unwrap(),
+            &session
+        ));
+        assert!(take_matching(&mut active, &session).is_none());
+    }
+
+    #[test]
+    fn equal_values_do_not_identify_the_same_session() {
+        let old = Arc::new(1);
+        let current = Arc::new(1);
+        let mut active = Some(Arc::clone(&current));
+        assert!(take_matching(&mut active, &old).is_none());
+        assert!(take_matching(&mut active, &current).is_some());
     }
 }
 
