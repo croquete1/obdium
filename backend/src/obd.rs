@@ -9,7 +9,8 @@ use thiserror::Error;
 
 use crate::cmd::{Command, CommandType};
 use crate::protocol::{
-    parse_reported_protocol, validate_selection_ack, ProtocolSelection, ReportedProtocol,
+    can_probe_identifier_width, confirm_can_probe, parse_reported_protocol, validate_selection_ack,
+    ObdProtocol, ProtocolSelection, ReportedProtocol,
 };
 use crate::response::Response;
 use crate::scalar::{Scalar, Unit, UnitPreferences};
@@ -965,6 +966,28 @@ impl OBD {
             .map_err(|_| Error::InvalidResponse)
     }
 
+    /// Read-only CAN probe, using the standard supported-PID request.
+    /// A successful result correlates ECU response framing with the adapter report.
+    /// The nominal bus speed is reported by the adapter, not measured independently.
+    /// Legacy protocol layouts are not supported by this verification path.
+    pub fn probe_can_protocol(&mut self) -> Result<ObdProtocol, Error> {
+        if self.replay_requests {
+            return Err(Error::InvalidResponse);
+        }
+        let selection = ProtocolSelection::try_from(self.protocol)
+            .map_err(|_| Error::InvalidProtocol(self.protocol))?;
+        if let ProtocolSelection::Manual(protocol) = selection {
+            if protocol.can_parameters().is_none() {
+                return Err(Error::InvalidResponse);
+            }
+        }
+        self.send_command(&mut Command::new_pid(b"0100"))?;
+        let raw = self.read_until(b'>')?;
+        can_probe_identifier_width(&raw).map_err(|_| Error::InvalidResponse)?;
+        let report = self.get_reported_protocol()?;
+        confirm_can_probe(selection, report, &raw).map_err(|_| Error::InvalidResponse)
+    }
+
     /// Requested configuration, not an independently verified ECU protocol.
     pub fn get_protocol_number(&self) -> u8 {
         if self.is_connected() {
@@ -1388,6 +1411,51 @@ mod serial_prompt_tests {
         assert_eq!(report.protocol.map(|protocol| protocol as u8), Some(7));
         assert_eq!(obd.get_protocol_number(), 0);
         assert_eq!(state.lock().unwrap().written, b"AT DPN\r");
+    }
+
+    #[test]
+    fn can_probe_requires_positive_ecu_response_before_reading_adapter_report() {
+        let (mut obd, state) = fixture_obd(FixtureState {
+            scripted_replies: VecDeque::from([
+                b"SEARCHING...\r18DAF110 06 41 00 00 00 00 00\r>".to_vec(),
+                b"A9\r>".to_vec(),
+            ]),
+            ..Default::default()
+        });
+        assert_eq!(obd.probe_can_protocol().unwrap(), ObdProtocol::Can29At250);
+        assert_eq!(state.lock().unwrap().written, b"0100\rAT DPN\r");
+        assert_eq!(obd.get_protocol_number(), 0);
+    }
+
+    #[test]
+    fn unsuccessful_can_probe_does_not_query_adapter_report() {
+        let (mut obd, state) = fixture_obd(FixtureState {
+            scripted_replies: VecDeque::from([b"NO DATA\r>".to_vec()]),
+            ..Default::default()
+        });
+        assert!(matches!(
+            obd.probe_can_protocol(),
+            Err(Error::InvalidResponse)
+        ));
+        assert_eq!(state.lock().unwrap().written, b"0100\r");
+    }
+
+    #[test]
+    fn can_probe_rejects_manual_protocol_mismatch() {
+        let (mut obd, state) = fixture_obd(FixtureState {
+            scripted_replies: VecDeque::from([
+                b"7E8 06 41 00 FF FF FF FF\r>".to_vec(),
+                b"8\r>".to_vec(),
+            ]),
+            ..Default::default()
+        });
+        obd.protocol = 6;
+        assert!(matches!(
+            obd.probe_can_protocol(),
+            Err(Error::InvalidResponse)
+        ));
+        assert_eq!(state.lock().unwrap().written, b"0100\rAT DPN\r");
+        assert_eq!(obd.get_protocol_number(), 6);
     }
 
     #[test]
