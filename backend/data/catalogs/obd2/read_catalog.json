@@ -1,0 +1,1198 @@
+{
+  "schema_version": 1,
+  "status": "reference_only",
+  "license": "GPL-2.0-or-later",
+  "source_revision": "a378bdd81d58c67d08050e4244173a9a7dbda73d",
+  "source_file": "obd/commands.py",
+  "note": "Adapted 2026-11-26 from upstream static command metadata; only read services 01/03/06/07/09, no formulas, no active command, no automatic dispatch. Length hint includes upstream service/PID framing assumptions; 0 is unknown. Do not infer support or trust vehicle responses from this table.",
+  "entries": [
+    {
+      "request_hex": "0100",
+      "name": "PIDS_A",
+      "description": "Supported PIDs [01-20]",
+      "upstream_response_length_hint": 6
+    },
+    {
+      "request_hex": "0101",
+      "name": "STATUS",
+      "description": "Status since DTCs cleared",
+      "upstream_response_length_hint": 6
+    },
+    {
+      "request_hex": "0102",
+      "name": "FREEZE_DTC",
+      "description": "DTC that triggered the freeze frame",
+      "upstream_response_length_hint": 4
+    },
+    {
+      "request_hex": "0103",
+      "name": "FUEL_STATUS",
+      "description": "Fuel System Status",
+      "upstream_response_length_hint": 4
+    },
+    {
+      "request_hex": "0104",
+      "name": "ENGINE_LOAD",
+      "description": "Calculated Engine Load",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "0105",
+      "name": "COOLANT_TEMP",
+      "description": "Engine Coolant Temperature",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "0106",
+      "name": "SHORT_FUEL_TRIM_1",
+      "description": "Short Term Fuel Trim - Bank 1",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "0107",
+      "name": "LONG_FUEL_TRIM_1",
+      "description": "Long Term Fuel Trim - Bank 1",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "0108",
+      "name": "SHORT_FUEL_TRIM_2",
+      "description": "Short Term Fuel Trim - Bank 2",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "0109",
+      "name": "LONG_FUEL_TRIM_2",
+      "description": "Long Term Fuel Trim - Bank 2",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "010A",
+      "name": "FUEL_PRESSURE",
+      "description": "Fuel Pressure",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "010B",
+      "name": "INTAKE_PRESSURE",
+      "description": "Intake Manifold Pressure",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "010C",
+      "name": "RPM",
+      "description": "Engine RPM",
+      "upstream_response_length_hint": 4
+    },
+    {
+      "request_hex": "010D",
+      "name": "SPEED",
+      "description": "Vehicle Speed",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "010E",
+      "name": "TIMING_ADVANCE",
+      "description": "Timing Advance",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "010F",
+      "name": "INTAKE_TEMP",
+      "description": "Intake Air Temp",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "0110",
+      "name": "MAF",
+      "description": "Air Flow Rate (MAF)",
+      "upstream_response_length_hint": 4
+    },
+    {
+      "request_hex": "0111",
+      "name": "THROTTLE_POS",
+      "description": "Throttle Position",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "0112",
+      "name": "AIR_STATUS",
+      "description": "Secondary Air Status",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "0113",
+      "name": "O2_SENSORS",
+      "description": "O2 Sensors Present",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "0114",
+      "name": "O2_B1S1",
+      "description": "O2: Bank 1 - Sensor 1 Voltage",
+      "upstream_response_length_hint": 4
+    },
+    {
+      "request_hex": "0115",
+      "name": "O2_B1S2",
+      "description": "O2: Bank 1 - Sensor 2 Voltage",
+      "upstream_response_length_hint": 4
+    },
+    {
+      "request_hex": "0116",
+      "name": "O2_B1S3",
+      "description": "O2: Bank 1 - Sensor 3 Voltage",
+      "upstream_response_length_hint": 4
+    },
+    {
+      "request_hex": "0117",
+      "name": "O2_B1S4",
+      "description": "O2: Bank 1 - Sensor 4 Voltage",
+      "upstream_response_length_hint": 4
+    },
+    {
+      "request_hex": "0118",
+      "name": "O2_B2S1",
+      "description": "O2: Bank 2 - Sensor 1 Voltage",
+      "upstream_response_length_hint": 4
+    },
+    {
+      "request_hex": "0119",
+      "name": "O2_B2S2",
+      "description": "O2: Bank 2 - Sensor 2 Voltage",
+      "upstream_response_length_hint": 4
+    },
+    {
+      "request_hex": "011A",
+      "name": "O2_B2S3",
+      "description": "O2: Bank 2 - Sensor 3 Voltage",
+      "upstream_response_length_hint": 4
+    },
+    {
+      "request_hex": "011B",
+      "name": "O2_B2S4",
+      "description": "O2: Bank 2 - Sensor 4 Voltage",
+      "upstream_response_length_hint": 4
+    },
+    {
+      "request_hex": "011C",
+      "name": "OBD_COMPLIANCE",
+      "description": "OBD Standards Compliance",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "011D",
+      "name": "O2_SENSORS_ALT",
+      "description": "O2 Sensors Present (alternate)",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "011E",
+      "name": "AUX_INPUT_STATUS",
+      "description": "Auxiliary input status (power take off)",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "011F",
+      "name": "RUN_TIME",
+      "description": "Engine Run Time",
+      "upstream_response_length_hint": 4
+    },
+    {
+      "request_hex": "0120",
+      "name": "PIDS_B",
+      "description": "Supported PIDs [21-40]",
+      "upstream_response_length_hint": 6
+    },
+    {
+      "request_hex": "0121",
+      "name": "DISTANCE_W_MIL",
+      "description": "Distance Traveled with MIL on",
+      "upstream_response_length_hint": 4
+    },
+    {
+      "request_hex": "0122",
+      "name": "FUEL_RAIL_PRESSURE_VAC",
+      "description": "Fuel Rail Pressure (relative to vacuum)",
+      "upstream_response_length_hint": 4
+    },
+    {
+      "request_hex": "0123",
+      "name": "FUEL_RAIL_PRESSURE_DIRECT",
+      "description": "Fuel Rail Pressure (direct inject)",
+      "upstream_response_length_hint": 4
+    },
+    {
+      "request_hex": "0124",
+      "name": "O2_S1_WR_VOLTAGE",
+      "description": "02 Sensor 1 WR Lambda Voltage",
+      "upstream_response_length_hint": 6
+    },
+    {
+      "request_hex": "0125",
+      "name": "O2_S2_WR_VOLTAGE",
+      "description": "02 Sensor 2 WR Lambda Voltage",
+      "upstream_response_length_hint": 6
+    },
+    {
+      "request_hex": "0126",
+      "name": "O2_S3_WR_VOLTAGE",
+      "description": "02 Sensor 3 WR Lambda Voltage",
+      "upstream_response_length_hint": 6
+    },
+    {
+      "request_hex": "0127",
+      "name": "O2_S4_WR_VOLTAGE",
+      "description": "02 Sensor 4 WR Lambda Voltage",
+      "upstream_response_length_hint": 6
+    },
+    {
+      "request_hex": "0128",
+      "name": "O2_S5_WR_VOLTAGE",
+      "description": "02 Sensor 5 WR Lambda Voltage",
+      "upstream_response_length_hint": 6
+    },
+    {
+      "request_hex": "0129",
+      "name": "O2_S6_WR_VOLTAGE",
+      "description": "02 Sensor 6 WR Lambda Voltage",
+      "upstream_response_length_hint": 6
+    },
+    {
+      "request_hex": "012A",
+      "name": "O2_S7_WR_VOLTAGE",
+      "description": "02 Sensor 7 WR Lambda Voltage",
+      "upstream_response_length_hint": 6
+    },
+    {
+      "request_hex": "012B",
+      "name": "O2_S8_WR_VOLTAGE",
+      "description": "02 Sensor 8 WR Lambda Voltage",
+      "upstream_response_length_hint": 6
+    },
+    {
+      "request_hex": "012C",
+      "name": "COMMANDED_EGR",
+      "description": "Commanded EGR",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "012D",
+      "name": "EGR_ERROR",
+      "description": "EGR Error",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "012E",
+      "name": "EVAPORATIVE_PURGE",
+      "description": "Commanded Evaporative Purge",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "012F",
+      "name": "FUEL_LEVEL",
+      "description": "Fuel Level Input",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "0130",
+      "name": "WARMUPS_SINCE_DTC_CLEAR",
+      "description": "Number of warm-ups since codes cleared",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "0131",
+      "name": "DISTANCE_SINCE_DTC_CLEAR",
+      "description": "Distance traveled since codes cleared",
+      "upstream_response_length_hint": 4
+    },
+    {
+      "request_hex": "0132",
+      "name": "EVAP_VAPOR_PRESSURE",
+      "description": "Evaporative system vapor pressure",
+      "upstream_response_length_hint": 4
+    },
+    {
+      "request_hex": "0133",
+      "name": "BAROMETRIC_PRESSURE",
+      "description": "Barometric Pressure",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "0134",
+      "name": "O2_S1_WR_CURRENT",
+      "description": "02 Sensor 1 WR Lambda Current",
+      "upstream_response_length_hint": 6
+    },
+    {
+      "request_hex": "0135",
+      "name": "O2_S2_WR_CURRENT",
+      "description": "02 Sensor 2 WR Lambda Current",
+      "upstream_response_length_hint": 6
+    },
+    {
+      "request_hex": "0136",
+      "name": "O2_S3_WR_CURRENT",
+      "description": "02 Sensor 3 WR Lambda Current",
+      "upstream_response_length_hint": 6
+    },
+    {
+      "request_hex": "0137",
+      "name": "O2_S4_WR_CURRENT",
+      "description": "02 Sensor 4 WR Lambda Current",
+      "upstream_response_length_hint": 6
+    },
+    {
+      "request_hex": "0138",
+      "name": "O2_S5_WR_CURRENT",
+      "description": "02 Sensor 5 WR Lambda Current",
+      "upstream_response_length_hint": 6
+    },
+    {
+      "request_hex": "0139",
+      "name": "O2_S6_WR_CURRENT",
+      "description": "02 Sensor 6 WR Lambda Current",
+      "upstream_response_length_hint": 6
+    },
+    {
+      "request_hex": "013A",
+      "name": "O2_S7_WR_CURRENT",
+      "description": "02 Sensor 7 WR Lambda Current",
+      "upstream_response_length_hint": 6
+    },
+    {
+      "request_hex": "013B",
+      "name": "O2_S8_WR_CURRENT",
+      "description": "02 Sensor 8 WR Lambda Current",
+      "upstream_response_length_hint": 6
+    },
+    {
+      "request_hex": "013C",
+      "name": "CATALYST_TEMP_B1S1",
+      "description": "Catalyst Temperature: Bank 1 - Sensor 1",
+      "upstream_response_length_hint": 4
+    },
+    {
+      "request_hex": "013D",
+      "name": "CATALYST_TEMP_B2S1",
+      "description": "Catalyst Temperature: Bank 2 - Sensor 1",
+      "upstream_response_length_hint": 4
+    },
+    {
+      "request_hex": "013E",
+      "name": "CATALYST_TEMP_B1S2",
+      "description": "Catalyst Temperature: Bank 1 - Sensor 2",
+      "upstream_response_length_hint": 4
+    },
+    {
+      "request_hex": "013F",
+      "name": "CATALYST_TEMP_B2S2",
+      "description": "Catalyst Temperature: Bank 2 - Sensor 2",
+      "upstream_response_length_hint": 4
+    },
+    {
+      "request_hex": "0140",
+      "name": "PIDS_C",
+      "description": "Supported PIDs [41-60]",
+      "upstream_response_length_hint": 6
+    },
+    {
+      "request_hex": "0141",
+      "name": "STATUS_DRIVE_CYCLE",
+      "description": "Monitor status this drive cycle",
+      "upstream_response_length_hint": 6
+    },
+    {
+      "request_hex": "0142",
+      "name": "CONTROL_MODULE_VOLTAGE",
+      "description": "Control module voltage",
+      "upstream_response_length_hint": 4
+    },
+    {
+      "request_hex": "0143",
+      "name": "ABSOLUTE_LOAD",
+      "description": "Absolute load value",
+      "upstream_response_length_hint": 4
+    },
+    {
+      "request_hex": "0144",
+      "name": "COMMANDED_EQUIV_RATIO",
+      "description": "Commanded equivalence ratio",
+      "upstream_response_length_hint": 4
+    },
+    {
+      "request_hex": "0145",
+      "name": "RELATIVE_THROTTLE_POS",
+      "description": "Relative throttle position",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "0146",
+      "name": "AMBIANT_AIR_TEMP",
+      "description": "Ambient air temperature",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "0147",
+      "name": "THROTTLE_POS_B",
+      "description": "Absolute throttle position B",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "0148",
+      "name": "THROTTLE_POS_C",
+      "description": "Absolute throttle position C",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "0149",
+      "name": "ACCELERATOR_POS_D",
+      "description": "Accelerator pedal position D",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "014A",
+      "name": "ACCELERATOR_POS_E",
+      "description": "Accelerator pedal position E",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "014B",
+      "name": "ACCELERATOR_POS_F",
+      "description": "Accelerator pedal position F",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "014C",
+      "name": "THROTTLE_ACTUATOR",
+      "description": "Commanded throttle actuator",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "014D",
+      "name": "RUN_TIME_MIL",
+      "description": "Time run with MIL on",
+      "upstream_response_length_hint": 4
+    },
+    {
+      "request_hex": "014E",
+      "name": "TIME_SINCE_DTC_CLEARED",
+      "description": "Time since trouble codes cleared",
+      "upstream_response_length_hint": 4
+    },
+    {
+      "request_hex": "014F",
+      "name": "MAX_VALUES",
+      "description": "Various Max values",
+      "upstream_response_length_hint": 6
+    },
+    {
+      "request_hex": "0150",
+      "name": "MAX_MAF",
+      "description": "Maximum value for mass air flow sensor",
+      "upstream_response_length_hint": 6
+    },
+    {
+      "request_hex": "0151",
+      "name": "FUEL_TYPE",
+      "description": "Fuel Type",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "0152",
+      "name": "ETHANOL_PERCENT",
+      "description": "Ethanol Fuel Percent",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "0153",
+      "name": "EVAP_VAPOR_PRESSURE_ABS",
+      "description": "Absolute Evap system Vapor Pressure",
+      "upstream_response_length_hint": 4
+    },
+    {
+      "request_hex": "0154",
+      "name": "EVAP_VAPOR_PRESSURE_ALT",
+      "description": "Evap system vapor pressure",
+      "upstream_response_length_hint": 4
+    },
+    {
+      "request_hex": "0155",
+      "name": "SHORT_O2_TRIM_B1",
+      "description": "Short term secondary O2 trim - Bank 1",
+      "upstream_response_length_hint": 4
+    },
+    {
+      "request_hex": "0156",
+      "name": "LONG_O2_TRIM_B1",
+      "description": "Long term secondary O2 trim - Bank 1",
+      "upstream_response_length_hint": 4
+    },
+    {
+      "request_hex": "0157",
+      "name": "SHORT_O2_TRIM_B2",
+      "description": "Short term secondary O2 trim - Bank 2",
+      "upstream_response_length_hint": 4
+    },
+    {
+      "request_hex": "0158",
+      "name": "LONG_O2_TRIM_B2",
+      "description": "Long term secondary O2 trim - Bank 2",
+      "upstream_response_length_hint": 4
+    },
+    {
+      "request_hex": "0159",
+      "name": "FUEL_RAIL_PRESSURE_ABS",
+      "description": "Fuel rail pressure (absolute)",
+      "upstream_response_length_hint": 4
+    },
+    {
+      "request_hex": "015A",
+      "name": "RELATIVE_ACCEL_POS",
+      "description": "Relative accelerator pedal position",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "015B",
+      "name": "HYBRID_BATTERY_REMAINING",
+      "description": "Hybrid battery pack remaining life",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "015C",
+      "name": "OIL_TEMP",
+      "description": "Engine oil temperature",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "015D",
+      "name": "FUEL_INJECT_TIMING",
+      "description": "Fuel injection timing",
+      "upstream_response_length_hint": 4
+    },
+    {
+      "request_hex": "015E",
+      "name": "FUEL_RATE",
+      "description": "Engine fuel rate",
+      "upstream_response_length_hint": 4
+    },
+    {
+      "request_hex": "015F",
+      "name": "EMISSION_REQ",
+      "description": "Designed emission requirements",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "03",
+      "name": "GET_DTC",
+      "description": "Get DTCs",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0600",
+      "name": "MIDS_A",
+      "description": "Supported MIDs [01-20]",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0601",
+      "name": "MONITOR_O2_B1S1",
+      "description": "O2 Sensor Monitor Bank 1 - Sensor 1",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0602",
+      "name": "MONITOR_O2_B1S2",
+      "description": "O2 Sensor Monitor Bank 1 - Sensor 2",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0603",
+      "name": "MONITOR_O2_B1S3",
+      "description": "O2 Sensor Monitor Bank 1 - Sensor 3",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0604",
+      "name": "MONITOR_O2_B1S4",
+      "description": "O2 Sensor Monitor Bank 1 - Sensor 4",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0605",
+      "name": "MONITOR_O2_B2S1",
+      "description": "O2 Sensor Monitor Bank 2 - Sensor 1",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0606",
+      "name": "MONITOR_O2_B2S2",
+      "description": "O2 Sensor Monitor Bank 2 - Sensor 2",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0607",
+      "name": "MONITOR_O2_B2S3",
+      "description": "O2 Sensor Monitor Bank 2 - Sensor 3",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0608",
+      "name": "MONITOR_O2_B2S4",
+      "description": "O2 Sensor Monitor Bank 2 - Sensor 4",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0609",
+      "name": "MONITOR_O2_B3S1",
+      "description": "O2 Sensor Monitor Bank 3 - Sensor 1",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "060A",
+      "name": "MONITOR_O2_B3S2",
+      "description": "O2 Sensor Monitor Bank 3 - Sensor 2",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "060B",
+      "name": "MONITOR_O2_B3S3",
+      "description": "O2 Sensor Monitor Bank 3 - Sensor 3",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "060C",
+      "name": "MONITOR_O2_B3S4",
+      "description": "O2 Sensor Monitor Bank 3 - Sensor 4",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "060D",
+      "name": "MONITOR_O2_B4S1",
+      "description": "O2 Sensor Monitor Bank 4 - Sensor 1",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "060E",
+      "name": "MONITOR_O2_B4S2",
+      "description": "O2 Sensor Monitor Bank 4 - Sensor 2",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "060F",
+      "name": "MONITOR_O2_B4S3",
+      "description": "O2 Sensor Monitor Bank 4 - Sensor 3",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0610",
+      "name": "MONITOR_O2_B4S4",
+      "description": "O2 Sensor Monitor Bank 4 - Sensor 4",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0620",
+      "name": "MIDS_B",
+      "description": "Supported MIDs [21-40]",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0621",
+      "name": "MONITOR_CATALYST_B1",
+      "description": "Catalyst Monitor Bank 1",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0622",
+      "name": "MONITOR_CATALYST_B2",
+      "description": "Catalyst Monitor Bank 2",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0623",
+      "name": "MONITOR_CATALYST_B3",
+      "description": "Catalyst Monitor Bank 3",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0624",
+      "name": "MONITOR_CATALYST_B4",
+      "description": "Catalyst Monitor Bank 4",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0631",
+      "name": "MONITOR_EGR_B1",
+      "description": "EGR Monitor Bank 1",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0632",
+      "name": "MONITOR_EGR_B2",
+      "description": "EGR Monitor Bank 2",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0633",
+      "name": "MONITOR_EGR_B3",
+      "description": "EGR Monitor Bank 3",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0634",
+      "name": "MONITOR_EGR_B4",
+      "description": "EGR Monitor Bank 4",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0635",
+      "name": "MONITOR_VVT_B1",
+      "description": "VVT Monitor Bank 1",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0636",
+      "name": "MONITOR_VVT_B2",
+      "description": "VVT Monitor Bank 2",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0637",
+      "name": "MONITOR_VVT_B3",
+      "description": "VVT Monitor Bank 3",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0638",
+      "name": "MONITOR_VVT_B4",
+      "description": "VVT Monitor Bank 4",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0639",
+      "name": "MONITOR_EVAP_150",
+      "description": "EVAP Monitor (Cap Off / 0.150\")",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "063A",
+      "name": "MONITOR_EVAP_090",
+      "description": "EVAP Monitor (0.090\")",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "063B",
+      "name": "MONITOR_EVAP_040",
+      "description": "EVAP Monitor (0.040\")",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "063C",
+      "name": "MONITOR_EVAP_020",
+      "description": "EVAP Monitor (0.020\")",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "063D",
+      "name": "MONITOR_PURGE_FLOW",
+      "description": "Purge Flow Monitor",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0640",
+      "name": "MIDS_C",
+      "description": "Supported MIDs [41-60]",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0641",
+      "name": "MONITOR_O2_HEATER_B1S1",
+      "description": "O2 Sensor Heater Monitor Bank 1 - Sensor 1",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0642",
+      "name": "MONITOR_O2_HEATER_B1S2",
+      "description": "O2 Sensor Heater Monitor Bank 1 - Sensor 2",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0643",
+      "name": "MONITOR_O2_HEATER_B1S3",
+      "description": "O2 Sensor Heater Monitor Bank 1 - Sensor 3",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0644",
+      "name": "MONITOR_O2_HEATER_B1S4",
+      "description": "O2 Sensor Heater Monitor Bank 1 - Sensor 4",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0645",
+      "name": "MONITOR_O2_HEATER_B2S1",
+      "description": "O2 Sensor Heater Monitor Bank 2 - Sensor 1",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0646",
+      "name": "MONITOR_O2_HEATER_B2S2",
+      "description": "O2 Sensor Heater Monitor Bank 2 - Sensor 2",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0647",
+      "name": "MONITOR_O2_HEATER_B2S3",
+      "description": "O2 Sensor Heater Monitor Bank 2 - Sensor 3",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0648",
+      "name": "MONITOR_O2_HEATER_B2S4",
+      "description": "O2 Sensor Heater Monitor Bank 2 - Sensor 4",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0649",
+      "name": "MONITOR_O2_HEATER_B3S1",
+      "description": "O2 Sensor Heater Monitor Bank 3 - Sensor 1",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "064A",
+      "name": "MONITOR_O2_HEATER_B3S2",
+      "description": "O2 Sensor Heater Monitor Bank 3 - Sensor 2",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "064B",
+      "name": "MONITOR_O2_HEATER_B3S3",
+      "description": "O2 Sensor Heater Monitor Bank 3 - Sensor 3",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "064C",
+      "name": "MONITOR_O2_HEATER_B3S4",
+      "description": "O2 Sensor Heater Monitor Bank 3 - Sensor 4",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "064D",
+      "name": "MONITOR_O2_HEATER_B4S1",
+      "description": "O2 Sensor Heater Monitor Bank 4 - Sensor 1",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "064E",
+      "name": "MONITOR_O2_HEATER_B4S2",
+      "description": "O2 Sensor Heater Monitor Bank 4 - Sensor 2",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "064F",
+      "name": "MONITOR_O2_HEATER_B4S3",
+      "description": "O2 Sensor Heater Monitor Bank 4 - Sensor 3",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0650",
+      "name": "MONITOR_O2_HEATER_B4S4",
+      "description": "O2 Sensor Heater Monitor Bank 4 - Sensor 4",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0660",
+      "name": "MIDS_D",
+      "description": "Supported MIDs [61-80]",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0661",
+      "name": "MONITOR_HEATED_CATALYST_B1",
+      "description": "Heated Catalyst Monitor Bank 1",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0662",
+      "name": "MONITOR_HEATED_CATALYST_B2",
+      "description": "Heated Catalyst Monitor Bank 2",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0663",
+      "name": "MONITOR_HEATED_CATALYST_B3",
+      "description": "Heated Catalyst Monitor Bank 3",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0664",
+      "name": "MONITOR_HEATED_CATALYST_B4",
+      "description": "Heated Catalyst Monitor Bank 4",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0671",
+      "name": "MONITOR_SECONDARY_AIR_1",
+      "description": "Secondary Air Monitor 1",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0672",
+      "name": "MONITOR_SECONDARY_AIR_2",
+      "description": "Secondary Air Monitor 2",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0673",
+      "name": "MONITOR_SECONDARY_AIR_3",
+      "description": "Secondary Air Monitor 3",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0674",
+      "name": "MONITOR_SECONDARY_AIR_4",
+      "description": "Secondary Air Monitor 4",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0680",
+      "name": "MIDS_E",
+      "description": "Supported MIDs [81-A0]",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0681",
+      "name": "MONITOR_FUEL_SYSTEM_B1",
+      "description": "Fuel System Monitor Bank 1",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0682",
+      "name": "MONITOR_FUEL_SYSTEM_B2",
+      "description": "Fuel System Monitor Bank 2",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0683",
+      "name": "MONITOR_FUEL_SYSTEM_B3",
+      "description": "Fuel System Monitor Bank 3",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0684",
+      "name": "MONITOR_FUEL_SYSTEM_B4",
+      "description": "Fuel System Monitor Bank 4",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0685",
+      "name": "MONITOR_BOOST_PRESSURE_B1",
+      "description": "Boost Pressure Control Monitor Bank 1",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0686",
+      "name": "MONITOR_BOOST_PRESSURE_B2",
+      "description": "Boost Pressure Control Monitor Bank 1",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0690",
+      "name": "MONITOR_NOX_ABSORBER_B1",
+      "description": "NOx Absorber Monitor Bank 1",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0691",
+      "name": "MONITOR_NOX_ABSORBER_B2",
+      "description": "NOx Absorber Monitor Bank 2",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0698",
+      "name": "MONITOR_NOX_CATALYST_B1",
+      "description": "NOx Catalyst Monitor Bank 1",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0699",
+      "name": "MONITOR_NOX_CATALYST_B2",
+      "description": "NOx Catalyst Monitor Bank 2",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "06A0",
+      "name": "MIDS_F",
+      "description": "Supported MIDs [A1-C0]",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "06A1",
+      "name": "MONITOR_MISFIRE_GENERAL",
+      "description": "Misfire Monitor General Data",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "06A2",
+      "name": "MONITOR_MISFIRE_CYLINDER_1",
+      "description": "Misfire Cylinder 1 Data",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "06A3",
+      "name": "MONITOR_MISFIRE_CYLINDER_2",
+      "description": "Misfire Cylinder 2 Data",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "06A4",
+      "name": "MONITOR_MISFIRE_CYLINDER_3",
+      "description": "Misfire Cylinder 3 Data",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "06A5",
+      "name": "MONITOR_MISFIRE_CYLINDER_4",
+      "description": "Misfire Cylinder 4 Data",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "06A6",
+      "name": "MONITOR_MISFIRE_CYLINDER_5",
+      "description": "Misfire Cylinder 5 Data",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "06A7",
+      "name": "MONITOR_MISFIRE_CYLINDER_6",
+      "description": "Misfire Cylinder 6 Data",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "06A8",
+      "name": "MONITOR_MISFIRE_CYLINDER_7",
+      "description": "Misfire Cylinder 7 Data",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "06A9",
+      "name": "MONITOR_MISFIRE_CYLINDER_8",
+      "description": "Misfire Cylinder 8 Data",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "06AA",
+      "name": "MONITOR_MISFIRE_CYLINDER_9",
+      "description": "Misfire Cylinder 9 Data",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "06AB",
+      "name": "MONITOR_MISFIRE_CYLINDER_10",
+      "description": "Misfire Cylinder 10 Data",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "06AC",
+      "name": "MONITOR_MISFIRE_CYLINDER_11",
+      "description": "Misfire Cylinder 11 Data",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "06AD",
+      "name": "MONITOR_MISFIRE_CYLINDER_12",
+      "description": "Misfire Cylinder 12 Data",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "06B0",
+      "name": "MONITOR_PM_FILTER_B1",
+      "description": "PM Filter Monitor Bank 1",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "06B1",
+      "name": "MONITOR_PM_FILTER_B2",
+      "description": "PM Filter Monitor Bank 2",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "07",
+      "name": "GET_CURRENT_DTC",
+      "description": "Get DTCs from the current/last driving cycle",
+      "upstream_response_length_hint": null
+    },
+    {
+      "request_hex": "0900",
+      "name": "PIDS_9A",
+      "description": "Supported PIDs [01-20]",
+      "upstream_response_length_hint": 7
+    },
+    {
+      "request_hex": "0901",
+      "name": "VIN_MESSAGE_COUNT",
+      "description": "VIN Message Count",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "0902",
+      "name": "VIN",
+      "description": "Vehicle Identification Number",
+      "upstream_response_length_hint": 22
+    },
+    {
+      "request_hex": "0903",
+      "name": "CALIBRATION_ID_MESSAGE_COUNT",
+      "description": "Calibration ID message count for PID 04",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "0904",
+      "name": "CALIBRATION_ID",
+      "description": "Calibration ID",
+      "upstream_response_length_hint": 18
+    },
+    {
+      "request_hex": "0905",
+      "name": "CVN_MESSAGE_COUNT",
+      "description": "CVN Message Count for PID 06",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "0906",
+      "name": "CVN",
+      "description": "Calibration Verification Numbers",
+      "upstream_response_length_hint": 10
+    },
+    {
+      "request_hex": "0907",
+      "name": "PERF_TRACKING_MESSAGE_COUNT",
+      "description": "Performance tracking message count",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "0908",
+      "name": "PERF_TRACKING_SPARK",
+      "description": "In-use performance tracking (spark ignition)",
+      "upstream_response_length_hint": 4
+    },
+    {
+      "request_hex": "0909",
+      "name": "ECU_NAME_MESSAGE_COUNT",
+      "description": "ECU Name Message Count for PID 0A",
+      "upstream_response_length_hint": 3
+    },
+    {
+      "request_hex": "090A",
+      "name": "ECU_NAME",
+      "description": "ECU Name",
+      "upstream_response_length_hint": 20
+    },
+    {
+      "request_hex": "090B",
+      "name": "PERF_TRACKING_COMPRESSION",
+      "description": "In-use performance tracking (compression ignition)",
+      "upstream_response_length_hint": 4
+    }
+  ]
+}

@@ -39,3 +39,7 @@
 Reuse F02/F03/F05/F06/F08/F10/F14–F21 and ADV criteria; do not create duplicate phases. DBC read-only signal decoding belongs to F10/F16/F20; capture interoperability belongs F08/F16; TLS research F17; SocketCAN F06/F19. Keep all criteria TODO until proven. First stabilize foundation PRs; max three independent fronts. No dependency changes, implementation, real hardware, external dataset imports or physical vehicle operations were performed in this audit. All proposed file formats and capabilities need explicit validation and prioritization.
 
 Licenses are repo metadata, not legal clearance for copying. Original Rust implementations preferred. Verify individual source and data grants before reuse; GPL-2.0-only cannot be presumed compatible with GPL-3.0. Preserve notices and provenance in technical references only. Do not import driver binaries, proprietary databases, raw captures containing identifiers, active scripts or source implementations wholesale.
+
+## Data staging follow-up
+
+Selected passive DBC, normalized read-only OBD metadata and UDS negative-response labels now reside in [backend/data/catalogs](../../backend/data/catalogs/README.md). This does not close CROSS criteria or establish hardware support. No Python or executable imports.

@@ -384,3 +384,7 @@ A auditoria foi estática, sobre árvore do repositório, ficheiros selecionados
 ### Auditoria complementar de ecossistema automóvel — 26/11/2026
 
 - [15 critérios CROSS-01–CROSS-15](references/AUTOMOTIVE_ECOSYSTEM_AUDIT.md) complementam F02/F03/F05/F06/F08/F10/F14–F21 e ADV-01–18. Incluem DBC de leitura passiva, qualidade e validade de sinais, interoperabilidade de capturas, timing UDS P2/P2*, DIDs múltiplos, DoIP/TLS, SocketCAN e CAN FD. Seis repositórios com fontes fixadas, PyRen identificado no GitLab (auditoria profunda pendente). Sem novas dependências ou código importado; todos TODO. Não duplicar alterações do motor em curso.
+
+### Consolidação inicial de dados — 26/11/2026
+
+- F10/F15/F16/F20 **REVIEW (dados de referência apenas)**: [catálogo consolidado](../backend/data/catalogs/README.md), manifest e licenças. 19 DBC autónomos selecionados, uma fixture DBC, 198 registos de leitura OBD2 e 65 grupos NRC UDS. Hashes dos DBC comparados com a origem, chaves OBD2 únicas; catálogo não ligado ao motor. Bases SQLite/VIN/requests.json intactas; restante cobertura, dados OEM, licenças específicas, descodificadores e validação Rust pendentes. Sem dependências novas, CI/hardware não executados. Não marcar fases DONE.
