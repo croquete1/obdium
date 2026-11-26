@@ -105,19 +105,7 @@ fn connect_obd(window: &WebviewWindow, port: String, baud_rate: u32, protocol: u
     let mut obd = OBD::new();
 
     match obd.connect(&port, baud_rate, protocol) {
-        Ok(()) => {
-            let band = obd.serial_port_baud_rate().unwrap_or_default();
-            let port = obd.serial_port_name().unwrap_or_default();
-
-            do_send_connection_status(
-                window,
-                &obd,
-                format!("Connected to port {port} on {band} baud"),
-                true,
-            );
-
-            Some(obd)
-        }
+        Ok(()) => Some(obd),
         Err(error) => {
             do_send_connection_status(
                 window,
