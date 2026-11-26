@@ -45,8 +45,9 @@ export function createTrackerRegistry(onCleanupError = console.error) {
 export async function runConnectionQueries({ isCurrent, delay, emit, firstDelay }) {
   await delay(firstDelay);
   if (!isCurrent()) return;
-  emit("get-pids");
+  await emit("get-pids");
+  if (!isCurrent()) return;
   await delay(2000);
   if (!isCurrent()) return;
-  emit("get-readiness-tests");
+  await emit("get-readiness-tests");
 }

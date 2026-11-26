@@ -191,14 +191,22 @@ listen("connection-status", async (event) => {
       updateUnitConversionDropdowns();
     }
 
-    await runConnectionQueries({
-      isCurrent: () => window.connected && connectionGeneration === generation,
-      delay: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
-      emit,
-      firstDelay: serialPort === "DEMO MODE" ? 15000 : 7000,
-    });
+    const isCurrent = () => window.connected && connectionGeneration === generation;
+    try {
+      await runConnectionQueries({
+        isCurrent,
+        delay: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+        emit,
+        firstDelay: serialPort === "DEMO MODE" ? 15000 : 7000,
+      });
+    } catch (error) {
+      if (isCurrent()) {
+        addNotification("DIAGNOSTIC REQUEST FAILED", "Could not initialize diagnostic readings.");
+        console.error("Connection initialization query failed", error);
+      }
+    }
   } else {
-    if (!window.connected) return;
+    const wasConnected = window.connected;
 
     connectionLabel.textContent = "ELM327 NOT CONNECTED";
     status.textContent = "NO CONNECTION ESTABLISHED";
@@ -211,7 +219,10 @@ listen("connection-status", async (event) => {
     connectButton.disabled = false;
     disconnectButton.disabled = true;
 
-    addNotification("DISCONNECTED FROM ELM", event.payload.message);
+    addNotification(
+      wasConnected ? "DISCONNECTED FROM ELM" : "CONNECTION NOT ESTABLISHED",
+      event.payload.message,
+    );
 
     if (demoStatus.style.display !== "none") demoStatus.style.display = "none";
   }

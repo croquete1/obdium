@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { readFileSync } from "node:fs";
+import { runInNewContext } from "node:vm";
 import { createTrackerRegistry, runConnectionQueries } from "../scripts/connection-lifecycle.mjs";
 
 test("a late listener registration is disposed and cannot replace its successor", () => {
@@ -98,4 +100,93 @@ test("current connection dispatches both queries after original delays", async (
   });
   assert.deepEqual(delays, [7000, 2000]);
   assert.deepEqual(events, ["get-pids", "get-readiness-tests"]);
+});
+
+test("failed first dispatch propagates and does not send readiness request", async () => {
+  const events = [];
+  await assert.rejects(runConnectionQueries({
+    isCurrent: () => true,
+    delay: async () => {},
+    emit: async (event) => {
+      events.push(event);
+      throw new Error("IPC failed");
+    },
+    firstDelay: 7000,
+  }), /IPC failed/);
+  assert.deepEqual(events, ["get-pids"]);
+});
+
+test("invalidation during in-flight dispatch prevents follow-up delay and request", async () => {
+  const events = [];
+  const delays = [];
+  let current = true;
+  await runConnectionQueries({
+    isCurrent: () => current,
+    delay: async (ms) => { delays.push(ms); },
+    emit: async (event) => {
+      events.push(event);
+      await Promise.resolve();
+      current = false;
+    },
+    firstDelay: 7000,
+  });
+  assert.deepEqual(events, ["get-pids"]);
+  assert.deepEqual(delays, [7000]);
+});
+
+test("failure of readiness dispatch is observed by caller", async () => {
+  const events = [];
+  await assert.rejects(runConnectionQueries({
+    isCurrent: () => true,
+    delay: async () => {},
+    emit: async (event) => {
+      events.push(event);
+      if (event === "get-readiness-tests") throw new Error("readiness IPC failed");
+    },
+    firstDelay: 7000,
+  }), /readiness IPC failed/);
+  assert.deepEqual(events, ["get-pids", "get-readiness-tests"]);
+});
+
+test("actual status handler re-enables connection controls after failed connection", async () => {
+  const source = readFileSync(new URL("../scripts/events.js", import.meta.url), "utf8");
+  const start = source.indexOf("let connectionGeneration = 0;");
+  const end = source.indexOf('listen("update-pids",', start);
+  assert.ok(start >= 0 && end > start);
+  for (const connected of [false, true]) {
+    const notices = [];
+    const connectButton = { disabled: true };
+    const disconnectButton = { disabled: !connected };
+    const recordResponses = { disabled: false };
+    const replayResponses = { disabled: false };
+    const demoStatus = { style: { display: "flex" } };
+    const connectionLabel = { textContent: "" };
+    const connectionIcon = { src: "" };
+    const status = { textContent: "" };
+    const window = { connected };
+    let stopped = 0;
+    let handler;
+    runInNewContext(source.slice(start, end), {
+      window, connectButton, disconnectButton, recordResponses, replayResponses,
+      demoStatus, connectionLabel, connectionIcon,
+      document: { getElementById: () => ({ ...status, replaceChildren() {} }) },
+      replaceReadinessSnapshot() {},
+      stopGraphTracking() { stopped++; },
+      addNotification: (...args) => notices.push(args),
+      listen(name, callback) {
+        assert.equal(name, "connection-status");
+        handler = callback;
+      },
+    });
+    assert.equal(typeof handler, "function");
+    await handler({ payload: { connected: false, message: "Connection ended" } });
+    assert.equal(window.connected, false);
+    assert.equal(connectButton.disabled, false);
+    assert.equal(disconnectButton.disabled, true);
+    assert.equal(recordResponses.disabled, true);
+    assert.equal(replayResponses.disabled, true);
+    assert.equal(demoStatus.style.display, "none");
+    assert.equal(stopped, 1);
+    assert.deepEqual(notices, [[connected ? "DISCONNECTED FROM ELM" : "CONNECTION NOT ESTABLISHED", "Connection ended"]]);
+  }
 });
