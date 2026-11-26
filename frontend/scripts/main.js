@@ -4,14 +4,12 @@ const { writeFile, removeFile } = window.__TAURI__.fs;
 const { appWindow } = window.__TAURI__.window;
 
 import {
-  clearDtcs,
   exportDtcs,
   connectElm,
   disconnectElm,
   clearObdView,
   appendTerminalOutput,
   addNotification,
-  btnHoldToActivate,
   addCustomPIDRow,
 } from "./features.js";
 
@@ -40,7 +38,6 @@ const connectButton = document.getElementById("btn-connect");
 const disconnectButton = document.getElementById("btn-disconnect");
 const clearObdButton = document.getElementById("obd-clear");
 const pauseObdButton = document.getElementById("obd-pause");
-const dtcClearButton = document.getElementById("dtc-clear-button");
 
 // When frontend gets loaded
 // alert the backend with an event.
@@ -136,9 +133,6 @@ dtcScanButton.addEventListener("click", async () => {
 
   emit("get-dtcs");
 });
-
-const fill = document.getElementById("btn-hold-fill");
-btnHoldToActivate(dtcClearButton, fill, clearDtcs);
 
 const dtcLogButton = document.getElementById("dtc-log-file");
 const dtcList = document.getElementById("dtc-list");

@@ -7,30 +7,9 @@ import { saveConnectionConfig } from "./settings.js";
 const connectButton = document.getElementById("btn-connect");
 const disconnectButton = document.getElementById("btn-disconnect");
 const dtcList = document.getElementById("dtc-list");
-const dtcHeader = document.getElementById("dtc-header");
 const freezeFrameBar = document.getElementById("freeze-frame-status");
 const obdGrid = document.getElementById("dashboard-cards");
 const terminalOutput = document.getElementById("terminal-output");
-
-export function clearDtcs() {
-  addNotification(
-    "TROUBLE CODES",
-    "Cleared all pending diagnostic trouble codes.",
-  );
-
-  if (dtcList.innerHTML.trim() == "") {
-    return;
-  }
-
-  // clear codes
-  emit("clear-dtcs");
-  dtcHeader.textContent = "DIAGNOSTIC TROUBLE CODES (0)";
-  dtcList.innerHTML = ``;
-
-  // get permanant codes
-  // (codes that remain even after being cleared)
-  emit("get-dtcs");
-}
 
 export async function exportDtcs(autoSave) {
 

@@ -268,7 +268,6 @@ pub fn listen_connect_elm(window: &Arc<WebviewWindow>) {
             listen_send_pids(&window_arc, &obd);
             listen_send_readiness_test(&window_arc, &obd);
             listen_send_dtcs(&window_arc, &obd);
-            listen_clear_dtcs(&window_arc, &obd);
 
             listen_run_user_command(&window_arc);
         }
@@ -362,13 +361,8 @@ pub fn listen_send_dtcs(window: &Arc<WebviewWindow>, obd: &Arc<Mutex<OBD>>) {
     });
 }
 
-pub fn listen_clear_dtcs(window: &Arc<WebviewWindow>, obd: &Arc<Mutex<OBD>>) {
-    let obd_arc = Arc::clone(obd);
-    window.listen("clear-dtcs", move |_| {
-        let mut obd = obd_arc.lock().unwrap();
-        let _ = obd.clear_trouble_codes();
-    });
-}
+// Intentionally no clear-dtcs event handler until Mode 04 acknowledgement,
+// current-session authorization and reconciliation are implemented (F04.04).
 
 pub fn listen_send_connection_status(window: &Arc<WebviewWindow>, obd: &Arc<Mutex<OBD>>) {
     let obd_arc = Arc::clone(obd);

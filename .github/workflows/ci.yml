@@ -104,3 +104,5 @@ jobs:
         run: |
           node --version
           find frontend -type f -name '*.js' -print0 | xargs -0 -r -n 1 node --check
+      - name: DTC safety regression guards
+        run: node --test frontend/tests/dtc-clear-safety.test.mjs

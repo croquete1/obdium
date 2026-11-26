@@ -441,7 +441,7 @@
 
       <div id="view-dtcs" class="screen" style="display: none">
         <div id="dtc-header" class="screen-label">DIAGNOSTIC TROUBLE CODES</div>
-        <div class="connection-details">VIEW DETAILED DTC CODES, CLEAR CODES, OR EXPORT TO FILE</div>
+        <div class="connection-details">VIEW DETAILED DTC CODES OR EXPORT TO FILE</div>
         <div class="button-row">
           <div
             class="btn"
@@ -450,20 +450,16 @@
           >
             SCAN
           </div>
-          <div
+          <button
+            type="button"
             class="btn"
             id="dtc-clear-button"
-            style="
-              background-color: #1f1f1f;
-              width: 105px;
-              margin-top: -5px;
-              position: relative;
-              overflow: hidden;
-            "
+            disabled
+            aria-describedby="dtc-clear-status"
+            style="background-color: #1f1f1f; color: inherit; width: 105px; margin-top: -5px; cursor: not-allowed"
           >
-            <span style="z-index: 5">CLEAR</span>
-            <div class="btn-hold-fill" id="btn-hold-fill"></div>
-          </div>
+            CLEAR
+          </button>
           <div
             class="btn"
             id="dtc-log-file"
@@ -472,6 +468,11 @@
            EXPORT 
           </div>
         </div>
+
+        <p class="connection-details" id="dtc-clear-status">
+          Clearing codes is temporarily unavailable until vehicle acknowledgements can be verified.
+          Scan and export remain available. Clearing can erase freeze-frame data and reset readiness monitors.
+        </p>
 
         <div
           id="dtc-list"
