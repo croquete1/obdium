@@ -403,7 +403,10 @@ pub fn listen_send_dtcs(window: &Arc<WebviewWindow>, obd: &Arc<Mutex<OBD>>) -> E
 // Intentionally no clear-dtcs event handler until Mode 04 acknowledgement,
 // current-session authorization and reconciliation are implemented (F04.04).
 
-pub fn listen_send_connection_status(window: &Arc<WebviewWindow>, obd: &Arc<Mutex<OBD>>) -> EventId {
+pub fn listen_send_connection_status(
+    window: &Arc<WebviewWindow>,
+    obd: &Arc<Mutex<OBD>>,
+) -> EventId {
     let obd_arc = Arc::clone(obd);
     let window_arc = Arc::clone(window);
     window.listen("get-connection-status", move |_| {

@@ -15,7 +15,10 @@ pub static SESSION_TRANSITION: Mutex<()> = Mutex::new(());
 pub static SESSION_LISTENERS: Mutex<Vec<EventId>> = Mutex::new(Vec::new());
 
 fn take_matching<T>(active: &mut Option<Arc<T>>, expected: &Arc<T>) -> Option<Arc<T>> {
-    if active.as_ref().is_some_and(|current| Arc::ptr_eq(current, expected)) {
+    if active
+        .as_ref()
+        .is_some_and(|current| Arc::ptr_eq(current, expected))
+    {
         active.take()
     } else {
         None
