@@ -121,6 +121,8 @@ Todos abertos. **C** = confirmado por inspeção do código; **R** = risco a rep
 
 ## 5. Arquitetura-alvo (incremental)
 
+Referência técnica complementar: [DDT4All — arquitetura, fontes fixadas, adaptadores, dados, segurança e testes](references/DDT4ALL.md). Implementação nativa Rust, sem copiar bases proprietárias. F14–F21 complementam F01–F13; não substituem os gates existentes.
+
 ```text
 Desktop Tauri 2 (UI tipada, i18n, gráficos)
   -> API interna tipada (comandos/respostas/eventos com session_id)
@@ -254,6 +256,56 @@ Dependências: nenhuma. Erros 008,011–013,017,026,029.
 - [ ] F13.03 Validação física, requisitos de lojas, assinatura e distribuição; não contratar contas pagas nem publicar automaticamente sem aprovação.
 **Aceitação:** apps testadas em dispositivos reais e transportes suportados, limitações explícitas. Não bloquear objetivo de paridade desktop por mobile.
 
+### F14 — Identificação e descoberta avançada de ECUs (P2; F03/F06/F10)
+- [ ] F14.01 Modelo de endereços CAN/K-line/DoIP e identidade ECU com fabricante, hardware, software e versão de diagnóstico; evidência e qualidade por campo.
+- [ ] F14.02 Scanner read-only guiado pelo perfil do veículo, cancelável e limitado; distinguir identificação exata, ambígua, desconhecida, ausência de resposta e não suportada.
+- [ ] F14.03 UI de módulos com identidade, parâmetros e DTC por ECU, sem inferir módulos não testados; preservar distinção OBD genérico/OEM.
+**Aceitação:** testes sintéticos de respostas fragmentadas, conflito de identidades, timeout e cancelamento; evidência física antes de anunciar cada modelo.
+
+### F15 — Importação de definições DDT/XML/JSON/ZIP (P2; F10.01/F14.01)
+- [ ] F15.01 ADR e esquema versionado do perfil ECU; campos byte/bit, endian, signed, escala, enum, unidade, identidade e proveniência; motor de leitura com limites verificáveis.
+- [ ] F15.02 Importador local com parsing seguro (sem DTD/entidades externas), limites de arquivo, tamanho/profundidade/contagem, prevenção de traversal e duplicados; rejeitar escrita, macros e código.
+- [ ] F15.03 Pré-visualização e relatório de campos não suportados, licença explícita, hash, staging transacional e rollback; exportação em formato próprio.
+- [ ] F15.04 Editor de definições de leitura e fixtures sintéticas com casos positivos/negativos; não redistribuir bases OEM sem autorização.
+**Aceitação:** importação determinística, falhas sem alteração da base ativa, nenhum comando importado contorna política Rust; testes adversariais e regressão.
+
+### F16 — Monitor CAN passivo (P2; F03/F06/F08)
+- [ ] F16.01 Contrato CaptureFrame com timestamp, interface, ID 11/29 bits, bytes e qualidade; captura passiva só com capacidade comprovada.
+- [ ] F16.02 Worker cancelável, filas limitadas, métricas de perda e backpressure; UI com filtros, pesquisa, diferenças de bytes e estatísticas.
+- [ ] F16.03 Exportação e replay exclusivamente offline, anonimização, quotas e testes de saturação; sem injeção de frames no veículo.
+**Aceitação:** teste de carga, desconexão e perdas explícitas, nenhuma transmissão em modo passivo; validar adaptador físico.
+
+### F17 — DoIP nativo Rust (P2; F03/F06/F14)
+- [ ] F17.01 ADR ISO 13400, transporte separado de ELM e J2534, gateway/interface escolhidos explicitamente e descoberta limitada.
+- [ ] F17.02 Framing TCP, validação de cabeçalho/versão/comprimento, fragmentação, deadline, routing activation e alive check; erros tipados e cancelamento.
+- [ ] F17.03 Identificação e serviços de leitura UDS por endereço lógico autorizado; integrar gestor de sessão, scanner e auditoria sem bypass.
+- [ ] F17.04 Peers simulados, payloads inválidos, mensagens parciais, rejeição de routing, desconexão; ensaios físicos opt-in.
+**Aceitação:** testes negativos e integração determinística; hardware/veículo ainda não testados = experimental, não suporte confirmado.
+
+### F18 — Perfis por fabricante (P2; F10/F14/F15)
+- [ ] F18.01 Piloto Renault/Dacia com dados legalmente obtidos e fixtures anonimizadas; identificação e leitura verificadas por ECU/versão.
+- [ ] F18.02 Expandir VAG, Stellantis, BMW/MINI, Mercedes-Benz, Ford, Toyota/Lexus, Hyundai/Kia, Nissan, Volvo e restantes conforme evidências, não por contagem.
+- [ ] F18.03 Matriz pública por modelo/ano/motor/ECU/firmware/adaptador com nível de evidência e limitações; desconhecido continua desconhecido.
+**Aceitação:** cada perfil tem origem, licença, versão, regressão e evidência; não anunciar cobertura de marca inteira.
+
+### F19 — CAN FD, USB-CAN e J2534 (P2 investigação; F03/F06/F16)
+- [ ] F19.01 ADR por tecnologia e plataforma: capacidades de hardware, drivers, licenças, dependências e limitações.
+- [ ] F19.02 CAN FD e ISO-TP aplicável em módulo separado; fixtures e simulação antes de integração; não forçar frame clássico para FD.
+- [ ] F19.03 Interface J2534 experimental com isolamento, driver legítimo, read-only inicial e falhas tipadas; separar DoIP e USB-CAN.
+**Aceitação:** testes mock e validação física por combinação driver/OS/dispositivo, sem afirmar suporte universal.
+
+### F20 — Biblioteca comunitária de definições (P2; F10.02/F15/F18)
+- [ ] F20.01 Catálogo local de packs versionados, hash e proveniência, licença por pack, compatibilidade e validação de schema.
+- [ ] F20.02 Importação, revisão, ativação explícita, atualização opt-in e rollback offline; nenhum código arbitrário ou acesso privilegiado.
+- [ ] F20.03 Processo de contribuição com fixtures, revisão e remoção de dados não autorizados; partilha sem VIN ou identificadores pessoais.
+**Aceitação:** packs inválidos/não autorizados recusados, versões reproduzíveis e nenhuma dependência obrigatória de cloud.
+
+### F21 — Validação física e regressões avançadas (P2 transversal; F02/F12.04 e fases relevantes)
+- [ ] F21.01 Bancada simulada e HIL opt-in: ELM/STN, legados, CAN clássico, BLE/SPP/TCP, USB-CAN/DoIP e novas interfaces quando disponíveis.
+- [ ] F21.02 Matriz de evidência com SHA, firmware, sistema operativo, veículo anonimizado, esperado/observado e limitações; resultados de mocks separados de físicos.
+- [ ] F21.03 Procedimentos ativos apenas no escopo F11, individualmente autorizados, precondições conhecidas, teste físico e revisão independente; nenhuma operação em circulação.
+**Aceitação:** CI e bancada com resultados rastreáveis; ausência de hardware mantém validação BLOCKED; não relaxar gates.
+
 ## 7. Entregas e gates
 
 | Marco | Escopo | Condição de aprovação |
@@ -264,6 +316,9 @@ Dependências: nenhuma. Erros 008,011–013,017,026,029.
 | M3 modo oficina | F09 | Histórico, PDF, backup, sessões e privacidade |
 | M4 extensões | F10/F11/F12 | Perfis OEM e operações ativas aprovados individualmente; releases verificadas |
 | M5 mobile opcional | F13 | Compatibilidade por plataforma demonstrada |
+| M6 diagnóstico OEM declarativo | F14/F15/F18/F20 | Perfis lícitos, leitura por ECU e validação de dados |
+| M7 comunicações avançadas | F16/F17/F19 | Captura passiva, DoIP e interfaces com evidência |
+| M8 validação avançada | F21 | Matriz HIL rastreável; operações F11 aprovadas individualmente |
 
 Paridade Premium integral só pode ser declarada quando todas as linhas de referência aplicáveis estiverem implementadas, incluindo Mode 08 com segurança, ou quando as exclusões forem declaradas. Não confundir contagem de funcionalidades com equivalência técnica. Sem prazos ou percentagens inventados.
 
@@ -311,3 +366,9 @@ A auditoria foi estática, sobre árvore do repositório, ficheiros selecionados
 - PR #3 integrada: main `d12f46336fbfb782fb78be873c77880f4bb123b6`, CI pré-merge [45890495779](https://github.com/croquete1/obdium/actions/runs/45890495779), preview 45890495686 e House Rules 45890495638 aprovados. CI pós-merge 45892953641 pendente à data deste registo.
 - PR #2: a primeira atualização de base (`47cd042`) aparentava não ter conflitos, mas a comparação com main revelou remoção dos workflows e reversões Rust da PR #3. Corrigida por construção a partir da árvore exata da main, preservando apenas os cinco caminhos próprios da PR #2, incluindo a remoção do lockfile de raiz obsoleto. Validar novamente o diff final e todos os workflows; não considerar mergeable=true prova de preservação de alterações.
 - Candidato integrado #9 `8365da146e0f389a9ad851cc0a4d7e3fede0af0f`: CI [45889596251](https://github.com/croquete1/obdium/actions/runs/45889596251), preview 45889596216 e House Rules 45889596213 aprovados. 68+3 Rust, 40 Node, 9 Python = 120 testes distintos. Validação conjunta, não merge. Ensaios físicos e WebView ainda pendentes.
+
+### Programa de integração DDT4All — 26/11/2026
+
+- Baseline main `314fa378b4de35cd9c44a6bc2df2aab9dddefa11`; referência DDT4All `09a39795725b7e510041436cdde3b1d65609142c`. Consulta de árvore, README e módulos selecionados, não auditoria integral nem validação física. F14–F21 TODO. Nenhuma implementação marcada concluída.
+- F03/F06: ampliar perfis de adaptador e negociação, incluindo diferenças entre baud do host e bitrate do veículo; reconciliar com #11/#12 antes de alterar o motor. F07/F08: editor de painéis e análise de captura; F10/F12: definições, CLI e plugins declarativos. Detalhes e agrupamento em [referência DDT4All](references/DDT4ALL.md).
+- Ordem: fechar regressões/integrações #4–#12 e contratos F03 antes de abrir novas frentes do motor; máximo três frentes independentes, serializar alterações partilhadas. Roadmap em PR própria, reconciliar mudanças da #11 sem perder os nove protocolos. Sem importar bases OEM, macros executáveis ou funções proibidas em F11/AGENTS.md.
