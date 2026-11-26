@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::io::{Read, Write};
 use std::str::{self, FromStr};
 use std::thread::sleep;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use thiserror::Error;
 
 use crate::cmd::{Command, CommandType};
@@ -60,11 +60,15 @@ pub enum Error {
         "Error occured during I/O operation via serial communication. Error details (if any): {0}"
     )]
     AdapterReadWriteError(String),
+    #[error("Adapter reply exceeded the total receive deadline")]
+    ReplyDeadlineExceeded,
 }
 
 // Limit a single adapter reply to avoid unbounded allocation if its prompt is lost.
 // Large/continuous diagnostic streams require a separate framing design.
 const MAX_ADAPTER_REPLY_BYTES: usize = 64 * 1024;
+const ADAPTER_IDLE_TIMEOUT: Duration = Duration::from_secs(1);
+const ADAPTER_REPLY_DEADLINE: Duration = Duration::from_secs(5);
 
 fn map_serial_error(error: serialport::Error) -> Error {
     if error.kind() == serialport::ErrorKind::NoDevice {
@@ -76,12 +80,24 @@ fn map_serial_error(error: serialport::Error) -> Error {
 
 /// Read a complete prompt-terminated reply without clearing or discarding input.
 /// A partial reply is never accepted on EOF, timeout or I/O failure.
-fn read_prompt<R: Read + ?Sized>(reader: &mut R, until: u8) -> Result<String, Error> {
+fn read_prompt_with_deadline(
+    until: u8,
+    mut elapsed: impl FnMut() -> Duration,
+    mut read: impl FnMut(&mut [u8], Duration) -> Result<usize, Error>,
+) -> Result<String, Error> {
     let mut response = String::new();
     let mut buffer = [0u8; 1];
 
     loop {
-        match reader.read(&mut buffer) {
+        let remaining = ADAPTER_REPLY_DEADLINE.saturating_sub(elapsed());
+        if remaining.is_zero() {
+            return Err(Error::ReplyDeadlineExceeded);
+        }
+        let result = read(&mut buffer, remaining.min(ADAPTER_IDLE_TIMEOUT));
+        if elapsed() >= ADAPTER_REPLY_DEADLINE {
+            return Err(Error::ReplyDeadlineExceeded);
+        }
+        match result {
             Ok(1) => {
                 let byte = buffer[0];
                 if byte == until {
@@ -93,9 +109,40 @@ fn read_prompt<R: Read + ?Sized>(reader: &mut R, until: u8) -> Result<String, Er
                 response.push(char::from(byte));
             }
             Ok(_) => return Err(Error::InvalidResponse),
-            Err(error) => return Err(Error::AdapterReadWriteError(error.to_string())),
+            Err(error) => return Err(error),
         }
     }
+}
+
+fn read_serial_prompt(port: &mut dyn SerialPort, until: u8) -> Result<String, Error> {
+    let start = Instant::now();
+    let mut timeout = port.timeout();
+    read_prompt_with_deadline(
+        until,
+        || start.elapsed(),
+        |buffer, remaining| {
+            // Avoid reconfiguring the port for every byte while the full idle budget remains.
+            if timeout != remaining {
+                port.set_timeout(remaining).map_err(map_serial_error)?;
+                timeout = remaining;
+            }
+            port.read(buffer)
+                .map_err(|error| Error::AdapterReadWriteError(error.to_string()))
+        },
+    )
+}
+
+#[cfg(test)]
+fn read_prompt<R: Read + ?Sized>(reader: &mut R, until: u8) -> Result<String, Error> {
+    read_prompt_with_deadline(
+        until,
+        || Duration::ZERO,
+        |buffer, _| {
+            reader
+                .read(buffer)
+                .map_err(|error| Error::AdapterReadWriteError(error.to_string()))
+        },
+    )
 }
 
 pub enum Service {
@@ -483,7 +530,7 @@ impl OBD {
         }
 
         stream
-            .set_timeout(Duration::from_secs(1))
+            .set_timeout(ADAPTER_IDLE_TIMEOUT)
             .map_err(map_serial_error)?;
         stream
             .clear(serialport::ClearBuffer::All)
@@ -705,7 +752,15 @@ impl OBD {
 
         // The buffer is cleared before sending a command, never after it.
         // A fast adapter may already have returned the entire reply.
-        let response = read_prompt(port.as_mut(), until)?;
+        let response = match read_serial_prompt(port.as_mut(), until) {
+            Ok(response) => response,
+            Err(error) => {
+                // Without a validated prompt boundary, the next reply cannot be
+                // attributed safely. Require an explicit reconnect; never retry.
+                self.connection = None;
+                return Err(error);
+            }
+        };
 
         if response.contains("UNABLE TO CONNECT") {
             println!("unable to connect");
@@ -1038,9 +1093,11 @@ mod serial_prompt_tests {
         events: Vec<&'static str>,
         pending: VecDeque<u8>,
         written: Vec<u8>,
+        timeout: Duration,
         fail_timeout: bool,
         fail_clear: bool,
         fail_write: bool,
+        eof_when_empty: bool,
     }
 
     #[derive(Clone)]
@@ -1068,9 +1125,9 @@ mod serial_prompt_tests {
             Ok(serialport::StopBits::One)
         }
         fn timeout(&self) -> Duration {
-            Duration::from_secs(0)
+            self.state.lock().unwrap().timeout
         }
-        fn set_timeout(&mut self, _timeout: Duration) -> serialport::Result<()> {
+        fn set_timeout(&mut self, timeout: Duration) -> serialport::Result<()> {
             let mut state = self.state.lock().unwrap();
             state.events.push("timeout");
             if state.fail_timeout {
@@ -1079,6 +1136,7 @@ mod serial_prompt_tests {
                     "fixture setup failure",
                 ));
             }
+            state.timeout = timeout;
             Ok(())
         }
         fn write_request_to_send(&mut self, _level: bool) -> serialport::Result<()> {
@@ -1155,6 +1213,8 @@ mod serial_prompt_tests {
             if let Some(byte) = state.pending.pop_front() {
                 buffer[0] = byte;
                 Ok(1)
+            } else if state.eof_when_empty {
+                Ok(0)
             } else {
                 Err(io::Error::new(io::ErrorKind::TimedOut, "fixture timeout"))
             }
@@ -1260,6 +1320,62 @@ mod serial_prompt_tests {
     }
 
     #[test]
+    fn partial_reply_timeout_invalidates_connection_and_blocks_next_write() {
+        let (mut obd, state) = fixture_obd(FixtureState::default());
+        obd.send_command(&mut Command::new_at(b"ATI")).unwrap();
+        state.lock().unwrap().pending = VecDeque::from(*b"ELM");
+        assert!(matches!(
+            obd.get_at_response(),
+            Err(Error::AdapterReadWriteError(_))
+        ));
+        assert!(!obd.is_connected());
+
+        // Simulate the late remainder arriving after the failed transaction.
+        state.lock().unwrap().pending.extend(b"327\r>");
+        assert!(matches!(
+            obd.send_command(&mut Command::new_at(b"ATI")),
+            Err(Error::NoConnection)
+        ));
+        let state = state.lock().unwrap();
+        assert_eq!(state.written, b"ATI\r");
+        assert_eq!(state.events, ["timeout", "clear", "write"]);
+    }
+
+    #[test]
+    fn premature_eof_invalidates_connection() {
+        let (mut obd, state) = fixture_obd(FixtureState {
+            eof_when_empty: true,
+            ..Default::default()
+        });
+        obd.send_command(&mut Command::new_at(b"ATI")).unwrap();
+        state.lock().unwrap().pending = VecDeque::from(*b"ELM");
+        assert!(matches!(obd.get_at_response(), Err(Error::InvalidResponse)));
+        assert!(!obd.is_connected());
+    }
+
+    #[test]
+    fn malformed_byte_before_prompt_invalidates_connection() {
+        let (mut obd, state) = fixture_obd(FixtureState::default());
+        obd.send_command(&mut Command::new_at(b"ATI")).unwrap();
+        state.lock().unwrap().pending = VecDeque::from([b'E', 0xff, b'>']);
+        assert!(matches!(obd.get_at_response(), Err(Error::InvalidResponse)));
+        assert!(!obd.is_connected());
+        assert_eq!(state.lock().unwrap().written, b"ATI\r");
+    }
+
+    #[test]
+    fn complete_no_data_reply_keeps_transport_synchronized() {
+        let (mut obd, state) = fixture_obd(FixtureState::default());
+        obd.send_command(&mut Command::new_pid(b"010C")).unwrap();
+        state.lock().unwrap().pending = VecDeque::from(*b"NO DATA\r>");
+        assert!(matches!(obd.get_pid_response(), Err(Error::NoData)));
+        assert!(obd.is_connected());
+        obd.send_command(&mut Command::new_at(b"ATI")).unwrap();
+        assert!(obd.get_at_response().is_ok());
+        assert_eq!(state.lock().unwrap().written, b"010C\rATI\r");
+    }
+
+    #[test]
     fn immediate_reply_is_preserved_until_prompt() {
         let mut reader = Cursor::new(b"41 0C 1A F8\r>next");
         let result = read_prompt(&mut reader, b'>').expect("complete reply");
@@ -1313,6 +1429,70 @@ mod serial_prompt_tests {
             read_prompt(&mut reader, b'>'),
             Err(Error::InvalidResponse)
         ));
+    }
+
+    #[test]
+    fn continuously_arriving_bytes_cannot_extend_total_deadline() {
+        use std::cell::Cell;
+        let elapsed = Cell::new(Duration::ZERO);
+        let reads = Cell::new(0);
+        let result = read_prompt_with_deadline(
+            b'>',
+            || elapsed.get(),
+            |buffer, timeout| {
+                assert!(timeout <= ADAPTER_IDLE_TIMEOUT);
+                elapsed.set(elapsed.get() + Duration::from_millis(500));
+                reads.set(reads.get() + 1);
+                buffer[0] = b'A';
+                Ok(1)
+            },
+        );
+        assert!(matches!(result, Err(Error::ReplyDeadlineExceeded)));
+        assert_eq!(reads.get(), 10);
+    }
+
+    #[test]
+    fn final_read_budget_is_clamped_and_late_prompt_is_rejected() {
+        use std::cell::Cell;
+        let elapsed = Cell::new(ADAPTER_REPLY_DEADLINE - Duration::from_millis(200));
+        let result = read_prompt_with_deadline(
+            b'>',
+            || elapsed.get(),
+            |buffer, timeout| {
+                assert_eq!(timeout, Duration::from_millis(200));
+                elapsed.set(ADAPTER_REPLY_DEADLINE);
+                buffer[0] = b'>';
+                Ok(1)
+            },
+        );
+        assert!(matches!(result, Err(Error::ReplyDeadlineExceeded)));
+    }
+
+    #[test]
+    fn prompt_before_deadline_is_accepted() {
+        use std::cell::Cell;
+        let elapsed = Cell::new(ADAPTER_REPLY_DEADLINE - Duration::from_millis(200));
+        let result = read_prompt_with_deadline(
+            b'>',
+            || elapsed.get(),
+            |buffer, timeout| {
+                assert_eq!(timeout, Duration::from_millis(200));
+                elapsed.set(ADAPTER_REPLY_DEADLINE - Duration::from_millis(1));
+                buffer[0] = b'>';
+                Ok(1)
+            },
+        );
+        assert_eq!(result.unwrap(), "");
+    }
+
+    #[test]
+    fn expired_budget_never_starts_another_read() {
+        let result = read_prompt_with_deadline(
+            b'>',
+            || ADAPTER_REPLY_DEADLINE,
+            |_, _| panic!("read must not begin after deadline"),
+        );
+        assert!(matches!(result, Err(Error::ReplyDeadlineExceeded)));
     }
 
     #[test]
