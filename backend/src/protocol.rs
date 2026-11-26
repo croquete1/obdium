@@ -292,9 +292,7 @@ mod tests {
             Ok(29)
         );
         assert_eq!(
-            can_probe_identifier_width(
-                "7E8 06 41 00 00 00 00 00\r7E9 06 41 00 FF FF FF FF"
-            ),
+            can_probe_identifier_width("7E8 06 41 00 00 00 00 00\r7E9 06 41 00 FF FF FF FF"),
             Ok(11)
         );
     }
@@ -334,14 +332,12 @@ mod tests {
             );
         }
         for report in ["A0", "A3", "A7", "6"] {
-            assert!(
-                confirm_can_probe(
-                    ProtocolSelection::Automatic,
-                    parse_reported_protocol(report).unwrap(),
-                    reply
-                )
-                .is_err()
-            );
+            assert!(confirm_can_probe(
+                ProtocolSelection::Automatic,
+                parse_reported_protocol(report).unwrap(),
+                reply
+            )
+            .is_err());
         }
         assert!(confirm_can_probe(
             ProtocolSelection::Manual(ObdProtocol::Can11At500),
