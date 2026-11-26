@@ -74,20 +74,20 @@ fn rejects_invalid_layout_truncation_and_nonfinite_values() {
         decode_signal(&[1], 0, 1, BitOrder::Intel, false, f64::NAN, 0.0),
         Err(ReferenceError::Scaling)
     ));
-    let max = decode_signal(&[0xff; 8], 0, 64, BitOrder::Intel, true, 1.0, 0.0)
-        .expect("64-bit signed");
+    let max =
+        decode_signal(&[0xff; 8], 0, 64, BitOrder::Intel, true, 1.0, 0.0).expect("64-bit signed");
     assert_eq!(max.raw, -1);
 }
 
 #[test]
 fn translation_preview_resolves_all_locales_and_falls_back() {
     let locales = [
-        "en", "cs-CZ", "de", "es", "fr", "hu", "it", "nl", "pl", "pt-PT", "ro", "ru", "sr",
-        "tr", "uk-UA", "zh-CN",
+        "en", "cs-CZ", "de", "es", "fr", "hu", "it", "nl", "pl", "pt-PT", "ro", "ru", "sr", "tr",
+        "uk-UA", "zh-CN",
     ];
     let keys = [
-        "confirm", "cancel", "error", "refresh", "stop", "close", "file", "exit", "help",
-        "about", "no", "timeout",
+        "confirm", "cancel", "error", "refresh", "stop", "close", "file", "exit", "help", "about",
+        "no", "timeout",
     ];
     for locale in locales {
         for key in keys {

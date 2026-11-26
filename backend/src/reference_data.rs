@@ -287,27 +287,28 @@ pub fn translation_preview(
         "en" => Some(english),
         _ => None,
     };
-    let parse_preview = |text: &str, expected: &str| -> Result<TranslationPreview, ReferenceError> {
-        if text.len() > MAX_CATALOG_BYTES {
-            return Err(ReferenceError::TooLarge);
-        }
-        let preview: TranslationPreview = serde_json::from_str(text)?;
-        if preview.schema_version != 1
-            || preview.status != "draft_reference"
-            || preview.locale != expected
-        {
-            return Err(ReferenceError::Header);
-        }
-        if preview.messages.values().any(|message| {
-            message.trim().is_empty()
-                || message
-                    .chars()
-                    .any(|ch| ch.is_control() || matches!(ch, '<' | '>' | '{' | '}' | '%'))
-        }) {
-            return Err(ReferenceError::Entry("invalid preview text".into()));
-        }
-        Ok(preview)
-    };
+    let parse_preview =
+        |text: &str, expected: &str| -> Result<TranslationPreview, ReferenceError> {
+            if text.len() > MAX_CATALOG_BYTES {
+                return Err(ReferenceError::TooLarge);
+            }
+            let preview: TranslationPreview = serde_json::from_str(text)?;
+            if preview.schema_version != 1
+                || preview.status != "draft_reference"
+                || preview.locale != expected
+            {
+                return Err(ReferenceError::Header);
+            }
+            if preview.messages.values().any(|message| {
+                message.trim().is_empty()
+                    || message
+                        .chars()
+                        .any(|ch| ch.is_control() || matches!(ch, '<' | '>' | '{' | '}' | '%'))
+            }) {
+                return Err(ReferenceError::Entry("invalid preview text".into()));
+            }
+            Ok(preview)
+        };
     let fallback_catalog = parse_preview(english, "en")?;
     let Some(default_text) = fallback_catalog.messages.get(key) else {
         return Ok(None);

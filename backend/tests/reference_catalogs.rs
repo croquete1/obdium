@@ -215,7 +215,8 @@ fn manifest_accounts_for_all_staged_dbc_files() {
                 assert!(file.bytes > 0 && file.bytes <= MAX_DBC_BYTES);
                 let text = fs::read_to_string(path).expect("UTF-8 DBC");
                 assert!(
-                    text.lines().any(|line| line.trim_start().starts_with("BO_ ")),
+                    text.lines()
+                        .any(|line| line.trim_start().starts_with("BO_ ")),
                     "no message definition: {}",
                     file.path
                 );

@@ -14,7 +14,10 @@ fn print_json(value: &impl Serialize) -> Result<(), Box<dyn Error>> {
 fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<String> = std::env::args_os()
         .skip(1)
-        .map(|arg| arg.into_string().map_err(|_| "arguments must be valid UTF-8"))
+        .map(|arg| {
+            arg.into_string()
+                .map_err(|_| "arguments must be valid UTF-8")
+        })
         .collect::<Result<_, _>>()?;
     match args.as_slice() {
         [kind, key] if kind == "obd" => {
