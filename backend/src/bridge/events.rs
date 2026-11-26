@@ -360,7 +360,7 @@ pub fn listen_change_obd_settings(window: &Arc<WebviewWindow>, obd: &Arc<Mutex<O
                 }
             }
             "replay-responses" => obd.replay_requests(setting.checked),
-            "use-freeze-fram" => obd.query_freeze_frame(setting.checked),
+            // Freeze-frame selection is unavailable until snapshot identity is validated.
             _ => (),
         }
     })

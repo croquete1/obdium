@@ -8,7 +8,6 @@ import { saveConnectionConfig } from "./settings.js";
 const connectButton = document.getElementById("btn-connect");
 const disconnectButton = document.getElementById("btn-disconnect");
 const dtcList = document.getElementById("dtc-list");
-const freezeFrameBar = document.getElementById("freeze-frame-status");
 const obdGrid = document.getElementById("dashboard-cards");
 const terminalOutput = document.getElementById("terminal-output");
 
@@ -63,10 +62,6 @@ export async function connectElm(baudRate, serialPort, protocol) {
 export async function disconnectElm() {
   connectButton.disabled = true;
   emit("disconnect-elm");
-}
-
-export function freezeFrameDisclaimer(show) {
-  freezeFrameBar.style.display = show ? "flex" : "none";
 }
 
 export function clearObdView() {
