@@ -1,11 +1,10 @@
-use serialport::ErrorKind::{Io, NoDevice};
 use serialport::SerialPort;
 use sqlite::State;
 use std::collections::HashMap;
 use std::io::{Read, Write};
 use std::str::{self, FromStr};
 use std::thread::sleep;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use thiserror::Error;
 
 use crate::cmd::{Command, CommandType};
@@ -61,6 +60,89 @@ pub enum Error {
         "Error occured during I/O operation via serial communication. Error details (if any): {0}"
     )]
     AdapterReadWriteError(String),
+    #[error("Adapter reply exceeded the total receive deadline")]
+    ReplyDeadlineExceeded,
+}
+
+// Limit a single adapter reply to avoid unbounded allocation if its prompt is lost.
+// Large/continuous diagnostic streams require a separate framing design.
+const MAX_ADAPTER_REPLY_BYTES: usize = 64 * 1024;
+const ADAPTER_IDLE_TIMEOUT: Duration = Duration::from_secs(1);
+const ADAPTER_REPLY_DEADLINE: Duration = Duration::from_secs(5);
+
+fn map_serial_error(error: serialport::Error) -> Error {
+    if error.kind() == serialport::ErrorKind::NoDevice {
+        Error::NoConnection
+    } else {
+        Error::AdapterReadWriteError(error.to_string())
+    }
+}
+
+/// Read a complete prompt-terminated reply without clearing or discarding input.
+/// A partial reply is never accepted on EOF, timeout or I/O failure.
+fn read_prompt_with_deadline(
+    until: u8,
+    mut elapsed: impl FnMut() -> Duration,
+    mut read: impl FnMut(&mut [u8], Duration) -> Result<usize, Error>,
+) -> Result<String, Error> {
+    let mut response = String::new();
+    let mut buffer = [0u8; 1];
+
+    loop {
+        let remaining = ADAPTER_REPLY_DEADLINE.saturating_sub(elapsed());
+        if remaining.is_zero() {
+            return Err(Error::ReplyDeadlineExceeded);
+        }
+        let result = read(&mut buffer, remaining.min(ADAPTER_IDLE_TIMEOUT));
+        if elapsed() >= ADAPTER_REPLY_DEADLINE {
+            return Err(Error::ReplyDeadlineExceeded);
+        }
+        match result {
+            Ok(1) => {
+                let byte = buffer[0];
+                if byte == until {
+                    return Ok(response);
+                }
+                if !byte.is_ascii() || response.len() >= MAX_ADAPTER_REPLY_BYTES {
+                    return Err(Error::InvalidResponse);
+                }
+                response.push(char::from(byte));
+            }
+            Ok(_) => return Err(Error::InvalidResponse),
+            Err(error) => return Err(error),
+        }
+    }
+}
+
+fn read_serial_prompt(port: &mut dyn SerialPort, until: u8) -> Result<String, Error> {
+    let start = Instant::now();
+    let mut timeout = port.timeout();
+    read_prompt_with_deadline(
+        until,
+        || start.elapsed(),
+        |buffer, remaining| {
+            // Avoid reconfiguring the port for every byte while the full idle budget remains.
+            if timeout != remaining {
+                port.set_timeout(remaining).map_err(map_serial_error)?;
+                timeout = remaining;
+            }
+            port.read(buffer)
+                .map_err(|error| Error::AdapterReadWriteError(error.to_string()))
+        },
+    )
+}
+
+#[cfg(test)]
+fn read_prompt<R: Read + ?Sized>(reader: &mut R, until: u8) -> Result<String, Error> {
+    read_prompt_with_deadline(
+        until,
+        || Duration::ZERO,
+        |buffer, _| {
+            reader
+                .read(buffer)
+                .map_err(|error| Error::AdapterReadWriteError(error.to_string()))
+        },
+    )
 }
 
 pub enum Service {
@@ -442,20 +524,22 @@ impl OBD {
             None => return Err(Error::NoConnection),
         };
 
-        let _ = stream.set_timeout(Duration::from_secs(1));
-        let _ = stream.clear(serialport::ClearBuffer::All);
-
         let mut cmd = req.as_bytes();
         if cmd.is_empty() {
             return Ok(());
         }
 
-        cmd.push(b'\r');
-        match stream.write_all(&cmd) {
-            Ok(()) => (),
+        stream
+            .set_timeout(ADAPTER_IDLE_TIMEOUT)
+            .map_err(map_serial_error)?;
+        stream
+            .clear(serialport::ClearBuffer::All)
+            .map_err(map_serial_error)?;
 
-            // Connection dropped
-            Err(_) => self.connection = None,
+        cmd.push(b'\r');
+        if let Err(error) = stream.write_all(&cmd) {
+            self.connection = None;
+            return Err(Error::AdapterReadWriteError(error.to_string()));
         }
 
         Ok(())
@@ -666,31 +750,17 @@ impl OBD {
             None => return Err(Error::NoConnection),
         };
 
-        port.clear(serialport::ClearBuffer::All)
-            .map_err(|error| match error.kind() {
-                NoDevice => Error::NoConnection,
-                Io(_) => Error::AdapterReadWriteError(error.description),
-                _ => Error::AdapterReadWriteError("unknown i/o error".to_string()),
-            })?;
-
-        let mut buffer = [0u8; 1];
-        let mut response = String::new();
-
-        loop {
-            match port.read(&mut buffer) {
-                Ok(1) => {
-                    let byte = buffer[0];
-                    if byte == until {
-                        break;
-                    }
-
-                    response.push(byte as char);
-                }
-                Ok(0) => std::thread::sleep(std::time::Duration::from_millis(10)),
-                Ok(_) => break,
-                Err(_) => break,
+        // The buffer is cleared before sending a command, never after it.
+        // A fast adapter may already have returned the entire reply.
+        let response = match read_serial_prompt(port.as_mut(), until) {
+            Ok(response) => response,
+            Err(error) => {
+                // Without a validated prompt boundary, the next reply cannot be
+                // attributed safely. Require an explicit reconnect; never retry.
+                self.connection = None;
+                return Err(error);
             }
-        }
+        };
 
         if response.contains("UNABLE TO CONNECT") {
             println!("unable to connect");
@@ -1007,5 +1077,430 @@ impl OBD {
                 Err(Box::new(err))
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod serial_prompt_tests {
+    use super::*;
+    use std::io::{self, Cursor};
+
+    use std::collections::VecDeque;
+    use std::sync::{Arc, Mutex};
+
+    #[derive(Default)]
+    struct FixtureState {
+        events: Vec<&'static str>,
+        pending: VecDeque<u8>,
+        written: Vec<u8>,
+        timeout: Duration,
+        fail_timeout: bool,
+        fail_clear: bool,
+        fail_write: bool,
+        eof_when_empty: bool,
+    }
+
+    #[derive(Clone)]
+    struct FixturePort {
+        state: Arc<Mutex<FixtureState>>,
+    }
+
+    impl SerialPort for FixturePort {
+        fn name(&self) -> Option<String> {
+            Some("fixture".to_string())
+        }
+        fn baud_rate(&self) -> serialport::Result<u32> {
+            Ok(0)
+        }
+        fn data_bits(&self) -> serialport::Result<serialport::DataBits> {
+            Ok(serialport::DataBits::Eight)
+        }
+        fn flow_control(&self) -> serialport::Result<serialport::FlowControl> {
+            Ok(serialport::FlowControl::None)
+        }
+        fn parity(&self) -> serialport::Result<serialport::Parity> {
+            Ok(serialport::Parity::None)
+        }
+        fn stop_bits(&self) -> serialport::Result<serialport::StopBits> {
+            Ok(serialport::StopBits::One)
+        }
+        fn timeout(&self) -> Duration {
+            self.state.lock().unwrap().timeout
+        }
+        fn set_timeout(&mut self, timeout: Duration) -> serialport::Result<()> {
+            let mut state = self.state.lock().unwrap();
+            state.events.push("timeout");
+            if state.fail_timeout {
+                return Err(serialport::Error::new(
+                    serialport::ErrorKind::Unknown,
+                    "fixture setup failure",
+                ));
+            }
+            state.timeout = timeout;
+            Ok(())
+        }
+        fn write_request_to_send(&mut self, _level: bool) -> serialport::Result<()> {
+            Ok(())
+        }
+        fn write_data_terminal_ready(&mut self, _level: bool) -> serialport::Result<()> {
+            Ok(())
+        }
+        fn read_clear_to_send(&mut self) -> serialport::Result<bool> {
+            Ok(true)
+        }
+        fn read_data_set_ready(&mut self) -> serialport::Result<bool> {
+            Ok(true)
+        }
+        fn read_ring_indicator(&mut self) -> serialport::Result<bool> {
+            Ok(false)
+        }
+        fn read_carrier_detect(&mut self) -> serialport::Result<bool> {
+            Ok(false)
+        }
+        fn bytes_to_read(&self) -> serialport::Result<u32> {
+            Ok(0)
+        }
+        fn bytes_to_write(&self) -> serialport::Result<u32> {
+            Ok(0)
+        }
+        fn clear(&self, _buffer: serialport::ClearBuffer) -> serialport::Result<()> {
+            let mut state = self.state.lock().unwrap();
+            state.events.push("clear");
+            if state.fail_clear {
+                return Err(serialport::Error::new(
+                    serialport::ErrorKind::Unknown,
+                    "fixture clear failure",
+                ));
+            }
+            state.pending.clear();
+            Ok(())
+        }
+        fn try_clone(&self) -> serialport::Result<Box<dyn SerialPort>> {
+            Ok(Box::new(self.clone()))
+        }
+        fn set_baud_rate(&mut self, _baud_rate: u32) -> serialport::Result<()> {
+            Ok(())
+        }
+        fn set_data_bits(&mut self, _data_bits: serialport::DataBits) -> serialport::Result<()> {
+            Ok(())
+        }
+        fn set_flow_control(
+            &mut self,
+            _flow_control: serialport::FlowControl,
+        ) -> serialport::Result<()> {
+            Ok(())
+        }
+        fn set_parity(&mut self, _parity: serialport::Parity) -> serialport::Result<()> {
+            Ok(())
+        }
+        fn set_stop_bits(&mut self, _stop_bits: serialport::StopBits) -> serialport::Result<()> {
+            Ok(())
+        }
+        fn set_break(&self) -> serialport::Result<()> {
+            Ok(())
+        }
+        fn clear_break(&self) -> serialport::Result<()> {
+            Ok(())
+        }
+    }
+
+    impl Read for FixturePort {
+        fn read(&mut self, buffer: &mut [u8]) -> io::Result<usize> {
+            let mut state = self.state.lock().unwrap();
+            if buffer.is_empty() {
+                return Ok(0);
+            }
+            if let Some(byte) = state.pending.pop_front() {
+                buffer[0] = byte;
+                Ok(1)
+            } else if state.eof_when_empty {
+                Ok(0)
+            } else {
+                Err(io::Error::new(io::ErrorKind::TimedOut, "fixture timeout"))
+            }
+        }
+    }
+
+    impl Write for FixturePort {
+        fn write(&mut self, buffer: &[u8]) -> io::Result<usize> {
+            let mut state = self.state.lock().unwrap();
+            state.events.push("write");
+            if state.fail_write {
+                return Err(io::Error::new(io::ErrorKind::BrokenPipe, "fixture write"));
+            }
+            state.written.extend_from_slice(buffer);
+            // Simulate an adapter whose reply is already queued when write returns.
+            state.pending.extend(b"ELM327 v1.5\r>".iter().copied());
+            Ok(buffer.len())
+        }
+
+        fn flush(&mut self) -> io::Result<()> {
+            Ok(())
+        }
+    }
+
+    fn fixture_obd(state: FixtureState) -> (OBD, Arc<Mutex<FixtureState>>) {
+        let state = Arc::new(Mutex::new(state));
+        let mut obd = OBD::new();
+        obd.connection = Some(Box::new(FixturePort {
+            state: Arc::clone(&state),
+        }));
+        (obd, state)
+    }
+
+    #[test]
+    fn transaction_keeps_reply_queued_during_write() {
+        let (mut obd, state) = fixture_obd(FixtureState {
+            pending: VecDeque::from(*b"X"),
+            ..Default::default()
+        });
+
+        obd.send_command(&mut Command::new_at(b"ATI"))
+            .expect("send succeeds");
+        let reply = obd.get_at_response().expect("receive succeeds");
+
+        assert_eq!(reply.raw_response().as_deref(), Some("ELM327 v1.5\r"));
+        let state = state.lock().unwrap();
+        assert_eq!(state.written, b"ATI\r");
+        assert_eq!(state.events, ["timeout", "clear", "write"]);
+        assert!(state.pending.is_empty());
+    }
+
+    #[test]
+    fn timeout_setup_failure_prevents_write() {
+        let (mut obd, state) = fixture_obd(FixtureState {
+            fail_timeout: true,
+            ..Default::default()
+        });
+
+        assert!(matches!(
+            obd.send_command(&mut Command::new_at(b"ATI")),
+            Err(Error::AdapterReadWriteError(_))
+        ));
+        let state = state.lock().unwrap();
+        assert_eq!(state.events, ["timeout"]);
+        assert!(state.written.is_empty());
+    }
+
+    #[test]
+    fn clear_failure_prevents_write() {
+        let (mut obd, state) = fixture_obd(FixtureState {
+            fail_clear: true,
+            ..Default::default()
+        });
+
+        assert!(matches!(
+            obd.send_command(&mut Command::new_at(b"ATI")),
+            Err(Error::AdapterReadWriteError(_))
+        ));
+        let state = state.lock().unwrap();
+        assert_eq!(state.events, ["timeout", "clear"]);
+        assert!(state.written.is_empty());
+    }
+
+    #[test]
+    fn failed_write_is_not_success_and_disconnects() {
+        let (mut obd, state) = fixture_obd(FixtureState {
+            fail_write: true,
+            ..Default::default()
+        });
+
+        assert!(matches!(
+            obd.send_command(&mut Command::new_at(b"ATI")),
+            Err(Error::AdapterReadWriteError(_))
+        ));
+        assert!(!obd.is_connected());
+        assert!(matches!(
+            obd.send_command(&mut Command::new_at(b"ATI")),
+            Err(Error::NoConnection)
+        ));
+        let state = state.lock().unwrap();
+        assert_eq!(state.events, ["timeout", "clear", "write"]);
+        assert!(state.written.is_empty());
+    }
+
+    #[test]
+    fn partial_reply_timeout_invalidates_connection_and_blocks_next_write() {
+        let (mut obd, state) = fixture_obd(FixtureState::default());
+        obd.send_command(&mut Command::new_at(b"ATI")).unwrap();
+        state.lock().unwrap().pending = VecDeque::from(*b"ELM");
+        assert!(matches!(
+            obd.get_at_response(),
+            Err(Error::AdapterReadWriteError(_))
+        ));
+        assert!(!obd.is_connected());
+
+        // Simulate the late remainder arriving after the failed transaction.
+        state.lock().unwrap().pending.extend(b"327\r>");
+        assert!(matches!(
+            obd.send_command(&mut Command::new_at(b"ATI")),
+            Err(Error::NoConnection)
+        ));
+        let state = state.lock().unwrap();
+        assert_eq!(state.written, b"ATI\r");
+        assert_eq!(state.events, ["timeout", "clear", "write"]);
+    }
+
+    #[test]
+    fn premature_eof_invalidates_connection() {
+        let (mut obd, state) = fixture_obd(FixtureState {
+            eof_when_empty: true,
+            ..Default::default()
+        });
+        obd.send_command(&mut Command::new_at(b"ATI")).unwrap();
+        state.lock().unwrap().pending = VecDeque::from(*b"ELM");
+        assert!(matches!(obd.get_at_response(), Err(Error::InvalidResponse)));
+        assert!(!obd.is_connected());
+    }
+
+    #[test]
+    fn malformed_byte_before_prompt_invalidates_connection() {
+        let (mut obd, state) = fixture_obd(FixtureState::default());
+        obd.send_command(&mut Command::new_at(b"ATI")).unwrap();
+        state.lock().unwrap().pending = VecDeque::from([b'E', 0xff, b'>']);
+        assert!(matches!(obd.get_at_response(), Err(Error::InvalidResponse)));
+        assert!(!obd.is_connected());
+        assert_eq!(state.lock().unwrap().written, b"ATI\r");
+    }
+
+    #[test]
+    fn complete_no_data_reply_keeps_transport_synchronized() {
+        let (mut obd, state) = fixture_obd(FixtureState::default());
+        obd.send_command(&mut Command::new_pid(b"010C")).unwrap();
+        state.lock().unwrap().pending = VecDeque::from(*b"NO DATA\r>");
+        assert!(matches!(obd.get_pid_response(), Err(Error::NoData)));
+        assert!(obd.is_connected());
+        obd.send_command(&mut Command::new_at(b"ATI")).unwrap();
+        assert!(obd.get_at_response().is_ok());
+        assert_eq!(state.lock().unwrap().written, b"010C\rATI\r");
+    }
+
+    #[test]
+    fn immediate_reply_is_preserved_until_prompt() {
+        let mut reader = Cursor::new(b"41 0C 1A F8\r>next");
+        let result = read_prompt(&mut reader, b'>').expect("complete reply");
+        assert_eq!(result, "41 0C 1A F8\r");
+        assert_eq!(reader.position(), b"41 0C 1A F8\r>".len() as u64);
+    }
+
+    #[test]
+    fn incomplete_reply_is_not_success() {
+        let mut reader = Cursor::new(b"41 0C");
+        assert!(matches!(
+            read_prompt(&mut reader, b'>'),
+            Err(Error::InvalidResponse)
+        ));
+    }
+
+    #[test]
+    fn io_error_after_partial_data_is_propagated() {
+        struct BrokenReader {
+            first: bool,
+        }
+        impl Read for BrokenReader {
+            fn read(&mut self, buffer: &mut [u8]) -> io::Result<usize> {
+                if self.first {
+                    self.first = false;
+                    buffer[0] = b'4';
+                    Ok(1)
+                } else {
+                    Err(io::Error::new(io::ErrorKind::TimedOut, "fixture timeout"))
+                }
+            }
+        }
+
+        let mut reader = BrokenReader { first: true };
+        assert!(matches!(
+            read_prompt(&mut reader, b'>'),
+            Err(Error::AdapterReadWriteError(_))
+        ));
+    }
+
+    #[test]
+    fn reply_size_limit_is_enforced() {
+        let mut bytes = vec![b'A'; MAX_ADAPTER_REPLY_BYTES];
+        bytes.push(b'>');
+        let mut reader = Cursor::new(bytes);
+        let reply = read_prompt(&mut reader, b'>').expect("maximum complete reply");
+        assert_eq!(reply.len(), MAX_ADAPTER_REPLY_BYTES);
+
+        let mut reader = Cursor::new(vec![b'A'; MAX_ADAPTER_REPLY_BYTES + 1]);
+        assert!(matches!(
+            read_prompt(&mut reader, b'>'),
+            Err(Error::InvalidResponse)
+        ));
+    }
+
+    #[test]
+    fn continuously_arriving_bytes_cannot_extend_total_deadline() {
+        use std::cell::Cell;
+        let elapsed = Cell::new(Duration::ZERO);
+        let reads = Cell::new(0);
+        let result = read_prompt_with_deadline(
+            b'>',
+            || elapsed.get(),
+            |buffer, timeout| {
+                assert!(timeout <= ADAPTER_IDLE_TIMEOUT);
+                elapsed.set(elapsed.get() + Duration::from_millis(500));
+                reads.set(reads.get() + 1);
+                buffer[0] = b'A';
+                Ok(1)
+            },
+        );
+        assert!(matches!(result, Err(Error::ReplyDeadlineExceeded)));
+        assert_eq!(reads.get(), 10);
+    }
+
+    #[test]
+    fn final_read_budget_is_clamped_and_late_prompt_is_rejected() {
+        use std::cell::Cell;
+        let elapsed = Cell::new(ADAPTER_REPLY_DEADLINE - Duration::from_millis(200));
+        let result = read_prompt_with_deadline(
+            b'>',
+            || elapsed.get(),
+            |buffer, timeout| {
+                assert_eq!(timeout, Duration::from_millis(200));
+                elapsed.set(ADAPTER_REPLY_DEADLINE);
+                buffer[0] = b'>';
+                Ok(1)
+            },
+        );
+        assert!(matches!(result, Err(Error::ReplyDeadlineExceeded)));
+    }
+
+    #[test]
+    fn prompt_before_deadline_is_accepted() {
+        use std::cell::Cell;
+        let elapsed = Cell::new(ADAPTER_REPLY_DEADLINE - Duration::from_millis(200));
+        let result = read_prompt_with_deadline(
+            b'>',
+            || elapsed.get(),
+            |buffer, timeout| {
+                assert_eq!(timeout, Duration::from_millis(200));
+                elapsed.set(ADAPTER_REPLY_DEADLINE - Duration::from_millis(1));
+                buffer[0] = b'>';
+                Ok(1)
+            },
+        );
+        assert_eq!(result.unwrap(), "");
+    }
+
+    #[test]
+    fn expired_budget_never_starts_another_read() {
+        let result = read_prompt_with_deadline(
+            b'>',
+            || ADAPTER_REPLY_DEADLINE,
+            |_, _| panic!("read must not begin after deadline"),
+        );
+        assert!(matches!(result, Err(Error::ReplyDeadlineExceeded)));
+    }
+
+    #[test]
+    fn non_ascii_reply_is_rejected() {
+        let mut reader = Cursor::new([b'4', 0xff, b'>']);
+        assert!(matches!(
+            read_prompt(&mut reader, b'>'),
+            Err(Error::InvalidResponse)
+        ));
     }
 }
