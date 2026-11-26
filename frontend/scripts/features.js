@@ -4,6 +4,7 @@ const { writeFile } = window.__TAURI__.fs;
 const invoke = window.__TAURI__.invoke;
 import { saveConnectionConfig } from "./settings.js";
 import { createGraphSampler } from "./graph-samples.mjs";
+import { createTrackerRegistry } from "./connection-lifecycle.mjs";
 
 const connectButton = document.getElementById("btn-connect");
 const disconnectButton = document.getElementById("btn-disconnect");
@@ -126,16 +127,27 @@ export async function addGraphDropdownOption(pid, name, unit, equation) {
   }
 }
 
-const activeTrackers = new Map(); // graphId -> cleanupFn
+const activeTrackers = createTrackerRegistry();
+const graphSelections = new Map();
+
+export function stopGraphTracking() {
+  activeTrackers.stopAll();
+}
+
+export function resumeGraphTracking() {
+  for (const [graphId, { name, unit }] of graphSelections) {
+    void trackGraph(graphId, name, unit);
+  }
+}
 
 export async function trackGraph(graphId, name, unit) {
-  if (activeTrackers.has(graphId)) {
-    const cleanup = activeTrackers.get(graphId);
-    cleanup();
-  }
-
+  graphSelections.set(graphId, { name, unit });
+  const ticket = activeTrackers.begin(graphId);
   const graph = Chart.getChart(graphId);
-  if (!graph) return;
+  if (!graph || !window.connected) {
+    ticket.stop();
+    return;
+  }
 
   // Reset graph data
   graph.data.labels = [];
@@ -155,15 +167,25 @@ export async function trackGraph(graphId, name, unit) {
   const myName = name.trim().toUpperCase();
 
   const listener = (event) => {
+    if (!ticket.isCurrent()) return;
     const incomingName = event.payload.name?.trim().toUpperCase();
     if (incomingName === myName) {
       sampler.push(event.payload);
     }
   };
 
-  const unlisten = await listen("update-graphs", listener);
+  let unlisten;
+  try {
+    unlisten = await listen("update-graphs", listener);
+  } catch (error) {
+    ticket.stop();
+    console.error("Graph listener registration failed", error);
+    return;
+  }
+  if (!ticket.attach(unlisten)) return;
+
   const intervalId = setInterval(() => {
-    if (!graph.config?.options) return;
+    if (!ticket.isCurrent() || !graph.config?.options) return;
 
     const now = Date.now();
     const elapsedMs = now - graph.startTime;
@@ -195,13 +217,7 @@ export async function trackGraph(graphId, name, unit) {
     graph.update();
   }, 1000);
 
-  const cleanup = () => {
-    clearInterval(intervalId);
-    unlisten();
-    activeTrackers.delete(graphId);
-  };
-
-  activeTrackers.set(graphId, cleanup);
+  ticket.attach(() => clearInterval(intervalId));
 }
 
 export function appendTerminalOutput(msg) {

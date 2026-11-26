@@ -5,7 +5,10 @@ import {
   appendTerminalOutput,
   addNotification,
   listenExpandPID,
+  stopGraphTracking,
+  resumeGraphTracking,
 } from "./features.js";
+import { runConnectionQueries } from "./connection-lifecycle.mjs";
 import {
   saveConnectionConfig,
   updateUnitConversionDropdowns,
@@ -128,6 +131,8 @@ listen("vehicle-details", (event) => {
   ).toUpperCase();
 });
 
+let connectionGeneration = 0;
+
 listen("connection-status", async (event) => {
   const protocolDropdown = document.getElementById("protocol-menu");
   const protocolSelected = document.getElementById("protocol-selected");
@@ -146,6 +151,8 @@ listen("connection-status", async (event) => {
       "CONNECTED THROUGH SERIAL PORT " + serialPort.toUpperCase();
     connectionIcon.src = "/assets/icons/connected.png";
     window.connected = true;
+    const generation = ++connectionGeneration;
+    resumeGraphTracking();
 
     // Features only accessible in real mode
     if (serialPort !== "DEMO MODE") {
@@ -184,17 +191,12 @@ listen("connection-status", async (event) => {
       updateUnitConversionDropdowns();
     }
 
-    if (serialPort === "DEMO MODE") {
-      await new Promise((r) => setTimeout(r, 15000));
-      emit("get-pids");
-      await new Promise((r) => setTimeout(r, 2000));
-      emit("get-readiness-tests");
-    } else {
-      await new Promise((r) => setTimeout(r, 7000));
-      emit("get-pids");
-      await new Promise((r) => setTimeout(r, 2000));
-      emit("get-readiness-tests");
-    }
+    await runConnectionQueries({
+      isCurrent: () => window.connected && connectionGeneration === generation,
+      delay: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+      emit,
+      firstDelay: serialPort === "DEMO MODE" ? 15000 : 7000,
+    });
   } else {
     if (!window.connected) return;
 
@@ -202,6 +204,8 @@ listen("connection-status", async (event) => {
     status.textContent = "NO CONNECTION ESTABLISHED";
     connectionIcon.src = "/assets/icons/not-connected.png";
     window.connected = false;
+    connectionGeneration++;
+    stopGraphTracking();
     recordResponses.disabled = true;
     replayResponses.disabled = true;
     connectButton.disabled = false;
