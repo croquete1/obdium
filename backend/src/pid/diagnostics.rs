@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use sqlite::State;
-use std::{default, fmt};
+use std::fmt;
 
 use crate::{
     engine::EngineType,

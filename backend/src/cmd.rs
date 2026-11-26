@@ -10,18 +10,18 @@ pub(crate) enum CommandType {
     /// A OBD service query, e.g 09
     ServiceQuery,
     /// An arbitrary message that doesn't fall into any other specific command category
-    /// e.g, this is used for Mode 22 PIDs because PIds are strictly 4 characters (the service # and PID #), but 
+    /// e.g, this is used for Mode 22 PIDs because PIds are strictly 4 characters (the service # and PID #), but
     /// an arbitrary command payload can be any length, useful for 6 character mode 22 pids (22xxyy)
     Arbitrary,
     #[default]
     Default,
 }
 
-/// The main Command abstraction layer to send over and use with the `OBD` struct 
+/// The main Command abstraction layer to send over and use with the `OBD` struct
 #[derive(Debug, Default)]
 pub struct Command {
     command_type: CommandType,
-    /// If command_type is PIDCommand, contains the 4 character PID 
+    /// If command_type is PIDCommand, contains the 4 character PID
     pid_command: [u8; 4],
     /// If command_type is ATCommand, contains the ATxx command
     at_command: &'static [u8],
@@ -34,8 +34,8 @@ pub struct Command {
 impl Command {
     /// Create a new generic PID command and returns the `Command``
     /// struct with command_type: PIDCommand.
-    /// 
-    /// `command` - The 4 character PID command, e.g: 010C (Engine RPM PID) 
+    ///
+    /// `command` - The 4 character PID command, e.g: 010C (Engine RPM PID)
     pub fn new_pid(command: &[u8; 4]) -> Self {
         Self {
             command_type: CommandType::PIDCommand,
@@ -46,7 +46,7 @@ impl Command {
 
     /// Create a new AT ELM command and returns the `Command`
     /// struct with command_type: ATCommand.
-    /// 
+    ///
     /// `at_command` - The variable length AT command, e.g: ATZ
     pub fn new_at(at_command: &'static [u8]) -> Self {
         Self {
@@ -58,7 +58,7 @@ impl Command {
 
     /// Create a new service query command and returns the `Command`
     /// struct with command_type: ServiceQuqery.
-    /// 
+    ///
     /// `svc_command` - The 2 character number of the service/mode to query, e.g 09
     pub fn new_svc(svc_command: &[u8; 2]) -> Self {
         Self {
@@ -70,7 +70,7 @@ impl Command {
 
     /// Create a new arbitrary command and returns the `Command`
     /// struct with command_type: Arbitrary
-    /// 
+    ///
     /// `arbitrary_msg` - The string to store in the `arbitrary_message` field of the command
     pub fn new_arb(arbitrary_msg: &str) -> Self {
         Self {
@@ -129,28 +129,28 @@ impl Command {
         self.svc_command = *command;
     }
 
-    /// Get the underlying `pid_command` field. 
+    /// Get the underlying `pid_command` field.
     /// Note: Ensure this command's command_type is PIDCommand to ensure you get
     /// the data you're looking for.
     pub fn get_pid(&self) -> [u8; 4] {
         self.pid_command
     }
 
-    /// Get the underlying `at_command` field. 
+    /// Get the underlying `at_command` field.
     /// Note: Ensure this command's command_type is ATCommand to ensure you get
     /// the data you're looking for.
     pub fn get_at(&self) -> &[u8] {
         self.at_command
     }
 
-    /// Get the underlying `svc_command` field. 
+    /// Get the underlying `svc_command` field.
     /// Note: Ensure this command's command_type is ServiceQuery mand to ensure you get
     /// the data you're looking for.
     pub fn get_svc(&self) -> [u8; 2] {
         self.svc_command
     }
 
-    /// Get the underlying `arbitrary_message` field. 
+    /// Get the underlying `arbitrary_message` field.
     /// Note: Ensure this command's command_type is Arbitrary to ensure you get
     /// the data you're looking for.
     pub fn get_msg(&self) -> String {
