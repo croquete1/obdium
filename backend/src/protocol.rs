@@ -180,7 +180,15 @@ mod tests {
     #[test]
     fn malformed_or_unsupported_reports_are_rejected() {
         for reply in [
-            "", "OK", "NO DATA", "ATDPN\rA6", "6\r7", "A 6", "A6>", "16", "é",
+            "",
+            "OK",
+            "NO DATA",
+            "ATDPN\rA6",
+            "6\r7",
+            "A 6",
+            "A6>",
+            "16",
+            "é",
         ] {
             assert!(parse_reported_protocol(reply).is_err(), "{reply:?}");
         }
