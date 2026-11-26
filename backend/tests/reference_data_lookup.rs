@@ -2,7 +2,7 @@
 mod reference_data;
 
 use reference_data::{
-    decode_signal, translation_preview, BitOrder, ReferenceCatalogs, ReferenceError,
+    decode_dbc_signal, decode_signal, translation_preview, BitOrder, ReferenceCatalogs, ReferenceError,
 };
 
 #[test]
@@ -128,4 +128,41 @@ fn rejects_duplicate_descriptions_and_labels_in_consumer() {
         ReferenceCatalogs::from_json(obd, dtc, duplicate_nrc),
         Err(ReferenceError::Entry(key)) if key == "78"
     ));
+}
+
+#[test]
+fn dbc_preview_decodes_synthetic_signal_and_requires_exact_frame_length() {
+    let dbc = include_str!("../data/catalogs/fixtures/dbc/opendbc-test.dbc");
+    let payload = [0, 0x0f, 0, 0, 0, 0, 0, 0];
+    let result = decode_dbc_signal(dbc, 316, "COUNTER", &payload).expect("fixture signal");
+    assert_eq!(result.raw, 15);
+    assert_eq!(result.scaled, 15.0);
+    assert!(matches!(
+        decode_dbc_signal(dbc, 316, "COUNTER", &payload[..7]),
+        Err(ReferenceError::Truncated)
+    ));
+    assert!(decode_dbc_signal(dbc, 316, "missing", &payload).is_err());
+    assert!(decode_dbc_signal(dbc, 999, "COUNTER", &payload).is_err());
+}
+
+#[test]
+fn dbc_preview_rejects_ambiguous_and_unsupported_layouts() {
+    let header = "BO_ 123 Example: 2 ECU\n";
+    let signal = " SG_ Value : 0|16@1+ (0.5,-1) [0|100] \"\" ECU\n";
+    let valid = format!("{header}{signal}");
+    let result = decode_dbc_signal(&valid, 123, "Value", &[0x34, 0x12]).expect("simple");
+    assert_eq!(result.raw, 0x1234);
+    assert_eq!(result.scaled, 2329.0);
+    for dbc in [
+        format!("{valid}{signal}"),
+        format!("{valid}{header}{signal}"),
+        valid.replace("Value :", "Value m1 :"),
+        format!("{valid}SIG_VALTYPE_ 123 Value : 1;"),
+        format!("{valid}SG_MUL_VAL_ 123 Value Switch 1-2;"),
+        valid.replace("0|16", "8|16"),
+        valid.replace("0.5", "NaN"),
+    ] {
+        assert!(decode_dbc_signal(&dbc, 123, "Value", &[0x34, 0x12]).is_err());
+    }
+    assert!(decode_dbc_signal(&valid, 0x8000_007b, "Value", &[0x34, 0x12]).is_err());
 }

@@ -2,13 +2,29 @@
 #[path = "../src/reference_data.rs"]
 mod reference_data;
 
-use reference_data::{decode_signal, translation_preview, BitOrder, ReferenceCatalogs};
+use reference_data::{
+    decode_dbc_signal, decode_signal, translation_preview, BitOrder, ReferenceCatalogs,
+};
 use serde::Serialize;
 use std::error::Error;
+use std::io::Read;
 
 fn print_json(value: &impl Serialize) -> Result<(), Box<dyn Error>> {
     println!("{}", serde_json::to_string_pretty(value)?);
     Ok(())
+}
+
+fn parse_payload(bytes: &str) -> Result<Vec<u8>, Box<dyn Error>> {
+    if bytes.len() > 128
+        || !bytes.len().is_multiple_of(2)
+        || !bytes.bytes().all(|byte| byte.is_ascii_hexdigit())
+    {
+        return Err("expected at most 64 bytes of contiguous hexadecimal data".into());
+    }
+    Ok((0..bytes.len())
+        .step_by(2)
+        .map(|index| u8::from_str_radix(&bytes[index..index + 2], 16))
+        .collect::<Result<Vec<_>, _>>()?)
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -33,17 +49,18 @@ fn main() -> Result<(), Box<dyn Error>> {
         [kind, locale, key] if kind == "translate" => {
             print_json(&translation_preview(locale, key)?)?;
         }
-        [kind, bytes, start, width, endian, sign, factor, offset] if kind == "decode" => {
-            if bytes.len() > 128
-                || !bytes.len().is_multiple_of(2)
-                || !bytes.bytes().all(|byte| byte.is_ascii_hexdigit())
-            {
-                return Err("expected at most 64 bytes of contiguous hexadecimal data".into());
+        [kind, path, id, signal, bytes] if kind == "dbc" => {
+            let payload = parse_payload(bytes)?;
+            let file = std::fs::File::open(path)?;
+            if !file.metadata()?.is_file() {
+                return Err("DBC path must be a regular file".into());
             }
-            let payload = (0..bytes.len())
-                .step_by(2)
-                .map(|index| u8::from_str_radix(&bytes[index..index + 2], 16))
-                .collect::<Result<Vec<_>, _>>()?;
+            let mut dbc = String::new();
+            file.take(2 * 1024 * 1024 + 1).read_to_string(&mut dbc)?;
+            print_json(&decode_dbc_signal(&dbc, id.parse()?, signal, &payload)?)?;
+        }
+        [kind, bytes, start, width, endian, sign, factor, offset] if kind == "decode" => {
+            let payload = parse_payload(bytes)?;
             let order = match endian.as_str() {
                 "intel" => BitOrder::Intel,
                 "motorola" => BitOrder::Motorola,
@@ -65,7 +82,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             )?)?;
         }
         _ => {
-            return Err("usage: catalog_lookup obd|dtc|nrc KEY; translate LOCALE KEY; or decode HEX START WIDTH intel|motorola signed|unsigned FACTOR OFFSET".into());
+            return Err("usage: catalog_lookup obd|dtc|nrc KEY; translate LOCALE KEY; dbc PATH DECIMAL_ID SIGNAL HEX; or decode HEX START WIDTH intel|motorola signed|unsigned FACTOR OFFSET".into());
         }
     }
     Ok(())

@@ -18,3 +18,7 @@ From backend: `cargo run --locked --example catalog_lookup -- obd 010C`, `cargo 
 ## Localization preview
 
 16 draft JSON locale resources with 12 stable plain-text keys each (192 entries), no fuzzy or executable expressions. PT-PT terminology adapted, not independently reviewed. `cargo run --locked --example catalog_lookup -- translate pt-PT file` previews a message; unknown locales fall back to English. No UI localization claim. Source PO notices and translator credits preserved in the technical reference snapshot and license directory.
+
+### Limited DBC preview
+
+`cargo run --locked --example catalog_lookup -- dbc data/catalogs/fixtures/dbc/opendbc-test.dbc 316 COUNTER 000F000000000000` reads a synthetic fixture, selects a decimal standard CAN identifier and exact signal name, validates frame length, and decodes a simple integer signal. Rejects duplicate target messages/signals, multiplexing and extended signal metadata for the selected message; extended IDs are not supported. Bounds file read at 2 MiB. No transmit, automatic vehicle selection, value labels, checksum/counter validation, full DBC parsing or hardware compatibility claims.

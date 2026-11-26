@@ -19,6 +19,8 @@ pub enum ReferenceError {
     Entry(String),
     #[error("invalid signal layout")]
     Layout,
+    #[error("unsupported DBC definition: {0}")]
+    Dbc(String),
     #[error("signal exceeds frame payload")]
     Truncated,
     #[error("non-finite scaling or result")]
@@ -330,4 +332,102 @@ pub fn translation_preview(
         text: default_text.clone(),
         fallback: true,
     }))
+}
+
+/// Decode one explicitly selected, non-multiplexed integer signal from a DBC.
+/// This is a strict subset, not a general DBC importer or vehicle capability check.
+/// Metadata such as value labels, checksum rules and range constraints is not interpreted.
+pub fn decode_dbc_signal(
+    dbc: &str,
+    message_id: u32,
+    signal_name: &str,
+    payload: &[u8],
+) -> Result<DecodedSignal, ReferenceError> {
+    if dbc.len() > MAX_CATALOG_BYTES {
+        return Err(ReferenceError::TooLarge);
+    }
+    // DBC uses bit 31 to distinguish extended identifiers. This preview
+    // deliberately accepts only standard identifiers, avoiding aliasing.
+    if message_id > 0x7ff || signal_name.is_empty() || signal_name.len() > 128 {
+        return Err(ReferenceError::Layout);
+    }
+    let message = regex::Regex::new(
+        r"^BO_\s+([0-9]+)\s+\S+\s*:\s*([0-9]+)\s+\S+\s*$",
+    )
+    .map_err(|error| ReferenceError::Dbc(error.to_string()))?;
+    let signal = regex::Regex::new(
+        r#"^SG_\s+([A-Za-z0-9_]+)\s*:\s*([0-9]+)\|([0-9]+)@([01])([+-])\s*\(\s*([^,]+),\s*([^\)]+)\)\s*\[[^\]]*\]\s*"[^"]*"\s+.+$"#,
+    )
+    .map_err(|error| ReferenceError::Dbc(error.to_string()))?;
+    let mut selected = false;
+    let mut length = None;
+    let mut definition = None;
+    let mut names = BTreeSet::new();
+    for line in dbc.lines().map(str::trim) {
+        if line.starts_with("BO_ ") || line.starts_with("BO_\t") {
+            let fields = message
+                .captures(line)
+                .ok_or_else(|| ReferenceError::Dbc("invalid message header".into()))?;
+            let id = fields[1]
+                .parse::<u32>()
+                .map_err(|_| ReferenceError::Layout)?;
+            selected = id == message_id;
+            if selected {
+                let size = fields[2]
+                    .parse::<usize>()
+                    .map_err(|_| ReferenceError::Layout)?;
+                if length.is_some() || size == 0 || size > 64 {
+                    return Err(ReferenceError::Layout);
+                }
+                length = Some(size);
+            }
+        } else if selected && (line.starts_with("SG_ ") || line.starts_with("SG_\t")) {
+            let fields = signal
+                .captures(line)
+                .ok_or_else(|| ReferenceError::Dbc("unsupported signal syntax or multiplexing".into()))?;
+            let name = fields[1].to_owned();
+            if !names.insert(name.clone()) {
+                return Err(ReferenceError::Dbc("duplicate signal".into()));
+            }
+            if name == signal_name {
+                let start = fields[2]
+                    .parse::<usize>()
+                    .map_err(|_| ReferenceError::Layout)?;
+                let width = fields[3]
+                    .parse::<u8>()
+                    .map_err(|_| ReferenceError::Layout)?;
+                let order = if &fields[4] == "1" {
+                    BitOrder::Intel
+                } else {
+                    BitOrder::Motorola
+                };
+                let signed = &fields[5] == "-";
+                let factor = fields[6]
+                    .trim()
+                    .parse::<f64>()
+                    .map_err(|_| ReferenceError::Scaling)?;
+                let offset = fields[7]
+                    .trim()
+                    .parse::<f64>()
+                    .map_err(|_| ReferenceError::Scaling)?;
+                definition = Some((start, width, order, signed, factor, offset));
+            }
+        } else if line.starts_with("SIG_VALTYPE_ ") || line.starts_with("SG_MUL_VAL_ ") {
+            let id = line
+                .split_whitespace()
+                .nth(1)
+                .and_then(|value| value.parse::<u32>().ok())
+                .ok_or_else(|| ReferenceError::Dbc("invalid extended signal metadata".into()))?;
+            if id == message_id {
+                return Err(ReferenceError::Dbc("extended signal metadata".into()));
+            }
+        }
+    }
+    let size = length.ok_or_else(|| ReferenceError::Dbc("message not found".into()))?;
+    if size != payload.len() {
+        return Err(ReferenceError::Truncated);
+    }
+    let (start, width, order, signed, factor, offset) =
+        definition.ok_or_else(|| ReferenceError::Dbc("signal not found".into()))?;
+    decode_signal(payload, start, width, order, signed, factor, offset)
 }
