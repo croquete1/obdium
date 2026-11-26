@@ -418,6 +418,46 @@ mod checked_payload_tests {
     }
 
     #[test]
+    fn actual_parser_preserves_complete_two_byte_measurement() {
+        let obd = OBD::new();
+        let response = obd.parse_pid_response("7E8 04 41 10 00 64\r").unwrap();
+        let flow = response.map_checked_pid_data::<2>(&[0x41, 0x10], |bytes| {
+            Scalar::new(
+                f32::from(u16::from_be_bytes(bytes)) / 100.0,
+                crate::scalar::Unit::GramsPerSecond,
+                None,
+            )
+        });
+        assert_eq!(flow.value, 1.0);
+        assert_eq!(flow.unit, crate::scalar::Unit::GramsPerSecond);
+    }
+
+    #[test]
+    fn actual_parser_truncated_reply_cannot_produce_measurement() {
+        let obd = OBD::new();
+        let response = obd.parse_pid_response("7E8 04 41 10 00\r").unwrap();
+        let result = response.map_checked_pid_data::<2>(&[0x41, 0x10], |_| {
+            panic!("truncated response must not reach scaling")
+        });
+        assert_eq!(result.unit, crate::scalar::Unit::NoData);
+    }
+
+    #[test]
+    fn two_byte_scaling_preserves_unsigned_boundaries() {
+        for (payload, expected) in [("41 1F 00 00", 0.0), ("41 1F FF FF", 65535.0)] {
+            let result = fixture(payload).map_checked_pid_data::<2>(&[0x41, 0x1F], |bytes| {
+                Scalar::new(
+                    f32::from(u16::from_be_bytes(bytes)),
+                    crate::scalar::Unit::Seconds,
+                    None,
+                )
+            });
+            assert_eq!(result.value, expected);
+            assert_eq!(result.unit, crate::scalar::Unit::Seconds);
+        }
+    }
+
+    #[test]
     fn wrong_header_and_wrong_length_are_rejected() {
         assert_eq!(
             fixture("41 0D 01").checked_pid_data::<1>(&[0x41, 0x0C]),

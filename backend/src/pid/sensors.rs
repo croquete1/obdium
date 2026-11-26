@@ -16,13 +16,14 @@ impl OBD {
     }
 
     pub fn timing_advance(&mut self) -> Scalar {
-        self.query(Command::new_pid(b"010E")).map_no_data(|r| {
-            Scalar::new(
-                (r.a_value() / 2.0) - 64.0,
-                Unit::Degrees,
-                Some(self.unit_preferences),
-            )
-        })
+        self.query(Command::new_pid(b"010E"))
+            .map_checked_pid_data::<1>(&[0x41, 0x0E], |[a]| {
+                Scalar::new(
+                    (f32::from(a) / 2.0) - 64.0,
+                    Unit::Degrees,
+                    Some(self.unit_preferences),
+                )
+            })
     }
 
     /// Fuel-air equivalance ratio, o2 sensor voltage, current, and instake abs pressure
@@ -65,13 +66,14 @@ impl OBD {
     }
 
     pub fn relative_throttle_pos(&mut self) -> Scalar {
-        self.query(Command::new_pid(b"0145")).map_no_data(|r| {
-            Scalar::new(
-                (100.0 / 255.0) * r.a_value(),
-                Unit::Percent,
-                Some(self.unit_preferences),
-            )
-        })
+        self.query(Command::new_pid(b"0145"))
+            .map_checked_pid_data::<1>(&[0x41, 0x45], |[a]| {
+                Scalar::new(
+                    (100.0 / 255.0) * f32::from(a),
+                    Unit::Percent,
+                    Some(self.unit_preferences),
+                )
+            })
     }
 
     pub fn abs_throttle_position_b(&mut self) -> Scalar {

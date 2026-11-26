@@ -130,13 +130,14 @@ impl OBD {
             return self.engine_runtime_diesel();
         }
 
-        self.query(Command::new_pid(b"011F")).map_no_data(|r| {
-            Scalar::new(
-                (256.0 * r.a_value()) + r.b_value(),
-                Unit::Seconds,
-                Some(self.unit_preferences),
-            )
-        })
+        self.query(Command::new_pid(b"011F"))
+            .map_checked_pid_data::<2>(&[0x41, 0x1F], |bytes| {
+                Scalar::new(
+                    f32::from(u16::from_be_bytes(bytes)),
+                    Unit::Seconds,
+                    Some(self.unit_preferences),
+                )
+            })
     }
 
     fn engine_runtime_diesel(&mut self) -> Scalar {

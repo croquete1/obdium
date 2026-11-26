@@ -119,13 +119,14 @@ impl OBD {
     }
 
     pub fn fuel_pressure(&mut self) -> Scalar {
-        self.query(Command::new_pid(b"010A")).map_no_data(|r| {
-            Scalar::new(
-                r.a_value() * 3.0,
-                Unit::KiloPascal,
-                Some(self.unit_preferences),
-            )
-        })
+        self.query(Command::new_pid(b"010A"))
+            .map_checked_pid_data::<1>(&[0x41, 0x0A], |[a]| {
+                Scalar::new(
+                    f32::from(a) * 3.0,
+                    Unit::KiloPascal,
+                    Some(self.unit_preferences),
+                )
+            })
     }
 
     pub fn fuel_tank_level(&mut self) -> Scalar {
@@ -140,23 +141,25 @@ impl OBD {
     }
 
     pub fn fuel_rail_pressure(&mut self) -> Scalar {
-        self.query(Command::new_pid(b"0122")).map_no_data(|r| {
-            Scalar::new(
-                0.079 * ((256.0 * r.a_value()) + r.b_value()),
-                Unit::KiloPascal,
-                Some(self.unit_preferences),
-            )
-        })
+        self.query(Command::new_pid(b"0122"))
+            .map_checked_pid_data::<2>(&[0x41, 0x22], |bytes| {
+                Scalar::new(
+                    0.079 * f32::from(u16::from_be_bytes(bytes)),
+                    Unit::KiloPascal,
+                    Some(self.unit_preferences),
+                )
+            })
     }
 
     pub fn fuel_rail_guage_pressure(&mut self) -> Scalar {
-        self.query(Command::new_pid(b"0123")).map_no_data(|r| {
-            Scalar::new(
-                10.0 * ((256.0 * r.a_value()) + r.b_value()),
-                Unit::KiloPascal,
-                Some(self.unit_preferences),
-            )
-        })
+        self.query(Command::new_pid(b"0123"))
+            .map_checked_pid_data::<2>(&[0x41, 0x23], |bytes| {
+                Scalar::new(
+                    10.0 * f32::from(u16::from_be_bytes(bytes)),
+                    Unit::KiloPascal,
+                    Some(self.unit_preferences),
+                )
+            })
     }
 
     pub fn fuel_type(&mut self) -> FuelType {

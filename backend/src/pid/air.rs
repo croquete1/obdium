@@ -45,13 +45,14 @@ impl OBD {
     }
 
     pub fn maf_air_flow_rate(&mut self) -> Scalar {
-        self.query(Command::new_pid(b"0110")).map_no_data(|r| {
-            Scalar::new(
-                ((r.a_value() * 256.0) + r.b_value()) / 100.0,
-                Unit::GramsPerSecond,
-                Some(self.unit_preferences),
-            )
-        })
+        self.query(Command::new_pid(b"0110"))
+            .map_checked_pid_data::<2>(&[0x41, 0x10], |bytes| {
+                Scalar::new(
+                    f32::from(u16::from_be_bytes(bytes)) / 100.0,
+                    Unit::GramsPerSecond,
+                    Some(self.unit_preferences),
+                )
+            })
     } // Mass airflow sensor
 
     pub fn ambient_air_temp(&mut self) -> Scalar {
@@ -174,8 +175,13 @@ impl OBD {
     }
 
     pub fn abs_barometric_pressure(&mut self) -> Scalar {
-        self.query(Command::new_pid(b"0133")).map_no_data(|r| {
-            Scalar::new(r.a_value(), Unit::KiloPascal, Some(self.unit_preferences))
-        })
+        self.query(Command::new_pid(b"0133"))
+            .map_checked_pid_data::<1>(&[0x41, 0x33], |[a]| {
+                Scalar::new(
+                    f32::from(a),
+                    Unit::KiloPascal,
+                    Some(self.unit_preferences),
+                )
+            })
     }
 }
