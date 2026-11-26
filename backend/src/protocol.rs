@@ -173,16 +173,12 @@ pub fn parse_legacy_probe(protocol: ObdProtocol, line: &str) -> Result<LegacyPro
     let checksum = match protocol {
         ObdProtocol::J1850Pwm if bytes[..2] == [0x41, 0x6B] => j1850_crc(&bytes[..9]),
         ObdProtocol::J1850Vpw if bytes[..2] == [0x48, 0x6B] => j1850_crc(&bytes[..9]),
-        ObdProtocol::Iso9141 if bytes[..2] == [0x48, 0x6B] => {
-            bytes[..9]
-                .iter()
-                .fold(0u8, |sum, byte| sum.wrapping_add(*byte))
-        }
-        ObdProtocol::KwpSlow | ObdProtocol::KwpFast if bytes[..2] == [0x86, 0xF1] => {
-            bytes[..9]
-                .iter()
-                .fold(0u8, |sum, byte| sum.wrapping_add(*byte))
-        }
+        ObdProtocol::Iso9141 if bytes[..2] == [0x48, 0x6B] => bytes[..9]
+            .iter()
+            .fold(0u8, |sum, byte| sum.wrapping_add(*byte)),
+        ObdProtocol::KwpSlow | ObdProtocol::KwpFast if bytes[..2] == [0x86, 0xF1] => bytes[..9]
+            .iter()
+            .fold(0u8, |sum, byte| sum.wrapping_add(*byte)),
         _ => return Err(ProtocolError::Malformed),
     };
     if bytes[9] != checksum {
@@ -371,9 +367,7 @@ mod tests {
             Ok(29)
         );
         assert_eq!(
-            can_probe_identifier_width(
-                "7E8 06 41 00 00 00 00 00\r7E9 06 41 00 FF FF FF FF"
-            ),
+            can_probe_identifier_width("7E8 06 41 00 00 00 00 00\r7E9 06 41 00 FF FF FF FF"),
             Ok(11)
         );
     }
@@ -413,14 +407,12 @@ mod tests {
             );
         }
         for report in ["A0", "A3", "A7", "6"] {
-            assert!(
-                confirm_can_probe(
-                    ProtocolSelection::Automatic,
-                    parse_reported_protocol(report).unwrap(),
-                    reply
-                )
-                .is_err()
-            );
+            assert!(confirm_can_probe(
+                ProtocolSelection::Automatic,
+                parse_reported_protocol(report).unwrap(),
+                reply
+            )
+            .is_err());
         }
         assert!(confirm_can_probe(
             ProtocolSelection::Manual(ObdProtocol::Can11At500),
@@ -490,8 +482,7 @@ mod tests {
             assert!(parse_legacy_probe(ObdProtocol::Iso9141, reply).is_err());
         }
         assert!(
-            parse_legacy_probe(ObdProtocol::J1850Vpw, "48 6B 10 41 00 00 00 00 00 04")
-                .is_err()
+            parse_legacy_probe(ObdProtocol::J1850Vpw, "48 6B 10 41 00 00 00 00 00 04").is_err()
         );
         assert!(
             parse_legacy_probe(ObdProtocol::KwpFast, "85 F1 11 41 00 FF FF FF FF C4")
