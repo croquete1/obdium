@@ -1,8 +1,8 @@
 //! Read-only decoding of a single collected classic CAN DTC transaction.
 //! No adapter commands are sent by this module.
 
-use crate::isotp::{parse_elm_classic_can_reply, CanId, IsoTpError};
 use crate::diagnostics::{decode_can_dtc_payload, DecodedDtc, DtcPayloadError};
+use crate::isotp::{parse_elm_classic_can_reply, CanId, IsoTpError};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DtcService {
@@ -96,7 +96,11 @@ mod tests {
         assert_eq!(replies.len(), 2);
         assert_eq!(replies[0].ecu, CanId::Standard(0x7E8));
         assert_eq!(replies[1].ecu, CanId::Standard(0x7E9));
-        let names: Vec<_> = replies[0].codes.iter().map(|code| code.code.as_str()).collect();
+        let names: Vec<_> = replies[0]
+            .codes
+            .iter()
+            .map(|code| code.code.as_str())
+            .collect();
         assert_eq!(names, ["P143C", "P0300", "C034A"]);
         assert_eq!(replies[1].codes[0].code, "P143C");
         assert_eq!(replies[0].payload, [0x43, 3, 0x14, 0x3C, 3, 0, 0x43, 0x4A]);
@@ -105,9 +109,21 @@ mod tests {
     #[test]
     fn same_code_can_have_distinct_statuses() {
         for (service, raw, status) in [
-            (DtcService::Confirmed, "7E8 04 43 01 14 3C", DtcStatus::Confirmed),
-            (DtcService::Pending, "7E8 04 47 01 14 3C", DtcStatus::Pending),
-            (DtcService::Permanent, "7E8 04 4A 01 14 3C", DtcStatus::Permanent),
+            (
+                DtcService::Confirmed,
+                "7E8 04 43 01 14 3C",
+                DtcStatus::Confirmed,
+            ),
+            (
+                DtcService::Pending,
+                "7E8 04 47 01 14 3C",
+                DtcStatus::Pending,
+            ),
+            (
+                DtcService::Permanent,
+                "7E8 04 4A 01 14 3C",
+                DtcStatus::Permanent,
+            ),
         ] {
             let replies = decode_elm_dtc_transaction(raw, service).unwrap();
             assert_eq!(replies[0].codes[0].status, status);
@@ -117,8 +133,7 @@ mod tests {
 
     #[test]
     fn explicit_zero_count_retains_responding_ecu() {
-        let replies =
-            decode_elm_dtc_transaction("7E8 02 43 00", DtcService::Confirmed).unwrap();
+        let replies = decode_elm_dtc_transaction("7E8 02 43 00", DtcService::Confirmed).unwrap();
         assert_eq!(replies.len(), 1);
         assert_eq!(replies[0].ecu, CanId::Standard(0x7E8));
         assert!(replies[0].codes.is_empty());
