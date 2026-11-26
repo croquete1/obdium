@@ -78,11 +78,10 @@ fn uppercase_hex(value: &str) -> bool {
 
 fn valid_obd_request(value: &str) -> bool {
     uppercase_hex(value)
-        && match value.as_bytes() {
-            [b'0', b'3' | b'7'] => true,
-            [b'0', b'1' | b'6' | b'9', _, _] => true,
-            _ => false,
-        }
+        && matches!(
+            value.as_bytes(),
+            [b'0', b'3' | b'7'] | [b'0', b'1' | b'6' | b'9', _, _]
+        )
 }
 
 fn valid_dtc_code(value: &str) -> bool {
@@ -199,15 +198,27 @@ fn manifest_accounts_for_all_staged_dbc_files() {
             assert!(paths.insert(&file.path));
             let path = catalog_path(&file.path).expect("relative manifest path");
             assert!(path.is_file());
-            assert_eq!(fs::metadata(&path).expect("metadata").len(), file.bytes);
+            assert_eq!(
+                fs::metadata(&path).expect("metadata").len(),
+                file.bytes,
+                "manifest byte length mismatch: {}",
+                file.path
+            );
             assert_eq!(file.git_blob_sha.len(), 40);
-            assert!(file.git_blob_sha.bytes().all(|byte| byte.is_ascii_hexdigit()));
+            assert!(file
+                .git_blob_sha
+                .bytes()
+                .all(|byte| byte.is_ascii_hexdigit()));
             if file.role == "passive_reference" {
                 assert!(file.path.starts_with("dbc/"));
                 assert!(file.path.ends_with(".dbc"));
                 assert!(file.bytes > 0 && file.bytes <= MAX_DBC_BYTES);
                 let text = fs::read_to_string(path).expect("UTF-8 DBC");
-                assert!(text.lines().any(|line| line.starts_with("BO_ ")));
+                assert!(
+                    text.lines().any(|line| line.trim_start().starts_with("BO_ ")),
+                    "no message definition: {}",
+                    file.path
+                );
                 dbc_paths.insert(file.path.clone());
             }
         }

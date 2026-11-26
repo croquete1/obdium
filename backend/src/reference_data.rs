@@ -2,7 +2,7 @@
 //! Reference data is not an ECU capability claim or authorization policy.
 
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 const MAX_CATALOG_BYTES: usize = 2 * 1024 * 1024;
 const MAX_ENTRIES: usize = 20_000;
@@ -134,6 +134,8 @@ impl ReferenceCatalogs {
             if !valid_dtc(&key)
                 || entry.descriptions.is_empty()
                 || entry.descriptions.iter().any(|s| s.trim().is_empty())
+                || entry.descriptions.iter().collect::<BTreeSet<_>>().len()
+                    != entry.descriptions.len()
                 || result.dtc.insert(key.clone(), entry).is_some()
             {
                 return Err(ReferenceError::Entry(key));
@@ -152,6 +154,13 @@ impl ReferenceCatalogs {
                             "uds_reference" | "security_transport_reference"
                         )
                 })
+                || entry
+                    .labels
+                    .iter()
+                    .map(|label| (&label.name, &label.context))
+                    .collect::<BTreeSet<_>>()
+                    .len()
+                    != entry.labels.len()
                 || result.nrc.insert(key.clone(), entry).is_some()
             {
                 return Err(ReferenceError::Entry(key));
@@ -161,10 +170,16 @@ impl ReferenceCatalogs {
     }
 
     pub fn obd(&self, request: &str) -> Option<&ObdReference> {
+        if !matches!(request.len(), 2 | 4) || !request.is_ascii() {
+            return None;
+        }
         self.obd.get(&request.to_ascii_uppercase())
     }
 
     pub fn dtc(&self, code: &str) -> Option<&DtcReference> {
+        if code.len() != 5 || !code.is_ascii() {
+            return None;
+        }
         self.dtc.get(&code.to_ascii_uppercase())
     }
 
@@ -248,7 +263,10 @@ pub struct PreviewMessage {
 }
 
 /// Read the explicitly staged, unreviewed preview strings only.
-pub fn translation_preview(locale: &str, key: &str) -> Result<Option<PreviewMessage>, ReferenceError> {
+pub fn translation_preview(
+    locale: &str,
+    key: &str,
+) -> Result<Option<PreviewMessage>, ReferenceError> {
     let english = include_str!("../data/catalogs/translations/en.json");
     let source = match locale {
         "cs-CZ" => Some(include_str!("../data/catalogs/translations/cs-CZ.json")),
@@ -279,6 +297,14 @@ pub fn translation_preview(locale: &str, key: &str) -> Result<Option<PreviewMess
             || preview.locale != expected
         {
             return Err(ReferenceError::Header);
+        }
+        if preview.messages.values().any(|message| {
+            message.trim().is_empty()
+                || message
+                    .chars()
+                    .any(|ch| ch.is_control() || matches!(ch, '<' | '>' | '{' | '}' | '%'))
+        }) {
+            return Err(ReferenceError::Entry("invalid preview text".into()));
         }
         Ok(preview)
     };

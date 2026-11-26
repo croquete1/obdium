@@ -13,6 +13,8 @@ fn bundled_catalogs_return_known_and_unknown_reference_values() {
     assert!(catalogs.obd("0801").is_none());
     assert!(catalogs.dtc("p0001").expect("known DTC").descriptions[0].contains("Fuel"));
     assert!(catalogs.dtc("X0000").is_none());
+    assert!(catalogs.obd(&"0".repeat(100_000)).is_none());
+    assert!(catalogs.dtc(&"P".repeat(100_000)).is_none());
     assert!(catalogs.nrc(0).is_none());
     assert!(catalogs
         .nrc(0x78)
@@ -110,4 +112,20 @@ fn translation_preview_resolves_all_locales_and_falls_back() {
     assert!(translation_preview("en", "missing")
         .expect("valid preview")
         .is_none());
+}
+
+#[test]
+fn rejects_duplicate_descriptions_and_labels_in_consumer() {
+    let obd = include_str!("../data/catalogs/obd2/read_catalog.json");
+    let dtc = include_str!("../data/catalogs/dtc/reference_catalog.json");
+    let duplicate_dtc = r#"{"schema_version":1,"status":"reference_only","entries":[{"code":"P0001","descriptions":["one","one"]}]}"#;
+    assert!(matches!(
+        ReferenceCatalogs::from_json(obd, duplicate_dtc, ""),
+        Err(ReferenceError::Entry(key)) if key == "P0001"
+    ));
+    let duplicate_nrc = r#"{"schema_version":1,"status":"reference_only","entries":[{"code_hex":"78","labels":[{"name":"Pending","context":"uds_reference"},{"name":"Pending","context":"uds_reference"}]}]}"#;
+    assert!(matches!(
+        ReferenceCatalogs::from_json(obd, dtc, duplicate_nrc),
+        Err(ReferenceError::Entry(key)) if key == "78"
+    ));
 }
