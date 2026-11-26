@@ -289,8 +289,8 @@ impl OBD {
             return Ok(());
         }
 
-        let selection = ProtocolSelection::try_from(protocol)
-            .map_err(|_| Error::InvalidProtocol(protocol))?;
+        let selection =
+            ProtocolSelection::try_from(protocol).map_err(|_| Error::InvalidProtocol(protocol))?;
 
         self.connection = serialport::new(port, baud_rate)
             .timeout(Duration::from_secs(1))
