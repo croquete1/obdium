@@ -1,6 +1,7 @@
 const { emit, listen } = window.__TAURI__.event;
 const { save } = window.__TAURI__.dialog;
-const { writeFile } = window.__TAURI__.fs;
+const { writeTextFile } = window.__TAURI__.fs;
+import { saveJsonExport } from "./json-export.mjs";
 const invoke = window.__TAURI__.invoke;
 import { saveConnectionConfig } from "./settings.js";
 
@@ -14,7 +15,6 @@ const terminalOutput = document.getElementById("terminal-output");
 export async function exportDtcs(autoSave) {
 
   let totalJSON = [];
-  let path = "./dtc_log.json";
   dtcList.childNodes.forEach((dtcRow) => {
     if (dtcRow.nodeType == 1) {
       const dtcJSON = {
@@ -30,19 +30,19 @@ export async function exportDtcs(autoSave) {
     }
   });
 
-  if (!autoSave) {
-    path = await save({
-      title: "Save as JSON",
+  try {
+    await saveJsonExport({
+      data: totalJSON,
       defaultPath: "dtc_log.json",
-      filters: [{ name: "JSON", extensions: ["json"] }],
+      save,
+      writeTextFile,
+      automatic: autoSave,
+      appDataBaseDir: window.__TAURI__.path.BaseDirectory.AppData,
     });
-
-    if (!path) {
-      return;
-    }
+  } catch (error) {
+    addNotification("EXPORT FAILED", "Could not save diagnostic trouble codes.");
+    console.error("DTC export failed", error);
   }
-
-  await writeFile({ path, contents: JSON.stringify(totalJSON, null, 2) });
 }
 
 export async function connectElm(baudRate, serialPort, protocol) {
