@@ -753,12 +753,13 @@ impl OBD {
         // The buffer is cleared before sending a command, never after it.
         // A fast adapter may already have returned the entire reply.
         let response = match read_serial_prompt(port.as_mut(), until) {
-            Err(Error::ReplyDeadlineExceeded) => {
-                // A late prompt can no longer be attributed safely to a new command.
+            Ok(response) => response,
+            Err(error) => {
+                // Without a validated prompt boundary, the next reply cannot be
+                // attributed safely. Require an explicit reconnect; never retry.
                 self.connection = None;
-                return Err(Error::ReplyDeadlineExceeded);
+                return Err(error);
             }
-            result => result?,
         };
 
         if response.contains("UNABLE TO CONNECT") {
@@ -1096,6 +1097,7 @@ mod serial_prompt_tests {
         fail_timeout: bool,
         fail_clear: bool,
         fail_write: bool,
+        eof_when_empty: bool,
     }
 
     #[derive(Clone)]
@@ -1211,6 +1213,8 @@ mod serial_prompt_tests {
             if let Some(byte) = state.pending.pop_front() {
                 buffer[0] = byte;
                 Ok(1)
+            } else if state.eof_when_empty {
+                Ok(0)
             } else {
                 Err(io::Error::new(io::ErrorKind::TimedOut, "fixture timeout"))
             }
@@ -1313,6 +1317,62 @@ mod serial_prompt_tests {
         let state = state.lock().unwrap();
         assert_eq!(state.events, ["timeout", "clear", "write"]);
         assert!(state.written.is_empty());
+    }
+
+    #[test]
+    fn partial_reply_timeout_invalidates_connection_and_blocks_next_write() {
+        let (mut obd, state) = fixture_obd(FixtureState::default());
+        obd.send_command(&mut Command::new_at(b"ATI")).unwrap();
+        state.lock().unwrap().pending = VecDeque::from(*b"ELM");
+        assert!(matches!(
+            obd.get_at_response(),
+            Err(Error::AdapterReadWriteError(_))
+        ));
+        assert!(!obd.is_connected());
+
+        // Simulate the late remainder arriving after the failed transaction.
+        state.lock().unwrap().pending.extend(b"327\r>");
+        assert!(matches!(
+            obd.send_command(&mut Command::new_at(b"ATI")),
+            Err(Error::NoConnection)
+        ));
+        let state = state.lock().unwrap();
+        assert_eq!(state.written, b"ATI\r");
+        assert_eq!(state.events, ["timeout", "clear", "write"]);
+    }
+
+    #[test]
+    fn premature_eof_invalidates_connection() {
+        let (mut obd, state) = fixture_obd(FixtureState {
+            eof_when_empty: true,
+            ..Default::default()
+        });
+        obd.send_command(&mut Command::new_at(b"ATI")).unwrap();
+        state.lock().unwrap().pending = VecDeque::from(*b"ELM");
+        assert!(matches!(obd.get_at_response(), Err(Error::InvalidResponse)));
+        assert!(!obd.is_connected());
+    }
+
+    #[test]
+    fn malformed_byte_before_prompt_invalidates_connection() {
+        let (mut obd, state) = fixture_obd(FixtureState::default());
+        obd.send_command(&mut Command::new_at(b"ATI")).unwrap();
+        state.lock().unwrap().pending = VecDeque::from([b'E', 0xff, b'>']);
+        assert!(matches!(obd.get_at_response(), Err(Error::InvalidResponse)));
+        assert!(!obd.is_connected());
+        assert_eq!(state.lock().unwrap().written, b"ATI\r");
+    }
+
+    #[test]
+    fn complete_no_data_reply_keeps_transport_synchronized() {
+        let (mut obd, state) = fixture_obd(FixtureState::default());
+        obd.send_command(&mut Command::new_pid(b"010C")).unwrap();
+        state.lock().unwrap().pending = VecDeque::from(*b"NO DATA\r>");
+        assert!(matches!(obd.get_pid_response(), Err(Error::NoData)));
+        assert!(obd.is_connected());
+        obd.send_command(&mut Command::new_at(b"ATI")).unwrap();
+        assert!(obd.get_at_response().is_ok());
+        assert_eq!(state.lock().unwrap().written, b"010C\rATI\r");
     }
 
     #[test]
