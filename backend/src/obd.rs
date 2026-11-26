@@ -276,6 +276,14 @@ impl OBD {
     }
 
     pub fn connect(&mut self, port: &str, baud_rate: u32, protocol: u8) -> Result<(), Error> {
+        if self.connection.is_some() {
+            return Ok(());
+        }
+
+        self.protocol = 0;
+        self.elm_version = None;
+        self.freeze_frame_query = false;
+
         if port == "DEMO MODE" {
             // No connection required
             self.replay_requests = true;
@@ -286,10 +294,6 @@ impl OBD {
 
         self.replay_requests = false;
         self.record_requests = false;
-
-        if self.connection.is_some() {
-            return Ok(());
-        }
 
         let selection =
             ProtocolSelection::try_from(protocol).map_err(|_| Error::InvalidProtocol(protocol))?;
@@ -329,10 +333,10 @@ impl OBD {
     }
 
     pub fn disconnect(&mut self) {
-        if let Some(connection) = self.connection.take() {
-            drop(connection);
-            self.connection = None;
-        }
+        self.connection = None;
+        self.protocol = 0;
+        self.elm_version = None;
+        self.freeze_frame_query = false;
     }
 
     pub fn is_connected(&self) -> bool {
@@ -468,7 +472,7 @@ impl OBD {
                 (b"ATZ", Some(data)) => {
                     self.elm_version = Some(data.to_owned());
                 }
-                (_, Some(data)) if data.contains("OK") => {}
+                (_, _)\n                    if validate_selection_ack(response.raw_response.as_deref().unwrap_or_default())\n                        .is_ok() => {}
                 x => {
                     println!("{:?}", x);
                     return Err(Error::InitFailedNoOKReceived);
@@ -961,7 +965,11 @@ impl OBD {
 
     /// Requested configuration, not an independently verified ECU protocol.
     pub fn get_protocol_number(&self) -> u8 {
-        self.protocol
+        if self.is_connected() {
+            self.protocol
+        } else {
+            0
+        }
     }
 
     /// Test and run Mode 22 pids from
@@ -1334,6 +1342,37 @@ mod serial_prompt_tests {
             .is_err());
         assert!(!obd.is_connected());
         assert_eq!(state.lock().unwrap().written, b"ATZ\rATE0\r");
+    }
+
+    #[test]
+    fn misleading_initialization_acknowledgements_stop_before_selection() {
+        for reply in [b"NOT OK\r>".as_slice(), b"OK\rERROR\r>"] {
+            let (mut obd, state) = fixture_obd(FixtureState {
+                scripted_replies: VecDeque::from([b"ELM327 v1.5\r>".to_vec(), reply.to_vec()]),
+                ..Default::default()
+            });
+            assert!(matches!(
+                obd.initialize_protocol(ProtocolSelection::try_from(6).unwrap(), 6),
+                Err(Error::InitFailedNoOKReceived)
+            ));
+            assert!(!obd.is_connected());
+            assert_eq!(state.lock().unwrap().written, b"ATZ\rATE0\r");
+        }
+    }
+
+    #[test]
+    fn disconnect_clears_previous_protocol_configuration() {
+        let (mut obd, _) = fixture_obd(FixtureState {
+            scripted_replies: initialization_replies(b"OK\r>"),
+            ..Default::default()
+        });
+        obd.initialize_protocol(ProtocolSelection::try_from(7).unwrap(), 7)
+            .unwrap();
+        obd.query_freeze_frame(true);
+        obd.disconnect();
+        assert_eq!(obd.get_protocol_number(), 0);
+        assert!(obd.elm_version.is_none());
+        assert!(!obd.freeze_frame_query);
     }
 
     #[test]
