@@ -231,8 +231,8 @@ mod tests {
 
     #[test]
     fn single_frame_preserves_zero_payload_and_ignores_padding() {
-        let replies = assemble_classic_can_replies(&[frame(A, &[4, 0x43, 1, 0x14, 0, 0, 0, 0])])
-            .unwrap();
+        let replies =
+            assemble_classic_can_replies(&[frame(A, &[4, 0x43, 1, 0x14, 0, 0, 0, 0])]).unwrap();
         assert_eq!(replies[0].ecu, A);
         assert_eq!(replies[0].payload, [0x43, 1, 0x14, 0]);
     }
@@ -333,7 +333,6 @@ mod tests {
         assert_eq!(assemble_classic_can_replies(&[]), Err(IsoTpError::NoFrames));
     }
 
-
     #[test]
     fn recorded_elm_layout_preserves_header_and_payload() {
         // Synthetic fixture in the layout of backend/data/requests.json.
@@ -374,7 +373,10 @@ mod tests {
 
     #[test]
     fn elm_parser_rejects_empty_or_oversized_transactions() {
-        assert_eq!(parse_elm_classic_can_reply("\r\n"), Err(IsoTpError::NoFrames));
+        assert_eq!(
+            parse_elm_classic_can_reply("\r\n"),
+            Err(IsoTpError::NoFrames)
+        );
         assert_eq!(
             parse_elm_classic_can_reply(&" ".repeat(MAX_ELM_REPLY_BYTES + 1)),
             Err(IsoTpError::ReplyTooLarge)
