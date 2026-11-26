@@ -2,6 +2,7 @@ const { listen, emit } = window.__TAURI__.event;
 const { save } = window.__TAURI__.dialog;
 const { writeTextFile } = window.__TAURI__.fs;
 import { saveJsonExport } from "./json-export.mjs";
+import { getReadinessSnapshot } from "./readiness-state.mjs";
 
 import {
   exportDtcs,
@@ -157,39 +158,17 @@ logFileButton.addEventListener("click", async () => {
 
 const imTestRefreshButton = document.getElementById("readiness-test-refresh");
 const imTestExportButton = document.getElementById("readiness-test-export");
-const imTestList = document.getElementById("readiness-tests-list");
 
 imTestRefreshButton.addEventListener("click", () => {
   emit("get-readiness-tests");
 });
 
 imTestExportButton.addEventListener("click", async () => {
-  let totalJSON = [];
-  imTestList.childNodes.forEach((testRow) => {
-    if (testRow.nodeType == 1) {
-      const available =
-        testRow.querySelector("#test-availability").textContent.trim() ==
-        "AVAILABLE"
-          ? true
-          : false;
-      const complete =
-        testRow.querySelector("#test-completeness").textContent.trim() ==
-        "COMPLETE"
-          ? true
-          : false;
-
-      const testJSON = {
-        name: testRow
-          .querySelector("#test-name")
-          .textContent.replace("TEST: ", "")
-          .trim(),
-        available: available,
-        complete: complete,
-      };
-
-      totalJSON.push(testJSON);
-    }
-  });
+  const totalJSON = getReadinessSnapshot();
+  if (!window.connected || totalJSON.length === 0) {
+    addNotification("EXPORT UNAVAILABLE", "Readiness information is not available for the current connection.");
+    return;
+  }
 
   try {
     await saveJsonExport({

@@ -106,11 +106,7 @@ pub fn listen_send_readiness_test(window: &Arc<WebviewWindow>, obd: &Arc<Mutex<O
             PAUSE_OBD_COUNT.fetch_sub(1, Ordering::Relaxed);
             return;
         }
-        let tests = [
-            obd.get_common_tests_status().to_vec(),
-            obd.get_advanced_tests_status().to_vec(),
-        ]
-        .concat();
+        let tests = obd.get_readiness_status();
 
         PAUSE_OBD_COUNT.fetch_sub(1, Ordering::Relaxed);
 
@@ -360,7 +356,7 @@ pub fn listen_change_obd_settings(window: &Arc<WebviewWindow>, obd: &Arc<Mutex<O
                 }
             }
             "replay-responses" => obd.replay_requests(setting.checked),
-            "use-freeze-fram" => obd.query_freeze_frame(setting.checked),
+            // Freeze-frame selection is unavailable until snapshot identity is validated.
             _ => (),
         }
     })

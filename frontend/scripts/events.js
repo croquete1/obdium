@@ -1,4 +1,5 @@
 const { listen, emit } = window.__TAURI__.event;
+import { replaceReadinessSnapshot, readinessLabels } from "./readiness-state.mjs";
 import {
   exportDtcs,
   addGraphDropdownOption,
@@ -151,6 +152,8 @@ listen("connection-status", async (event) => {
       "CONNECTED THROUGH SERIAL PORT " + serialPort.toUpperCase();
     connectionIcon.src = "/assets/icons/connected.png";
     window.connected = true;
+    replaceReadinessSnapshot([]);
+    document.getElementById("readiness-tests-list").replaceChildren();
     const generation = ++connectionGeneration;
     resumeGraphTracking();
 
@@ -204,6 +207,8 @@ listen("connection-status", async (event) => {
     status.textContent = "NO CONNECTION ESTABLISHED";
     connectionIcon.src = "/assets/icons/not-connected.png";
     window.connected = false;
+    replaceReadinessSnapshot([]);
+    document.getElementById("readiness-tests-list").replaceChildren();
     connectionGeneration++;
     stopGraphTracking();
     recordResponses.disabled = true;
@@ -396,11 +401,13 @@ listen("update-serial-ports", (event) => {
 
 const readinessTests = document.getElementById("readiness-tests-list");
 listen("update-readiness-tests", (event) => {
-  readinessTests.innerHTML = ``;
+  if (!window.connected) return;
+  readinessTests.replaceChildren();
 
-  addNotification("READINESS TESTS", "Updated I/M readiness test information.");
-
-  const tests = event.payload;
+  const tests = replaceReadinessSnapshot(event.payload);
+  addNotification("READINESS TESTS", tests.length
+    ? "Updated I/M readiness test information."
+    : "No I/M readiness test information is available.");
   for (const test of tests) {
     const testRow = document.createElement("div");
     testRow.className = "info-row";
@@ -412,11 +419,10 @@ listen("update-readiness-tests", (event) => {
 
     `;
 
-    testRow.querySelector("#test-name").textContent = "TEST: " + String(test.name ?? "");
-    testRow.querySelector("#test-availability").textContent =
-      test.available ? "COMPLETE" : "NOT COMPLETE";
-    testRow.querySelector("#test-completeness").textContent =
-      test.complete ? "READY" : "NOT READY";
+    const labels = readinessLabels(test);
+    testRow.querySelector("#test-name").textContent = "TEST: " + test.name;
+    testRow.querySelector("#test-availability").textContent = labels.availability;
+    testRow.querySelector("#test-completeness").textContent = labels.completeness;
     readinessTests.appendChild(testRow);
   }
 });
