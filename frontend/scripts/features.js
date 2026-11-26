@@ -68,19 +68,30 @@ export async function exportDtcs(autoSave) {
   await writeFile({ path, contents: JSON.stringify(totalJSON, null, 2) });
 }
 
+let connectionAttempt = 0;
+
 export async function connectElm(baudRate, serialPort, protocol) {
   if (window.connected) {
     return;
   }
 
-  const status = document.getElementById("connection-details");
-
+  const attempt = ++connectionAttempt;
   connectButton.disabled = true;
-  emit("connect-elm", {
-    serialPort: serialPort,
-    baudRate: parseInt(baudRate),
-    protocol: parseInt(protocol),
-  });
+  try {
+    await emit("connect-elm", {
+      serialPort: serialPort,
+      baudRate: parseInt(baudRate),
+      protocol: parseInt(protocol),
+    });
+  } catch (error) {
+    // Dispatch failure is not a backend connection result. Never let an old
+    // rejection overwrite a newer attempt or an established connection.
+    if (attempt === connectionAttempt && !window.connected) {
+      connectButton.disabled = false;
+      addNotification("CONNECTION REQUEST FAILED", "Could not send the connection request.");
+    }
+    console.error("Connection request dispatch failed", error);
+  }
 }
 
 export async function disconnectElm() {
