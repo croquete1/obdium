@@ -106,11 +106,7 @@ pub fn listen_send_readiness_test(window: &Arc<WebviewWindow>, obd: &Arc<Mutex<O
             PAUSE_OBD_COUNT.fetch_sub(1, Ordering::Relaxed);
             return;
         }
-        let tests = [
-            obd.get_common_tests_status().to_vec(),
-            obd.get_advanced_tests_status().to_vec(),
-        ]
-        .concat();
+        let tests = obd.get_readiness_status();
 
         PAUSE_OBD_COUNT.fetch_sub(1, Ordering::Relaxed);
 

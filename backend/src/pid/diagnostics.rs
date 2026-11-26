@@ -3,7 +3,6 @@ use sqlite::State;
 use std::fmt;
 
 use crate::{
-    engine::EngineType,
     scalar::{Scalar, Unit},
     Command, Error, CODE_DESC_DB_PATH, OBD,
 };
@@ -231,6 +230,136 @@ impl Test {
     }
 }
 
+// ELM header-on, spaces-on, visible classic CAN single frame only.
+// A single response avoids silently merging different ECUs. The generalized
+// ISO-TP transaction parser can replace this narrow adapter later.
+fn decode_readiness_reply(raw: &str) -> Option<[Test; 11]> {
+    let mut lines = raw.split(['\r', '\n']).map(str::trim).filter(|line| !line.is_empty());
+    let line = lines.next()?;
+    if lines.next().is_some() {
+        return None;
+    }
+    let mut tokens = line.split_ascii_whitespace();
+    let id = tokens.next()?;
+    let valid_id = matches!(id.len(), 3 | 8)
+        && id.bytes().all(|byte| byte.is_ascii_hexdigit())
+        && u32::from_str_radix(id, 16)
+            .ok()
+            .is_some_and(|value| value <= if id.len() == 3 { 0x7ff } else { 0x1fffffff });
+    if !valid_id {
+        return None;
+    }
+
+    let mut bytes = [0u8; 7];
+    for byte in &mut bytes {
+        let token = tokens.next()?;
+        if token.len() != 2 || !token.bytes().all(|value| value.is_ascii_hexdigit()) {
+            return None;
+        }
+        *byte = u8::from_str_radix(token, 16).ok()?;
+    }
+    if tokens.next().is_some() || bytes[..3] != [0x06, 0x41, 0x01] {
+        return None;
+    }
+    Some(decode_readiness_bytes([bytes[3], bytes[4], bytes[5], bytes[6]]))
+}
+
+// J1979 PID 01: A is MIL/count; B is common monitors + ignition flag;
+// C is advanced availability, D advanced incompleteness.
+fn decode_readiness_bytes([_, b, c, d]: [u8; 4]) -> [Test; 11] {
+    let mut tests = [Test::no_data(); 11];
+    for (index, name) in ["Components", "Fuel System", "Misfire"].into_iter().enumerate() {
+        let bit = 1 << (2 - index);
+        let available = b & bit != 0;
+        tests[index] = Test::new(name, available, available && b & (bit << 4) == 0);
+    }
+    let names = if b & 0x08 == 0 {
+        [
+            "EGR and/or VVT System", "Oxygen Sensor Heater", "Oxygen Sensor",
+            "Gasoline Particulate Filter", "Secondary Air System", "Evaporative System",
+            "Heated Catalyst", "Catalyst",
+        ]
+    } else {
+        [
+            "EGR and/or VVT System", "PM filter monitoring", "Exhaust Gas Sensor",
+            "Reserved", "Boost Pressure", "Reserved", "NOx/SCR Monitor", "NMHC Catalyst",
+        ]
+    };
+    for (index, name) in names.into_iter().enumerate() {
+        let bit = 1 << (7 - index);
+        let available = name != "Reserved" && c & bit != 0;
+        tests[index + 3] = Test::new(name, available, available && d & bit == 0);
+    }
+    tests
+}
+
+#[cfg(test)]
+mod readiness_decoder_tests {
+    use super::*;
+
+    #[test]
+    fn common_monitors_use_b_not_mil_or_dtc_count() {
+        let tests = decode_readiness_bytes([0xff, 0x27, 0, 0]);
+        assert!(tests[0].available && tests[0].complete);
+        assert!(tests[1].available && !tests[1].complete);
+        assert!(tests[2].available && tests[2].complete);
+        let changed = decode_readiness_bytes([0, 0x27, 0, 0]);
+        for (left, right) in tests.iter().zip(changed) {
+            assert_eq!((left.available, left.complete), (right.available, right.complete));
+        }
+    }
+
+    #[test]
+    fn unsupported_is_never_complete() {
+        let tests = decode_readiness_bytes([0xff, 0, 0, 0]);
+        assert!(tests.iter().all(|test| !test.available && !test.complete));
+    }
+
+    #[test]
+    fn ignition_flag_and_completion_share_one_snapshot() {
+        let spark = decode_readiness_bytes([0, 0, 0x81, 0x01]);
+        assert_eq!(spark[10].name, "Catalyst");
+        assert!(spark[3].complete && !spark[10].complete);
+        let diesel = decode_readiness_bytes([0, 8, 0xff, 0]);
+        assert_eq!(diesel[10].name, "NMHC Catalyst");
+        assert!(diesel[10].complete);
+        for index in [6, 8] {
+            assert_eq!(diesel[index].name, "Reserved");
+            assert!(!diesel[index].available && !diesel[index].complete);
+        }
+    }
+
+    #[test]
+    fn exact_can_response_decodes() {
+        for id in ["7E8", "18DAF110"] {
+            let raw = format!("{id} 06 41 01 80 27 81 01\r\n");
+            let tests = decode_readiness_reply(&raw).unwrap();
+            assert!(tests[0].complete && !tests[1].complete);
+            assert!(tests[3].complete && !tests[10].complete);
+        }
+    }
+
+    #[test]
+    fn malformed_wrong_service_and_unsupported_layouts_are_unknown() {
+        for raw in [
+            "", "NO DATA", "7E8 06 42 01 00 07 00 00",
+            "7E8 06 41 02 00 07 00 00", "7E8 05 41 01 00 07 00",
+            "7E8 06 41 01 00 07 ZZ 00", "7E8 06 41 01 00 +7 00 00",
+            "7E8 06 41 01 00 07 00 00 00", "FFF 06 41 01 00 07 00 00",
+            "41 01 00 07 00 00",
+        ] {
+            assert!(decode_readiness_reply(raw).is_none(), "{raw}");
+        }
+    }
+
+    #[test]
+    fn multiple_ecus_cannot_be_silently_combined() {
+        assert!(decode_readiness_reply(
+            "7E8 06 41 01 00 07 00 00\r\n7E9 06 41 01 00 00 00 00"
+        ).is_none());
+    }
+}
+
 impl OBD {
     /// Get the DTC that caused the freeze frame.
     pub fn get_freeze_frame_dtc(&mut self) -> Vec<TroubleCode> {
@@ -265,102 +394,41 @@ impl OBD {
         }
     }
 
-    // See https://en.wikipedia.org/wiki/OBD-II_PIDs#Service_01_PID_01
-    //
-    // Common tests incldue 'components, fuel system, misfire'"
-    // If a response is invalid, Tests will have the name "Unknown"
-    pub fn get_common_tests_status(&mut self) -> [Test; 3] {
-        let response = self.query(Command::new_pid(b"0101"));
-        if *response.get_payload_size() == 0 {
-            return [Test::no_data(); 3];
+    /// Read monitor status from a single, unambiguous Mode 01 PID 01 response.
+    /// Unsupported adapter layouts or multiple ECU replies remain unknown.
+    pub fn get_readiness_status(&mut self) -> [Test; 11] {
+        let mut request = Command::new_pid(b"0101");
+        let response = if self.replay_requests {
+            self.get_recorded_response(&request)
+        } else {
+            if self.send_command(&mut request).is_err() {
+                return [Test::no_data(); 11];
+            }
+            match self.get_at_response() {
+                Ok(response) => response,
+                Err(_) => return [Test::no_data(); 11],
+            }
+        };
+
+        if self.record_requests {
+            self.save_request(&request, &response);
         }
 
-        let byte = response.a_value() as u32;
-
-        // "For bits indicating test availability a bit set to 1
-        // indicates available, whilst for bits indicating test completeness
-        // a bit set to 0 indicates complete. "
-
-        let components = Test::new(
-            "Components",
-            (byte & 0b0000_0100) != 0,
-            // '== 0' instead of '!= 0'
-            // complete will be true if bit is equal to 0
-            (byte & 0b0100_0000) == 0,
-        );
-
-        let fuel_system = Test::new(
-            "Fuel System",
-            (byte & 0b0000_0010) != 0,
-            (byte & 0b0010_0000) == 0,
-        );
-
-        let misfire = Test::new(
-            "Misfire",
-            (byte & 0b0000_0001) != 0,
-            (byte & 0b0001_0000) == 0,
-        );
-
-        [components, fuel_system, misfire]
+        response
+            .raw_response()
+            .as_deref()
+            .and_then(decode_readiness_reply)
+            .unwrap_or([Test::no_data(); 11])
     }
 
-    // These tests are engine-type specific
-    // Tests will differ if the engine type
-    // is compression vs. spark ignition
-    //
-    // For Compression engines, two tests are reserved.
-    // If a response is invalid, Tests will have the name "Unknown"
+    pub fn get_common_tests_status(&mut self) -> [Test; 3] {
+        let tests = self.get_readiness_status();
+        [tests[0], tests[1], tests[2]]
+    }
+
     pub fn get_advanced_tests_status(&mut self) -> [Test; 8] {
-        let engine_type = self.get_engine_type();
-        let response = self.query(Command::new_pid(b"0101"));
-        if *response.get_payload_size() == 0 {
-            return [Test::no_data(); 8];
-        }
-
-        let c_byte = response.c_value() as u32;
-        let d_byte = response.d_value() as u32;
-
-        let mut tests: [Test; 8] = [Test::no_data(); 8];
-        for (index, test) in tests.iter_mut().enumerate() {
-            let bit = 1 << (7 - index);
-            let available = (c_byte & bit) != 0;
-
-            // Complete will only be able to be true if the test is available
-            let complete = if available {
-                (d_byte & bit) == 0
-            } else {
-                false
-            };
-
-            let name = match engine_type {
-                EngineType::SparkIgnition => match index + 1 {
-                    1 => "EGR and/or VVT System",
-                    2 => "Oxygen Sensor Heater",
-                    3 => "Oxygen Sensor",
-                    4 => "Gasoline Particulate Filter",
-                    5 => "Secondary Air System",
-                    6 => "Evaporative System",
-                    7 => "Heated Catalyst",
-                    8 => "Catalyst",
-                    _ => unreachable!(),
-                },
-                EngineType::CompressionIgnition => match index + 1 {
-                    1 => "EGR and/or VVT System",
-                    2 => "PM filter monitoring",
-                    3 => "Exhaust Gas Sensor",
-                    4 | 6 => "Reserved",
-                    5 => "Boost Pressure",
-                    7 => "NOx/SCR Monitor ",
-                    8 => "NMHC Catalyst",
-                    _ => unreachable!(),
-                },
-                _ => "Unknown",
-            };
-
-            *test = Test::new(name, available, complete);
-        }
-
-        tests
+        let tests = self.get_readiness_status();
+        std::array::from_fn(|index| tests[index + 3])
     }
 
     pub fn get_test_results(&mut self) {
