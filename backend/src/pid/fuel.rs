@@ -129,13 +129,14 @@ impl OBD {
     }
 
     pub fn fuel_tank_level(&mut self) -> Scalar {
-        self.query(Command::new_pid(b"012F")).map_no_data(|r| {
-            Scalar::new(
-                (100.0 / 255.0) * r.a_value(),
-                Unit::Percent,
-                Some(self.unit_preferences),
-            )
-        })
+        self.query(Command::new_pid(b"012F"))
+            .map_checked_pid_data::<1>(&[0x41, 0x2F], |[a]| {
+                Scalar::new(
+                    (100.0 / 255.0) * f32::from(a),
+                    Unit::Percent,
+                    Some(self.unit_preferences),
+                )
+            })
     }
 
     pub fn fuel_rail_pressure(&mut self) -> Scalar {

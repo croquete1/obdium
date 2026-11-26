@@ -27,19 +27,25 @@ impl OBD {
     }
 
     pub fn intake_air_temp(&mut self) -> Scalar {
-        self.query(Command::new_pid(b"010F")).map_no_data(|r| {
-            Scalar::new(
-                r.a_value() - 40.0,
-                Unit::Celsius,
-                Some(self.unit_preferences),
-            )
-        })
+        self.query(Command::new_pid(b"010F"))
+            .map_checked_pid_data::<1>(&[0x41, 0x0F], |[a]| {
+                Scalar::new(
+                    f32::from(a) - 40.0,
+                    Unit::Celsius,
+                    Some(self.unit_preferences),
+                )
+            })
     }
 
     pub fn intake_manifold_abs_pressure(&mut self) -> Scalar {
-        self.query(Command::new_pid(b"010B")).map_no_data(|r| {
-            Scalar::new(r.a_value(), Unit::KiloPascal, Some(self.unit_preferences))
-        })
+        self.query(Command::new_pid(b"010B"))
+            .map_checked_pid_data::<1>(&[0x41, 0x0B], |[a]| {
+                Scalar::new(
+                    f32::from(a),
+                    Unit::KiloPascal,
+                    Some(self.unit_preferences),
+                )
+            })
     }
 
     pub fn maf_air_flow_rate(&mut self) -> Scalar {
@@ -53,13 +59,14 @@ impl OBD {
     } // Mass airflow sensor
 
     pub fn ambient_air_temp(&mut self) -> Scalar {
-        self.query(Command::new_pid(b"0146")).map_no_data(|r| {
-            Scalar::new(
-                r.a_value() - 40.0,
-                Unit::Celsius,
-                Some(self.unit_preferences),
-            )
-        })
+        self.query(Command::new_pid(b"0146"))
+            .map_checked_pid_data::<1>(&[0x41, 0x46], |[a]| {
+                Scalar::new(
+                    f32::from(a) - 40.0,
+                    Unit::Celsius,
+                    Some(self.unit_preferences),
+                )
+            })
     }
 
     pub fn max_air_flow_rate_from_maf(&mut self) -> Scalar {

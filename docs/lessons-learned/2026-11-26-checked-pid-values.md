@@ -1,0 +1,7 @@
+# Checked PID measurements — 26 November 2026
+
+CI [45836694070](https://github.com/croquete1/obdium/actions/runs/45836694070) on d2e5a48474345773f8efb32015d8ac348a93736d: Linux Rustfmt, Clippy, nine actual tests and release build passed; Windows Clippy/tests/build passed; frontend passed. macOS was cancelled, not a code failure or a pass. No lint waiver.
+
+Extend the validated measurement path to eight Mode 01 single-byte PIDs: 0104 engine_load, 0105 coolant_temp, 010F intake_air_temp, 010B intake_manifold_abs_pressure, 0146 ambient_air_temp, 010D vehicle_speed, 0111 throttle_position, 012F fuel_tank_level. Keep the original scaling and units. The formula is invoked only after exact header, byte count and hex validation. Three new helper-level regression tests check no formula execution on malformed input, real zero/maximum speed and temperature offsets. Existing RPM regression tests remain. This is a partial migration of BUG-006 / F03.08: existing legacy getters, other consumers, ECU selection, freshness and upstream extraction remain unresolved. The strict Mode 01 header deliberately does not pretend to support Mode 02; freeze-frame indexing/decoding requires its own validated design (BUG-016). No new active commands. Final HEAD CI and physical adapter validation pending.
+
+Learning: validate before scaling, not after; do not confuse a legitimate zero or negative physical value with missing data. Verify format/lint and actual test counts on the exact commit. A cancelled runner does not justify editing functional code blindly.

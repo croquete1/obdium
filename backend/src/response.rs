@@ -134,6 +134,18 @@ impl Response {
         Ok(data)
     }
 
+    /// Convert only a validated measurement; never evaluate its formula on absent bytes.
+    pub(crate) fn map_checked_pid_data<const N: usize>(
+        &self,
+        header: &[u8],
+        op: impl FnOnce([u8; N]) -> Scalar,
+    ) -> Scalar {
+        match self.checked_pid_data::<N>(header) {
+            Ok(data) => op(data),
+            Err(_) => Scalar::no_data(),
+        }
+    }
+
     pub fn new(raw: String, escaped: String) -> Self {
         Self {
             formatted_response: Some(raw),
@@ -361,6 +373,40 @@ mod checked_payload_tests {
                 fixture(payload).checked_pid_data::<1>(&[0x41, 0x0C]),
                 Err(PidPayloadError::InvalidHex)
             );
+        }
+    }
+
+    #[test]
+    fn measurement_formula_is_not_called_for_invalid_payloads() {
+        for payload in ["", "NO DATA", "41 0D", "41 0D GG", "41 0C 00", "41 0D 00 01"] {
+            let result = fixture(payload).map_checked_pid_data::<1>(&[0x41, 0x0D], |_| {
+                panic!("formula must not run on invalid data")
+            });
+            assert_eq!(result.unit, crate::scalar::Unit::NoData);
+        }
+    }
+
+    #[test]
+    fn validated_zero_and_maximum_are_real_measurements() {
+        use crate::scalar::Unit;
+        for (payload, expected) in [("41 0D 00", 0.0), ("41 0D FF", 255.0)] {
+            let result = fixture(payload).map_checked_pid_data::<1>(&[0x41, 0x0D], |[a]| {
+                Scalar::new(f32::from(a), Unit::KilometersPerHour, None)
+            });
+            assert_eq!(result.value, expected);
+            assert_eq!(result.unit, Unit::KilometersPerHour);
+        }
+    }
+
+    #[test]
+    fn signed_temperature_offset_is_applied_only_to_valid_data() {
+        use crate::scalar::Unit;
+        for (payload, expected) in [("41 05 00", -40.0), ("41 05 28", 0.0), ("41 05 FF", 215.0)] {
+            let result = fixture(payload).map_checked_pid_data::<1>(&[0x41, 0x05], |[a]| {
+                Scalar::new(f32::from(a) - 40.0, Unit::Celsius, None)
+            });
+            assert_eq!(result.value, expected);
+            assert_eq!(result.unit, Unit::Celsius);
         }
     }
 

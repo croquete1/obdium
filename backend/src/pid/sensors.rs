@@ -5,13 +5,14 @@ use crate::{
 
 impl OBD {
     pub fn vehicle_speed(&mut self) -> Scalar {
-        self.query(Command::new_pid(b"010D")).map_no_data(|r| {
-            Scalar::new(
-                r.a_value(),
-                Unit::KilometersPerHour,
-                Some(self.unit_preferences),
-            )
-        })
+        self.query(Command::new_pid(b"010D"))
+            .map_checked_pid_data::<1>(&[0x41, 0x0D], |[a]| {
+                Scalar::new(
+                    f32::from(a),
+                    Unit::KilometersPerHour,
+                    Some(self.unit_preferences),
+                )
+            })
     }
 
     pub fn timing_advance(&mut self) -> Scalar {
@@ -53,13 +54,14 @@ impl OBD {
     }
 
     pub fn throttle_position(&mut self) -> Scalar {
-        self.query(Command::new_pid(b"0111")).map_no_data(|r| {
-            Scalar::new(
-                r.a_value() * (100.0 / 255.0),
-                Unit::Percent,
-                Some(self.unit_preferences),
-            )
-        })
+        self.query(Command::new_pid(b"0111"))
+            .map_checked_pid_data::<1>(&[0x41, 0x11], |[a]| {
+                Scalar::new(
+                    f32::from(a) * (100.0 / 255.0),
+                    Unit::Percent,
+                    Some(self.unit_preferences),
+                )
+            })
     }
 
     pub fn relative_throttle_pos(&mut self) -> Scalar {

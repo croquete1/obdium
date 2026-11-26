@@ -66,23 +66,25 @@ impl OBD {
     }
 
     pub fn engine_load(&mut self) -> Scalar {
-        self.query(Command::new_pid(b"0104")).map_no_data(|r| {
-            Scalar::new(
-                r.a_value() / 2.55,
-                Unit::Percent,
-                Some(self.unit_preferences),
-            )
-        })
+        self.query(Command::new_pid(b"0104"))
+            .map_checked_pid_data::<1>(&[0x41, 0x04], |[a]| {
+                Scalar::new(
+                    f32::from(a) / 2.55,
+                    Unit::Percent,
+                    Some(self.unit_preferences),
+                )
+            })
     }
 
     pub fn coolant_temp(&mut self) -> Scalar {
-        self.query(Command::new_pid(b"0105")).map_no_data(|r| {
-            Scalar::new(
-                r.a_value() - 40.0,
-                Unit::Celsius,
-                Some(self.unit_preferences),
-            )
-        })
+        self.query(Command::new_pid(b"0105"))
+            .map_checked_pid_data::<1>(&[0x41, 0x05], |[a]| {
+                Scalar::new(
+                    f32::from(a) - 40.0,
+                    Unit::Celsius,
+                    Some(self.unit_preferences),
+                )
+            })
     }
 
     pub fn coolant_temp_sensors(&mut self) -> (Scalar, Scalar) {
