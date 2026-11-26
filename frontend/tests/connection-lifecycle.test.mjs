@@ -190,3 +190,63 @@ test("actual status handler re-enables connection controls after failed connecti
     assert.deepEqual(notices, [[connected ? "DISCONNECTED FROM ELM" : "CONNECTION NOT ESTABLISHED", "Connection ended"]]);
   }
 });
+
+
+function connectFixture(emit) {
+  const source = readFileSync(new URL("../scripts/features.js", import.meta.url), "utf8");
+  const start = source.indexOf("let connectionAttempt = 0;");
+  const end = source.indexOf("export async function disconnectElm", start);
+  assert.ok(start >= 0 && end > start);
+  const window = { connected: false };
+  const connectButton = { disabled: false };
+  const notices = [];
+  const context = {
+    window, connectButton, emit,
+    addNotification: (...args) => notices.push(args),
+    console: { error() {} },
+  };
+  runInNewContext(source.slice(start, end).replace("export async function", "async function") + "\nthis.connectElm = connectElm;", context);
+  return { connect: context.connectElm, window, connectButton, notices };
+}
+
+test("rejected connect dispatch restores controls and reports failure", async () => {
+  const fixture = connectFixture(async () => { throw new Error("IPC rejected"); });
+  await fixture.connect("38400", "COM1", "0");
+  assert.equal(fixture.connectButton.disabled, false);
+  assert.equal(fixture.window.connected, false);
+  assert.equal(fixture.notices.length, 1);
+});
+
+test("successful dispatch leaves controls pending until backend status", async () => {
+  const fixture = connectFixture(async () => {});
+  await fixture.connect("38400", "COM1", "0");
+  assert.equal(fixture.connectButton.disabled, true);
+  assert.equal(fixture.window.connected, false);
+  assert.equal(fixture.notices.length, 0);
+});
+
+test("late rejection cannot unlock a newer pending connection attempt", async () => {
+  let rejectFirst;
+  let calls = 0;
+  const fixture = connectFixture(() => {
+    if (++calls === 1) return new Promise((_, reject) => { rejectFirst = reject; });
+    return Promise.resolve();
+  });
+  const first = fixture.connect("38400", "COM1", "0");
+  await fixture.connect("38400", "COM2", "0");
+  rejectFirst(new Error("old request rejected"));
+  await first;
+  assert.equal(fixture.connectButton.disabled, true);
+  assert.equal(fixture.notices.length, 0);
+});
+
+test("rejection after backend reports a connected session cannot unlock controls", async () => {
+  let rejectDispatch;
+  const fixture = connectFixture(() => new Promise((_, reject) => { rejectDispatch = reject; }));
+  const pending = fixture.connect("38400", "COM1", "0");
+  fixture.window.connected = true;
+  rejectDispatch(new Error("late rejection"));
+  await pending;
+  assert.equal(fixture.connectButton.disabled, true);
+  assert.equal(fixture.notices.length, 0);
+});
