@@ -8,6 +8,7 @@ use std::time::{Duration, Instant};
 use thiserror::Error;
 
 use crate::cmd::{Command, CommandType};
+use crate::protocol::{validate_selection_ack, ProtocolSelection};
 use crate::response::Response;
 use crate::scalar::{Scalar, Unit, UnitPreferences};
 use crate::vin::VIN;
@@ -288,34 +289,33 @@ impl OBD {
             return Ok(());
         }
 
+        let selection = ProtocolSelection::try_from(protocol)
+            .map_err(|_| Error::InvalidProtocol(protocol))?;
+
         self.connection = serialport::new(port, baud_rate)
             .timeout(Duration::from_secs(1))
             .open()
             .ok();
 
-        if self.is_connected() {
-            let initialized = self.init();
-            let mut command = match protocol {
-                0 => Command::new_at(b"ATSP0"),
-                1 => Command::new_at(b"ATSP1"),
-                2 => Command::new_at(b"ATSP2"),
-                3 => Command::new_at(b"ATSP3"),
-                4 => Command::new_at(b"ATSP4"),
-                5 => Command::new_at(b"ATSP5"),
-                6 => Command::new_at(b"ATSP6"),
-                7 => Command::new_at(b"ATSP7"),
-                8 => Command::new_at(b"ATSP8"),
-                9 => Command::new_at(b"ATSP9"),
-                _ => return Err(Error::InvalidProtocol(protocol)),
-            };
-
-            self.send_command(&mut command)?;
-            self.protocol = protocol;
-
-            initialized
-        } else {
-            Err(Error::ConnectionFailed)
+        if !self.is_connected() {
+            return Err(Error::ConnectionFailed);
         }
+
+        if let Err(error) = self.init().and_then(|()| self.select_protocol(selection)) {
+            self.disconnect();
+            return Err(error);
+        }
+
+        // This is the selected configuration, not the negotiated ECU protocol.
+        self.protocol = protocol;
+        Ok(())
+    }
+
+    fn select_protocol(&mut self, selection: ProtocolSelection) -> Result<(), Error> {
+        self.send_command(&mut Command::new_at(selection.command()))?;
+        let response = self.get_at_response()?;
+        validate_selection_ack(response.raw_response.as_deref().unwrap_or_default())
+            .map_err(|_| Error::InitFailedNoOKReceived)
     }
 
     pub fn disconnect(&mut self) {
