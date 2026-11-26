@@ -380,3 +380,7 @@ A auditoria foi estática, sobre árvore do repositório, ficheiros selecionados
 ### Auditoria preventiva de diagnóstico avançado — 26/11/2026
 
 - [18 critérios preventivos ADV-01–ADV-18](references/ADVANCED_DIAGNOSTICS_AUDIT.md) complementam F02/F03/F06–F21, com fontes, prioridades e regressões. Destacam-se inicialização K-line, estado pós-reset, baud vs bitrate, little-endian, cache por sessão/ECU, flow control, identificação ambígua, erro de layout/status DoIP e política de operações. Todos TODO; evidência estática e relatos externos não confirmam defeitos no OBDium. Não duplicar PRs #4–#12; implementação e testes Rust, sem hardware executado nesta auditoria.
+
+### Auditoria complementar de ecossistema automóvel — 26/11/2026
+
+- [15 critérios CROSS-01–CROSS-15](references/AUTOMOTIVE_ECOSYSTEM_AUDIT.md) complementam F02/F03/F05/F06/F08/F10/F14–F21 e ADV-01–18. Incluem DBC de leitura passiva, qualidade e validade de sinais, interoperabilidade de capturas, timing UDS P2/P2*, DIDs múltiplos, DoIP/TLS, SocketCAN e CAN FD. Seis repositórios com fontes fixadas, PyRen identificado no GitLab (auditoria profunda pendente). Sem novas dependências ou código importado; todos TODO. Não duplicar alterações do motor em curso.
