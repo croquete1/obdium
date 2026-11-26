@@ -1030,6 +1030,235 @@ mod serial_prompt_tests {
     use super::*;
     use std::io::{self, Cursor};
 
+    use std::collections::VecDeque;
+    use std::sync::{Arc, Mutex};
+
+    #[derive(Default)]
+    struct FixtureState {
+        events: Vec<&'static str>,
+        pending: VecDeque<u8>,
+        written: Vec<u8>,
+        fail_timeout: bool,
+        fail_clear: bool,
+        fail_write: bool,
+    }
+
+    #[derive(Clone)]
+    struct FixturePort {
+        state: Arc<Mutex<FixtureState>>,
+    }
+
+    impl SerialPort for FixturePort {
+        fn name(&self) -> Option<String> {
+            Some("fixture".to_string())
+        }
+        fn baud_rate(&self) -> serialport::Result<u32> {
+            Ok(0)
+        }
+        fn data_bits(&self) -> serialport::Result<serialport::DataBits> {
+            Ok(serialport::DataBits::Eight)
+        }
+        fn flow_control(&self) -> serialport::Result<serialport::FlowControl> {
+            Ok(serialport::FlowControl::None)
+        }
+        fn parity(&self) -> serialport::Result<serialport::Parity> {
+            Ok(serialport::Parity::None)
+        }
+        fn stop_bits(&self) -> serialport::Result<serialport::StopBits> {
+            Ok(serialport::StopBits::One)
+        }
+        fn timeout(&self) -> Duration {
+            Duration::from_secs(0)
+        }
+        fn set_timeout(&mut self, _timeout: Duration) -> serialport::Result<()> {
+            let mut state = self.state.lock().unwrap();
+            state.events.push("timeout");
+            if state.fail_timeout {
+                return Err(serialport::Error::new(
+                    serialport::ErrorKind::Unknown,
+                    "fixture setup failure",
+                ));
+            }
+            Ok(())
+        }
+        fn write_request_to_send(&mut self, _level: bool) -> serialport::Result<()> {
+            Ok(())
+        }
+        fn write_data_terminal_ready(&mut self, _level: bool) -> serialport::Result<()> {
+            Ok(())
+        }
+        fn read_clear_to_send(&mut self) -> serialport::Result<bool> {
+            Ok(true)
+        }
+        fn read_data_set_ready(&mut self) -> serialport::Result<bool> {
+            Ok(true)
+        }
+        fn read_ring_indicator(&mut self) -> serialport::Result<bool> {
+            Ok(false)
+        }
+        fn read_carrier_detect(&mut self) -> serialport::Result<bool> {
+            Ok(false)
+        }
+        fn bytes_to_read(&self) -> serialport::Result<u32> {
+            Ok(0)
+        }
+        fn bytes_to_write(&self) -> serialport::Result<u32> {
+            Ok(0)
+        }
+        fn clear(&self, _buffer: serialport::ClearBuffer) -> serialport::Result<()> {
+            let mut state = self.state.lock().unwrap();
+            state.events.push("clear");
+            if state.fail_clear {
+                return Err(serialport::Error::new(
+                    serialport::ErrorKind::Unknown,
+                    "fixture clear failure",
+                ));
+            }
+            state.pending.clear();
+            Ok(())
+        }
+        fn try_clone(&self) -> serialport::Result<Box<dyn SerialPort>> {
+            Ok(Box::new(self.clone()))
+        }
+        fn set_baud_rate(&mut self, _baud_rate: u32) -> serialport::Result<()> {
+            Ok(())
+        }
+        fn set_data_bits(&mut self, _data_bits: serialport::DataBits) -> serialport::Result<()> {
+            Ok(())
+        }
+        fn set_flow_control(
+            &mut self,
+            _flow_control: serialport::FlowControl,
+        ) -> serialport::Result<()> {
+            Ok(())
+        }
+        fn set_parity(&mut self, _parity: serialport::Parity) -> serialport::Result<()> {
+            Ok(())
+        }
+        fn set_stop_bits(&mut self, _stop_bits: serialport::StopBits) -> serialport::Result<()> {
+            Ok(())
+        }
+        fn set_break(&self) -> serialport::Result<()> {
+            Ok(())
+        }
+        fn clear_break(&self) -> serialport::Result<()> {
+            Ok(())
+        }
+    }
+
+    impl Read for FixturePort {
+        fn read(&mut self, buffer: &mut [u8]) -> io::Result<usize> {
+            let mut state = self.state.lock().unwrap();
+            if buffer.is_empty() {
+                return Ok(0);
+            }
+            if let Some(byte) = state.pending.pop_front() {
+                buffer[0] = byte;
+                Ok(1)
+            } else {
+                Err(io::Error::new(io::ErrorKind::TimedOut, "fixture timeout"))
+            }
+        }
+    }
+
+    impl Write for FixturePort {
+        fn write(&mut self, buffer: &[u8]) -> io::Result<usize> {
+            let mut state = self.state.lock().unwrap();
+            state.events.push("write");
+            if state.fail_write {
+                return Err(io::Error::new(io::ErrorKind::BrokenPipe, "fixture write"));
+            }
+            state.written.extend_from_slice(buffer);
+            // Simulate an adapter whose reply is already queued when write returns.
+            state.pending.extend(b"ELM327 v1.5\r>".iter().copied());
+            Ok(buffer.len())
+        }
+
+        fn flush(&mut self) -> io::Result<()> {
+            Ok(())
+        }
+    }
+
+    fn fixture_obd(state: FixtureState) -> (OBD, Arc<Mutex<FixtureState>>) {
+        let state = Arc::new(Mutex::new(state));
+        let mut obd = OBD::new();
+        obd.connection = Some(Box::new(FixturePort {
+            state: Arc::clone(&state),
+        }));
+        (obd, state)
+    }
+
+    #[test]
+    fn transaction_keeps_reply_queued_during_write() {
+        let (mut obd, state) = fixture_obd(FixtureState {
+            pending: VecDeque::from([b'X']),
+            ..Default::default()
+        });
+
+        obd.send_command(&mut Command::new_at(b"ATI"))
+            .expect("send succeeds");
+        let reply = obd.get_at_response().expect("receive succeeds");
+
+        assert_eq!(reply.raw_response().as_deref(), Some("ELM327 v1.5\r"));
+        let state = state.lock().unwrap();
+        assert_eq!(state.written, b"ATI\r");
+        assert_eq!(state.events, ["timeout", "clear", "write"]);
+        assert!(state.pending.is_empty());
+    }
+
+    #[test]
+    fn timeout_setup_failure_prevents_write() {
+        let (mut obd, state) = fixture_obd(FixtureState {
+            fail_timeout: true,
+            ..Default::default()
+        });
+
+        assert!(matches!(
+            obd.send_command(&mut Command::new_at(b"ATI")),
+            Err(Error::AdapterReadWriteError(_))
+        ));
+        let state = state.lock().unwrap();
+        assert_eq!(state.events, ["timeout"]);
+        assert!(state.written.is_empty());
+    }
+
+    #[test]
+    fn clear_failure_prevents_write() {
+        let (mut obd, state) = fixture_obd(FixtureState {
+            fail_clear: true,
+            ..Default::default()
+        });
+
+        assert!(matches!(
+            obd.send_command(&mut Command::new_at(b"ATI")),
+            Err(Error::AdapterReadWriteError(_))
+        ));
+        let state = state.lock().unwrap();
+        assert_eq!(state.events, ["timeout", "clear"]);
+        assert!(state.written.is_empty());
+    }
+
+    #[test]
+    fn failed_write_is_not_success_and_disconnects() {
+        let (mut obd, state) = fixture_obd(FixtureState {
+            fail_write: true,
+            ..Default::default()
+        });
+
+        assert!(matches!(
+            obd.send_command(&mut Command::new_at(b"ATI")),
+            Err(Error::AdapterReadWriteError(_))
+        ));
+        assert!(!obd.is_connected());
+        assert!(matches!(
+            obd.send_command(&mut Command::new_at(b"ATI")),
+            Err(Error::NoConnection)
+        ));
+        let state = state.lock().unwrap();
+        assert_eq!(state.events, ["timeout", "clear", "write"]);
+        assert!(state.written.is_empty());
+    }
+
     #[test]
     fn immediate_reply_is_preserved_until_prompt() {
         let mut reader = Cursor::new(b"41 0C 1A F8\r>next");
