@@ -121,7 +121,7 @@ Todos abertos. **C** = confirmado por inspeção do código; **R** = risco a rep
 
 ## 5. Arquitetura-alvo (incremental)
 
-Referência técnica complementar: [DDT4All — arquitetura, fontes fixadas, adaptadores, dados, segurança e testes](references/DDT4ALL.md). Implementação nativa Rust, sem copiar bases proprietárias. F14–F21 complementam F01–F13; não substituem os gates existentes.
+Referência técnica complementar: [arquitetura, adaptadores, dados, segurança e testes](references/DDT4ALL.md). Implementação nativa Rust, sem copiar bases proprietárias. F14–F21 complementam F01–F13; não substituem os gates existentes.
 
 ```text
 Desktop Tauri 2 (UI tipada, i18n, gráficos)
@@ -367,8 +367,8 @@ A auditoria foi estática, sobre árvore do repositório, ficheiros selecionados
 - PR #2: a primeira atualização de base (`47cd042`) aparentava não ter conflitos, mas a comparação com main revelou remoção dos workflows e reversões Rust da PR #3. Corrigida por construção a partir da árvore exata da main, preservando apenas os cinco caminhos próprios da PR #2, incluindo a remoção do lockfile de raiz obsoleto. Validar novamente o diff final e todos os workflows; não considerar mergeable=true prova de preservação de alterações.
 - Candidato integrado #9 `8365da146e0f389a9ad851cc0a4d7e3fede0af0f`: CI [45889596251](https://github.com/croquete1/obdium/actions/runs/45889596251), preview 45889596216 e House Rules 45889596213 aprovados. 68+3 Rust, 40 Node, 9 Python = 120 testes distintos. Validação conjunta, não merge. Ensaios físicos e WebView ainda pendentes.
 
-### Programa de integração DDT4All — 26/11/2026
+### Programa de diagnóstico avançado — 26/11/2026
 
-- Baseline main `314fa378b4de35cd9c44a6bc2df2aab9dddefa11`; referência DDT4All `09a39795725b7e510041436cdde3b1d65609142c`. Consulta de árvore, README e módulos selecionados, não auditoria integral nem validação física. F14–F21 TODO. Nenhuma implementação marcada concluída.
-- F03/F06: ampliar perfis de adaptador e negociação, incluindo diferenças entre baud do host e bitrate do veículo; reconciliar com #11/#12 antes de alterar o motor. F07/F08: editor de painéis e análise de captura; F10/F12: definições, CLI e plugins declarativos. Detalhes e agrupamento em [referência DDT4All](references/DDT4ALL.md).
+- Baseline main `314fa378b4de35cd9c44a6bc2df2aab9dddefa11`; fontes e revisões registadas na documentação técnica. Consulta de árvore, README e módulos selecionados, não auditoria integral nem validação física. F14–F21 TODO. Nenhuma implementação marcada concluída.
+- F03/F06: ampliar perfis de adaptador e negociação, incluindo diferenças entre baud do host e bitrate do veículo; reconciliar com #11/#12 antes de alterar o motor. F07/F08: editor de painéis e análise de captura; F10/F12: definições, CLI e plugins declarativos. Detalhes e agrupamento em [referência técnica](references/DDT4ALL.md).
 - Ordem: fechar regressões/integrações #4–#12 e contratos F03 antes de abrir novas frentes do motor; máximo três frentes independentes, serializar alterações partilhadas. Roadmap em PR própria, reconciliar mudanças da #11 sem perder os nove protocolos. Sem importar bases OEM, macros executáveis ou funções proibidas em F11/AGENTS.md.
