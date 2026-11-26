@@ -136,7 +136,10 @@ mod tests {
             assert_eq!(command, &[b'A', b'T', b'S', b'P', b'0' + id]);
         }
         for id in 10..=u8::MAX {
-            assert_eq!(ProtocolSelection::try_from(id), Err(ProtocolError::Unsupported));
+            assert_eq!(
+                ProtocolSelection::try_from(id),
+                Err(ProtocolError::Unsupported)
+            );
         }
     }
 
@@ -145,10 +148,17 @@ mod tests {
         for id in 1..=9 {
             let protocol = Some(ObdProtocol::try_from(id).unwrap());
             for automatic in [false, true] {
-                let reply = if automatic { format!("A{id}\r") } else { format!("{id}\r") };
+                let reply = if automatic {
+                    format!("A{id}\r")
+                } else {
+                    format!("{id}\r")
+                };
                 assert_eq!(
                     parse_reported_protocol(&reply),
-                    Ok(ReportedProtocol { automatic, protocol })
+                    Ok(ReportedProtocol {
+                        automatic,
+                        protocol
+                    })
                 );
             }
         }
@@ -159,18 +169,26 @@ mod tests {
         for reply in ["0", "A0", "a0\r\n"] {
             assert_eq!(
                 parse_reported_protocol(reply),
-                Ok(ReportedProtocol { automatic: true, protocol: None })
+                Ok(ReportedProtocol {
+                    automatic: true,
+                    protocol: None
+                })
             );
         }
     }
 
     #[test]
     fn malformed_or_unsupported_reports_are_rejected() {
-        for reply in ["", "OK", "NO DATA", "ATDPN\rA6", "6\r7", "A 6", "A6>", "16", "é"] {
+        for reply in [
+            "", "OK", "NO DATA", "ATDPN\rA6", "6\r7", "A 6", "A6>", "16", "é",
+        ] {
             assert!(parse_reported_protocol(reply).is_err(), "{reply:?}");
         }
         for reply in ["A", "B", "C", "AA", "AB", "AC"] {
-            assert_eq!(parse_reported_protocol(reply), Err(ProtocolError::Unsupported));
+            assert_eq!(
+                parse_reported_protocol(reply),
+                Err(ProtocolError::Unsupported)
+            );
         }
     }
 
@@ -181,7 +199,10 @@ mod tests {
             assert_eq!(ObdProtocol::try_from(id).unwrap().can_parameters(), None);
         }
         for (id, parameters) in (6..=9).zip(expected) {
-            assert_eq!(ObdProtocol::try_from(id).unwrap().can_parameters(), Some(parameters));
+            assert_eq!(
+                ObdProtocol::try_from(id).unwrap().can_parameters(),
+                Some(parameters)
+            );
         }
     }
 
@@ -189,7 +210,10 @@ mod tests {
     fn only_exact_ok_acknowledges_selection() {
         assert_eq!(validate_selection_ack(" \rOK\r\n"), Ok(()));
         for reply in ["", "?", "STOPPED", "NOT OK", "OK\rERROR", "ATSP6\rOK"] {
-            assert_eq!(validate_selection_ack(reply), Err(ProtocolError::Unacknowledged));
+            assert_eq!(
+                validate_selection_ack(reply),
+                Err(ProtocolError::Unacknowledged)
+            );
         }
     }
 }
