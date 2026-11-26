@@ -2,6 +2,10 @@
 
 Date: 2026-11-26. Source: [cedricp/ddt4all](https://github.com/cedricp/ddt4all/tree/09a39795725b7e510041436cdde3b1d65609142c), commit `09a39795725b7e510041436cdde3b1d65609142c`, README v3.1.6, GPL-3.0-or-later. OBDium baseline: `314fa378b4de35cd9c44a6bc2df2aab9dddefa11`. Canonical status and acceptance: [ROADMAP.md](../ROADMAP.md). This is an original technical synthesis, not a vendored implementation, OEM database, or proof of physical compatibility. DDT4All primarily covers DDT/Renault-family definitions; general multibrand coverage needs independent evidence. Existing OBDium PRs #4–#12 are active; do not duplicate their parsers or change their branches.
 
+## Native Rust implementation constraint
+
+All new diagnostic, transport, import, simulation, CLI and extension logic must be implemented in Rust. Do not embed, invoke, install or package Python, PyQt, pyserial, pyusb, polib or any other dependency taken from the reference project's stack. No FFI/sidecar/subprocess bridge to the reference application. Prefer existing Rust dependencies and standard library; any additional Rust crate requires a documented technical need, license and security review. Existing Tauri frontend and SQLite architecture remain unchanged. Existing CI tools are outside this integration; do not add Python tests or scripts for the new features. Port relevant tests into Rust and use inert XML/JSON fixtures. Preserve required provenance and notices for adapted code.
+
 ## Source map and portability decisions
 
 | Reference (pinned) | Observed behavior / concept | OBDium work |
@@ -77,4 +81,4 @@ Planning and source mapping only; no runtime feature or physical verification is
 
 ## Vendored reference files
 
-A selective snapshot of GPL code and synthetic XML/JSON fixtures is stored in [vendor/ddt4all](vendor/ddt4all/README.md). It is documentation/test reference only, not a runtime dependency. Actual OEM database and project catalog remain excluded pending data-specific rights verification; see manifest.
+Only the five synthetic XML/JSON fixtures, original GPL license and provenance manifest remain in [vendor/ddt4all](vendor/ddt4all/README.md). Previously copied Python modules were removed from the proposed tree at the maintainer's request; their original source remains accessible through the pinned links above. Actual OEM database and project catalog remain excluded pending data-specific rights verification; see manifest.
