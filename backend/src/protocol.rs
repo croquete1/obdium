@@ -125,6 +125,75 @@ pub fn validate_selection_ack(reply: &str) -> Result<(), ProtocolError> {
     }
 }
 
+fn parse_hex_byte(token: &str) -> Result<u8, ProtocolError> {
+    if token.len() != 2 || !token.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+        return Err(ProtocolError::Malformed);
+    }
+    u8::from_str_radix(token, 16).map_err(|_| ProtocolError::Malformed)
+}
+
+/// A bounded legacy response with the ECU's source address and PID 00 bitmap.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct LegacyProbe {
+    pub source: u8,
+    pub bitmap: [u8; 4],
+}
+
+fn j1850_crc(data: &[u8]) -> u8 {
+    let mut crc = 0xFFu8;
+    for &byte in data {
+        crc ^= byte;
+        for _ in 0..8 {
+            crc = if crc & 0x80 == 0 {
+                crc << 1
+            } else {
+                (crc << 1) ^ 0x1D
+            };
+        }
+    }
+    !crc
+}
+
+/// Validate a standard three-byte legacy header, exact PID 00 payload and checksum.
+/// Non-standard addressing, four-byte KWP headers and headers-off replies are
+/// intentionally unverified. The selected adapter protocol determines the checksum.
+pub fn parse_legacy_probe(protocol: ObdProtocol, line: &str) -> Result<LegacyProbe, ProtocolError> {
+    let mut bytes = [0u8; 10];
+    let mut count = 0;
+    for token in line.split_ascii_whitespace() {
+        if count == bytes.len() {
+            return Err(ProtocolError::Malformed);
+        }
+        bytes[count] = parse_hex_byte(token)?;
+        count += 1;
+    }
+    if count != bytes.len() || bytes[3..5] != [0x41, 0x00] {
+        return Err(ProtocolError::Malformed);
+    }
+    let checksum = match protocol {
+        ObdProtocol::J1850Pwm if bytes[..2] == [0x41, 0x6B] => j1850_crc(&bytes[..9]),
+        ObdProtocol::J1850Vpw if bytes[..2] == [0x48, 0x6B] => j1850_crc(&bytes[..9]),
+        ObdProtocol::Iso9141 if bytes[..2] == [0x48, 0x6B] => {
+            bytes[..9]
+                .iter()
+                .fold(0u8, |sum, byte| sum.wrapping_add(*byte))
+        }
+        ObdProtocol::KwpSlow | ObdProtocol::KwpFast if bytes[..2] == [0x86, 0xF1] => {
+            bytes[..9]
+                .iter()
+                .fold(0u8, |sum, byte| sum.wrapping_add(*byte))
+        }
+        _ => return Err(ProtocolError::Malformed),
+    };
+    if bytes[9] != checksum {
+        return Err(ProtocolError::Malformed);
+    }
+    Ok(LegacyProbe {
+        source: bytes[2],
+        bitmap: [bytes[5], bytes[6], bytes[7], bytes[8]],
+    })
+}
+
 /// Conservative evidence for the standard Mode 01 PID 00 CAN reply.
 /// Requires ELM headers, spaces and the single-frame length byte.
 /// Other valid adapter layouts are deliberately unverified here.
@@ -139,10 +208,20 @@ pub fn can_probe_identifier_width(reply: &str) -> Result<u8, ProtocolError> {
         if !identifier.bytes().all(|byte| byte.is_ascii_hexdigit()) {
             return Err(ProtocolError::Malformed);
         }
-        let id = u32::from_str_radix(identifier, 16).map_err(|_| ProtocolError::Malformed)?;
+        let mut id = u32::from_str_radix(identifier, 16).map_err(|_| ProtocolError::Malformed)?;
         let current_width = match identifier.len() {
             3 if (0x7E8..=0x7EF).contains(&id) => 11,
             8 if id & 0x1FFF_FF00 == 0x18DA_F100 && id <= 0x1FFF_FFFF => 29,
+            2 if id == 0x18 => {
+                for _ in 0..3 {
+                    let token = tokens.next().ok_or(ProtocolError::Malformed)?;
+                    id = (id << 8) | u32::from(parse_hex_byte(token)?);
+                }
+                if id & 0x1FFF_FF00 != 0x18DA_F100 {
+                    return Err(ProtocolError::Malformed);
+                }
+                29
+            }
             _ => return Err(ProtocolError::Malformed),
         };
         if width.is_some_and(|previous| previous != current_width) {
@@ -349,6 +428,75 @@ mod tests {
             reply
         )
         .is_err());
+    }
+
+    #[test]
+    fn split_extended_can_identifier_is_supported() {
+        let reply = "18 DA F1 10 06 41 00 FF FF FF FF";
+        assert_eq!(can_probe_identifier_width(reply), Ok(29));
+        assert_eq!(
+            confirm_can_probe(
+                ProtocolSelection::Automatic,
+                parse_reported_protocol("A9").unwrap(),
+                reply
+            ),
+            Ok(ObdProtocol::Can29At250)
+        );
+        for malformed in [
+            "18 DA F2 10 06 41 00 FF FF FF FF",
+            "18 DA F1 1 06 41 00 FF FF FF FF",
+            "18 DA F1 GG 06 41 00 FF FF FF FF",
+            "18 DA F1",
+        ] {
+            assert!(can_probe_identifier_width(malformed).is_err());
+        }
+    }
+
+    #[test]
+    fn j1850_crc_matches_standard_check_vector() {
+        assert_eq!(j1850_crc(b"123456789"), 0x4B);
+    }
+
+    #[test]
+    fn legacy_probes_accept_five_protocols_with_valid_checksums() {
+        for (protocol, line) in [
+            (ObdProtocol::J1850Pwm, "41 6B 10 41 00 00 00 00 00 9C"),
+            (ObdProtocol::J1850Vpw, "48 6B 10 41 00 00 00 00 00 F6"),
+            (ObdProtocol::Iso9141, "48 6B 10 41 00 00 00 00 00 04"),
+            (ObdProtocol::KwpSlow, "86 F1 11 41 00 FF FF FF FF C5"),
+            (ObdProtocol::KwpFast, "86 F1 11 41 00 FF FF FF FF C5"),
+        ] {
+            let probe = parse_legacy_probe(protocol, line).unwrap();
+            if matches!(protocol, ObdProtocol::KwpSlow | ObdProtocol::KwpFast) {
+                assert_eq!(probe.source, 0x11);
+                assert_eq!(probe.bitmap, [255; 4]);
+            } else {
+                assert_eq!(probe.source, 0x10);
+                assert_eq!(probe.bitmap, [0; 4]);
+            }
+        }
+    }
+
+    #[test]
+    fn legacy_probes_reject_corruption_and_other_services() {
+        for reply in [
+            "48 6B 10 41 00 00 00 00 00 05",
+            "48 6B 10 41 00 00 00 00 04",
+            "48 6B 10 41 00 00 00 00 00 04 00",
+            "48 6B 10 41 20 00 00 00 00 24",
+            "48 6B 10 41 00 GG 00 00 00 04",
+            "NO DATA",
+        ] {
+            assert!(parse_legacy_probe(ObdProtocol::Iso9141, reply).is_err());
+        }
+        assert!(
+            parse_legacy_probe(ObdProtocol::J1850Vpw, "48 6B 10 41 00 00 00 00 00 04")
+                .is_err()
+        );
+        assert!(
+            parse_legacy_probe(ObdProtocol::KwpFast, "85 F1 11 41 00 FF FF FF FF C4")
+                .is_err()
+        );
     }
 
     #[test]
