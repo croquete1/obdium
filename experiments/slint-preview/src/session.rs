@@ -1,4 +1,6 @@
 use obdium::scalar::{Scalar, Unit};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(2);
@@ -10,11 +12,27 @@ pub(crate) struct Ticket {
     sequence: u64,
 }
 
-#[derive(Clone, Copy, Debug)]
-struct Pending {
+/// A worker receives only a permit for an already-issued observation.
+#[derive(Clone, Debug)]
+pub(crate) struct Permit {
     ticket: Ticket,
     started: Instant,
     deadline: Instant,
+    cancelled: Arc<AtomicBool>,
+}
+
+impl Permit {
+    pub(crate) fn ticket(&self) -> Ticket {
+        self.ticket
+    }
+
+    pub(crate) fn is_live(&self, now: Instant) -> bool {
+        !self.cancelled.load(Ordering::Acquire) && now >= self.started && now < self.deadline
+    }
+
+    fn invalidate(&self) {
+        self.cancelled.store(true, Ordering::Release);
+    }
 }
 
 #[derive(Debug, Default)]
@@ -22,7 +40,7 @@ pub(crate) struct PreviewSession {
     generation: u64,
     sequence: u64,
     active: bool,
-    pending: Option<Pending>,
+    pending: Option<Permit>,
     sample: Option<Scalar>,
     timed_out: bool,
 }
@@ -42,7 +60,7 @@ impl PreviewSession {
 
     pub(crate) fn stop(&mut self) {
         self.active = false;
-        if let Some(pending) = self.pending {
+        if let Some(pending) = self.pending.as_ref() {
             self.cancel(pending.ticket);
         }
         self.sample = None;
@@ -75,38 +93,51 @@ impl PreviewSession {
         };
         self.sample = None;
         self.timed_out = false;
-        self.pending = Some(Pending {
+        self.pending = Some(Permit {
             ticket,
             started: now,
             deadline,
+            cancelled: Arc::new(AtomicBool::new(false)),
         });
         Some(ticket)
     }
 
+    pub(crate) fn permit(&self, ticket: Ticket) -> Option<Permit> {
+        self.pending
+            .as_ref()
+            .filter(|permit| permit.ticket == ticket)
+            .cloned()
+    }
+
     /// Accept only the currently outstanding request, exactly once.
     pub(crate) fn complete(&mut self, ticket: Ticket, sample: Scalar, now: Instant) -> bool {
-        let Some(pending) = self.pending else {
+        let Some(pending) = self.pending.as_ref() else {
             return false;
         };
         if !self.active || pending.ticket != ticket {
             return false;
         }
+        let started = pending.started;
         if self.expire(now) {
             return false;
         }
-        if now < pending.started {
+        if now < started {
             self.cancel(ticket);
             return false;
         }
-        self.pending = None;
+        self.invalidate_pending();
         self.sample = Some(sample);
         true
     }
 
     /// The deadline is exclusive: completion at or after it is too late.
     pub(crate) fn expire(&mut self, now: Instant) -> bool {
-        if self.pending.is_some_and(|pending| now >= pending.deadline) {
-            self.pending = None;
+        if self
+            .pending
+            .as_ref()
+            .is_some_and(|pending| now >= pending.deadline)
+        {
+            self.invalidate_pending();
             self.sample = None;
             self.timed_out = true;
             return true;
@@ -116,13 +147,23 @@ impl PreviewSession {
 
     /// Explicit failure or cancellation for the matching request.
     pub(crate) fn cancel(&mut self, ticket: Ticket) -> bool {
-        if !self.pending.is_some_and(|pending| pending.ticket == ticket) {
+        if !self
+            .pending
+            .as_ref()
+            .is_some_and(|pending| pending.ticket == ticket)
+        {
             return false;
         }
-        self.pending = None;
+        self.invalidate_pending();
         self.sample = None;
         self.timed_out = false;
         true
+    }
+
+    fn invalidate_pending(&mut self) {
+        if let Some(pending) = self.pending.take() {
+            pending.invalidate();
+        }
     }
 
     pub(crate) fn rpm_text(&self) -> String {
@@ -294,5 +335,31 @@ mod tests {
         assert!(!session.complete(current, rpm(200.0), now));
         assert_eq!(session.rpm_text(), "Unavailable");
         assert!(session.request(later).is_some());
+    }
+
+    #[test]
+    fn permits_are_revoked_by_stop_cancel_timeout_and_completion() {
+        let now = Instant::now();
+        let mut session = PreviewSession::default();
+        assert!(session.start());
+        let first = session.request(now).expect("first");
+        let permit = session.permit(first).expect("permit");
+        assert!(permit.is_live(now));
+        session.stop();
+        assert!(!permit.is_live(now));
+        assert!(session.start());
+        let second = session.request(now).expect("second");
+        assert!(session.permit(first).is_none());
+        let permit = session.permit(second).expect("permit");
+        assert!(session.cancel(second));
+        assert!(!permit.is_live(now));
+        let third = session.request(now).expect("third");
+        let permit = session.permit(third).expect("permit");
+        assert!(session.expire(now + REQUEST_TIMEOUT));
+        assert!(!permit.is_live(now));
+        let fourth = session.request(now).expect("fourth");
+        let permit = session.permit(fourth).expect("permit");
+        assert!(session.complete(fourth, rpm(0.0), now));
+        assert!(!permit.is_live(now));
     }
 }

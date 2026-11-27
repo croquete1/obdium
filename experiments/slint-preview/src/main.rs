@@ -46,8 +46,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 state.stop();
             } else if let Some(worker) = callback_worker.borrow().as_ref() {
                 if state.start() {
-                    if let Some(ticket) = state.request(Instant::now()) {
-                        match worker.submit(ticket) {
+                    if let Some(permit) = state
+                        .request(Instant::now())
+                        .and_then(|ticket| state.permit(ticket))
+                    {
+                        match worker.submit(permit) {
                             Ok(()) => {
                                 ui.set_core_status("Core: initialized, disconnected".into());
                             }
