@@ -351,10 +351,8 @@ pub fn decode_dbc_signal(
     if message_id > 0x7ff || signal_name.is_empty() || signal_name.len() > 128 {
         return Err(ReferenceError::Layout);
     }
-    let message = regex::Regex::new(
-        r"^BO_\s+([0-9]+)\s+\S+\s*:\s*([0-9]+)\s+\S+\s*$",
-    )
-    .map_err(|error| ReferenceError::Dbc(error.to_string()))?;
+    let message = regex::Regex::new(r"^BO_\s+([0-9]+)\s+\S+\s*:\s*([0-9]+)\s+\S+\s*$")
+        .map_err(|error| ReferenceError::Dbc(error.to_string()))?;
     let signal = regex::Regex::new(
         r#"^SG_\s+([A-Za-z0-9_]+)\s*:\s*([0-9]+)\|([0-9]+)@([01])([+-])\s*\(\s*([^,]+),\s*([^\)]+)\)\s*\[[^\]]*\]\s*"[^"]*"\s+.+$"#,
     )
@@ -382,9 +380,9 @@ pub fn decode_dbc_signal(
                 length = Some(size);
             }
         } else if selected && (line.starts_with("SG_ ") || line.starts_with("SG_\t")) {
-            let fields = signal
-                .captures(line)
-                .ok_or_else(|| ReferenceError::Dbc("unsupported signal syntax or multiplexing".into()))?;
+            let fields = signal.captures(line).ok_or_else(|| {
+                ReferenceError::Dbc("unsupported signal syntax or multiplexing".into())
+            })?;
             let name = fields[1].to_owned();
             if !names.insert(name.clone()) {
                 return Err(ReferenceError::Dbc("duplicate signal".into()));

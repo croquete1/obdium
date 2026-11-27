@@ -2,7 +2,8 @@
 mod reference_data;
 
 use reference_data::{
-    decode_dbc_signal, decode_signal, translation_preview, BitOrder, ReferenceCatalogs, ReferenceError,
+    decode_dbc_signal, decode_signal, translation_preview, BitOrder, ReferenceCatalogs,
+    ReferenceError,
 };
 
 #[test]
