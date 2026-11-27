@@ -103,4 +103,6 @@ jobs:
         shell: bash
         run: |
           node --version
-          find frontend -type f -name '*.js' -print0 | xargs -0 -r -n 1 node --check
+          find frontend -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -r -n 1 node --check
+      - name: Graph measurement regression tests
+        run: node --test frontend/tests/graph-samples.test.mjs frontend/tests/connection-lifecycle.test.mjs

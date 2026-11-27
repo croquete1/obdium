@@ -5,7 +5,10 @@ import {
   appendTerminalOutput,
   addNotification,
   listenExpandPID,
+  stopGraphTracking,
+  resumeGraphTracking,
 } from "./features.js";
+import { runConnectionQueries } from "./connection-lifecycle.mjs";
 import {
   saveConnectionConfig,
   updateUnitConversionDropdowns,
@@ -26,6 +29,13 @@ listen("update-card", (event) => {
   });
 
   if (window.obdViewPaused) return;
+
+  // update any graphs that might be using this
+  emit("update-graphs", {
+    name: event.payload.name,
+    value: event.payload.value,
+    unit: event.payload.unit,
+  });
 
   // create card if it doesnt exist
   if (!exists) {
@@ -101,12 +111,6 @@ listen("update-card", (event) => {
     }
   });
 
-  // update any graphs that might be using this
-  emit("update-graphs", {
-    name: event.payload.name,
-    value: event.payload.value,
-    unit: event.payload.unit,
-  });
 });
 
 listen("vehicle-details", (event) => {
@@ -127,6 +131,8 @@ listen("vehicle-details", (event) => {
   ).toUpperCase();
 });
 
+let connectionGeneration = 0;
+
 listen("connection-status", async (event) => {
   const protocolDropdown = document.getElementById("protocol-menu");
   const protocolSelected = document.getElementById("protocol-selected");
@@ -145,6 +151,8 @@ listen("connection-status", async (event) => {
       "CONNECTED THROUGH SERIAL PORT " + serialPort.toUpperCase();
     connectionIcon.src = "/assets/icons/connected.png";
     window.connected = true;
+    const generation = ++connectionGeneration;
+    resumeGraphTracking();
 
     // Features only accessible in real mode
     if (serialPort !== "DEMO MODE") {
@@ -183,30 +191,38 @@ listen("connection-status", async (event) => {
       updateUnitConversionDropdowns();
     }
 
-    if (serialPort === "DEMO MODE") {
-      await new Promise((r) => setTimeout(r, 15000));
-      emit("get-pids");
-      await new Promise((r) => setTimeout(r, 2000));
-      emit("get-readiness-tests");
-    } else {
-      await new Promise((r) => setTimeout(r, 7000));
-      emit("get-pids");
-      await new Promise((r) => setTimeout(r, 2000));
-      emit("get-readiness-tests");
+    const isCurrent = () => window.connected && connectionGeneration === generation;
+    try {
+      await runConnectionQueries({
+        isCurrent,
+        delay: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+        emit,
+        firstDelay: serialPort === "DEMO MODE" ? 15000 : 7000,
+      });
+    } catch (error) {
+      if (isCurrent()) {
+        addNotification("DIAGNOSTIC REQUEST FAILED", "Could not initialize diagnostic readings.");
+        console.error("Connection initialization query failed", error);
+      }
     }
   } else {
-    if (!window.connected) return;
+    const wasConnected = window.connected;
 
     connectionLabel.textContent = "ELM327 NOT CONNECTED";
     status.textContent = "NO CONNECTION ESTABLISHED";
     connectionIcon.src = "/assets/icons/not-connected.png";
     window.connected = false;
+    connectionGeneration++;
+    stopGraphTracking();
     recordResponses.disabled = true;
     replayResponses.disabled = true;
     connectButton.disabled = false;
     disconnectButton.disabled = true;
 
-    addNotification("DISCONNECTED FROM ELM", event.payload.message);
+    addNotification(
+      wasConnected ? "DISCONNECTED FROM ELM" : "CONNECTION NOT ESTABLISHED",
+      event.payload.message,
+    );
 
     if (demoStatus.style.display !== "none") demoStatus.style.display = "none";
   }

@@ -169,12 +169,12 @@ impl Scalar {
                 Some(Scalar::new(self.value * 1.609, target_unit, None))
             }
 
-            (Kilometers, Feet) => Some(Scalar::new(self.value * 83281.0, Feet, None)),
-            (Feet, Kilometers) => Some(Scalar::new(self.value / 83281.0, Kilometers, None)),
+            (Kilometers, Feet) => Some(Scalar::new(self.value / 0.0003048, Feet, None)),
+            (Feet, Kilometers) => Some(Scalar::new(self.value * 0.0003048, Kilometers, None)),
 
             // Temperature
             (Celsius, Fahrenheit) => Some(Scalar::new((self.value * 1.8) + 32.0, Fahrenheit, None)),
-            (Fahrenheit, Celsius) => Some(Scalar::new((self.value - 32.0) * 1.8, Celsius, None)),
+            (Fahrenheit, Celsius) => Some(Scalar::new((self.value - 32.0) / 1.8, Celsius, None)),
 
             // Time
             (Seconds, Minutes) => Some(Scalar::new(self.value / 60.0, Minutes, None)),
@@ -305,5 +305,53 @@ impl UnitPreferences {
     }
     pub fn set_flow_rate(&mut self, new: Unit) {
         self.flow_rate = new;
+    }
+}
+
+#[cfg(test)]
+mod conversion_tests {
+    use super::*;
+
+    #[test]
+    fn temperature_conversion_preserves_known_reference_points() {
+        for (fahrenheit, celsius) in [(32.0, 0.0), (212.0, 100.0), (-40.0, -40.0)] {
+            let converted = Scalar::new(fahrenheit, Unit::Fahrenheit, None)
+                .convert(Unit::Celsius)
+                .expect("supported conversion");
+            assert_eq!(converted.unit, Unit::Celsius);
+            assert!((converted.value - celsius).abs() < 0.001);
+            let reversed = converted
+                .convert(Unit::Fahrenheit)
+                .expect("reverse conversion");
+            assert!((reversed.value - fahrenheit).abs() < 0.001);
+        }
+    }
+
+    #[test]
+    fn distance_conversion_uses_international_foot() {
+        let converted = Scalar::new(1.0, Unit::Kilometers, None)
+            .convert(Unit::Feet)
+            .expect("supported conversion");
+        assert_eq!(converted.unit, Unit::Feet);
+        assert!((converted.value - 3280.84).abs() < 0.01);
+        let reversed = Scalar::new(1000.0, Unit::Feet, None)
+            .convert(Unit::Kilometers)
+            .expect("reverse conversion");
+        assert_eq!(reversed.unit, Unit::Kilometers);
+        assert!((reversed.value - 0.3048).abs() < 0.000001);
+    }
+
+    #[test]
+    fn unit_preferences_apply_corrected_conversions() {
+        let mut preferences = UnitPreferences::default();
+        preferences.set_distance(Unit::Feet);
+        let distance = Scalar::new(1.0, Unit::Kilometers, Some(preferences));
+        assert_eq!(distance.unit, Unit::Feet);
+        assert!((distance.value - 3280.84).abs() < 0.01);
+        let temperature = Scalar::new(212.0, Unit::Fahrenheit, Some(preferences));
+        assert_eq!(temperature.unit, Unit::Celsius);
+        assert!((temperature.value - 100.0).abs() < 0.001);
+        let missing = Scalar::no_data();
+        assert!(missing.convert(Unit::Celsius).is_none());
     }
 }

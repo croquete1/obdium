@@ -45,35 +45,46 @@ impl fmt::Display for EngineType {
     }
 }
 
+fn rpm_from_response(
+    response: &crate::Response,
+    preferences: crate::scalar::UnitPreferences,
+) -> Scalar {
+    match response.checked_pid_data::<2>(&[0x41, 0x0C]) {
+        Ok(bytes) => Scalar::new(
+            f32::from(u16::from_be_bytes(bytes)) / 4.0,
+            Unit::RPM,
+            Some(preferences),
+        ),
+        Err(_) => Scalar::no_data(),
+    }
+}
+
 impl OBD {
     pub fn rpm(&mut self) -> Scalar {
-        self.query(Command::new_pid(b"010C")).map_no_data(|r| {
-            Scalar::new(
-                ((256.0 * r.a_value()) + r.b_value()) / 4.0,
-                Unit::RPM,
-                Some(self.unit_preferences),
-            )
-        })
+        let response = self.query(Command::new_pid(b"010C"));
+        rpm_from_response(&response, self.unit_preferences)
     }
 
     pub fn engine_load(&mut self) -> Scalar {
-        self.query(Command::new_pid(b"0104")).map_no_data(|r| {
-            Scalar::new(
-                r.a_value() / 2.55,
-                Unit::Percent,
-                Some(self.unit_preferences),
-            )
-        })
+        self.query(Command::new_pid(b"0104"))
+            .map_checked_pid_data::<1>(&[0x41, 0x04], |[a]| {
+                Scalar::new(
+                    f32::from(a) / 2.55,
+                    Unit::Percent,
+                    Some(self.unit_preferences),
+                )
+            })
     }
 
     pub fn coolant_temp(&mut self) -> Scalar {
-        self.query(Command::new_pid(b"0105")).map_no_data(|r| {
-            Scalar::new(
-                r.a_value() - 40.0,
-                Unit::Celsius,
-                Some(self.unit_preferences),
-            )
-        })
+        self.query(Command::new_pid(b"0105"))
+            .map_checked_pid_data::<1>(&[0x41, 0x05], |[a]| {
+                Scalar::new(
+                    f32::from(a) - 40.0,
+                    Unit::Celsius,
+                    Some(self.unit_preferences),
+                )
+            })
     }
 
     pub fn coolant_temp_sensors(&mut self) -> (Scalar, Scalar) {
@@ -119,13 +130,14 @@ impl OBD {
             return self.engine_runtime_diesel();
         }
 
-        self.query(Command::new_pid(b"011F")).map_no_data(|r| {
-            Scalar::new(
-                (256.0 * r.a_value()) + r.b_value(),
-                Unit::Seconds,
-                Some(self.unit_preferences),
-            )
-        })
+        self.query(Command::new_pid(b"011F"))
+            .map_checked_pid_data::<2>(&[0x41, 0x1F], |bytes| {
+                Scalar::new(
+                    f32::from(u16::from_be_bytes(bytes)),
+                    Unit::Seconds,
+                    Some(self.unit_preferences),
+                )
+            })
     }
 
     fn engine_runtime_diesel(&mut self) -> Scalar {
@@ -302,6 +314,52 @@ impl OBD {
             0 => EngineType::SparkIgnition,
             1 => EngineType::CompressionIgnition,
             _ => unreachable!(),
+        }
+    }
+}
+
+#[cfg(test)]
+mod checked_rpm_tests {
+    use super::*;
+    use crate::Response;
+
+    fn fixture(payload: &str) -> Response {
+        Response {
+            payload: Some(payload.into()),
+            payload_size: 4,
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn actual_zero_rpm_is_distinct_from_missing_data() {
+        let zero = rpm_from_response(&fixture("41 0C 00 00"), Default::default());
+        assert_eq!(zero.value, 0.0);
+        assert_eq!(zero.unit, Unit::RPM);
+        let missing = rpm_from_response(&Response::no_data(), Default::default());
+        assert_eq!(missing.unit, Unit::NoData);
+    }
+
+    #[test]
+    fn rpm_scaling_uses_both_bytes() {
+        let rpm = rpm_from_response(&fixture("41 0C 1A F8"), Default::default());
+        assert_eq!(rpm.value, 1726.0);
+        assert_eq!(rpm.unit, Unit::RPM);
+    }
+
+    #[test]
+    fn incomplete_or_invalid_rpm_is_not_a_measurement() {
+        for payload in [
+            "41 0C 1A",
+            "41 0C GG F8",
+            "41 0C +1 F8",
+            "41 0C é F8",
+            "41 0D 1A F8",
+            "42 0C 1A F8",
+            "41 0C 1A F8 41 0C 00 00",
+        ] {
+            let result = rpm_from_response(&fixture(payload), Default::default());
+            assert_eq!(result.unit, Unit::NoData, "payload: {payload}");
         }
     }
 }
