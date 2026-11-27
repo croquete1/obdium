@@ -41,6 +41,13 @@ jobs:
           path: experiments/slint-preview/Cargo.lock
           if-no-files-found: error
           retention-days: 7
+      - name: Export public lock candidate for exact readback
+        shell: bash
+        run: |
+          if ! git ls-files --error-unmatch Cargo.lock >/dev/null 2>&1; then
+            sha256sum Cargo.lock
+            base64 -w 768 Cargo.lock | sed 's/^/LOCK_CANDIDATE:/'
+          fi
       - name: Fast Rust formatting check
         run: cargo fmt --all -- --check
       - name: Install Linux native window prerequisites
