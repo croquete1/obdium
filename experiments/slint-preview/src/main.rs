@@ -5,6 +5,7 @@ use obdium::OBD;
 use session::PreviewSession;
 use slint::ComponentHandle;
 use std::cell::RefCell;
+use std::time::Instant;
 
 slint::include_modules!();
 
@@ -30,8 +31,12 @@ fn main() -> Result<(), slint::PlatformError> {
             if state.is_active() {
                 state.stop();
             } else if state.start() {
-                if let Some(ticket) = state.request() {
-                    let _ = state.complete(ticket, Scalar::new(1726.0, Unit::RPM, None));
+                if let Some(ticket) = state.request(Instant::now()) {
+                    let _ = state.complete(
+                        ticket,
+                        Scalar::new(1726.0, Unit::RPM, None),
+                        Instant::now(),
+                    );
                 }
             }
             ui.set_demo_active(state.is_active());
