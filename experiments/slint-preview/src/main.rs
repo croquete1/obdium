@@ -113,7 +113,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 #[cfg(test)]
 mod core_boundary_tests {
     use super::*;
-    use crate::session::format_synthetic_rpm;
+    use crate::session::Observation;
     use obdium::scalar::{Scalar, Unit};
 
     #[test]
@@ -126,15 +126,18 @@ mod core_boundary_tests {
     #[test]
     fn sample_boundary_distinguishes_zero_and_invalid_values() {
         let zero = Scalar::new(0.0, Unit::RPM, None);
-        assert_eq!(format_synthetic_rpm(&zero), "0 rpm (synthetic)");
+        assert_eq!(Observation::from_scalar(&zero).text(), "0 rpm (synthetic)");
+        assert_eq!(
+            Observation::from_scalar(&Scalar::no_data()),
+            Observation::NoData
+        );
         for sample in [
-            Scalar::no_data(),
             Scalar::new(10.0, Unit::Volts, None),
             Scalar::new(f32::NAN, Unit::RPM, None),
             Scalar::new(f32::INFINITY, Unit::RPM, None),
             Scalar::new(-1.0, Unit::RPM, None),
         ] {
-            assert_eq!(format_synthetic_rpm(&sample), "Unavailable");
+            assert_eq!(Observation::from_scalar(&sample), Observation::Invalid);
         }
     }
 }

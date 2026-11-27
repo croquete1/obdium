@@ -47,13 +47,43 @@ impl Permit {
     }
 }
 
+/// Typed synthetic observation, distinct from request lifecycle state.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(crate) enum Observation {
+    Rpm(f32),
+    NoData,
+    Invalid,
+    SourceFailure,
+}
+
+impl Observation {
+    pub(crate) fn from_scalar(sample: &Scalar) -> Self {
+        if sample.unit == Unit::NoData {
+            Self::NoData
+        } else if sample.unit != Unit::RPM || !sample.value.is_finite() || sample.value < 0.0 {
+            Self::Invalid
+        } else {
+            Self::Rpm(sample.value)
+        }
+    }
+
+    pub(crate) fn text(self) -> String {
+        match self {
+            Self::Rpm(value) => format!("{value} rpm (synthetic)"),
+            Self::NoData => "No data".into(),
+            Self::Invalid => "Invalid measurement".into(),
+            Self::SourceFailure => "Source read failed".into(),
+        }
+    }
+}
+
 #[derive(Debug, Default)]
 pub(crate) struct PreviewSession {
     generation: u64,
     sequence: u64,
     active: bool,
     pending: Option<Permit>,
-    sample: Option<Scalar>,
+    sample: Option<Observation>,
     timed_out: bool,
 }
 
@@ -123,7 +153,7 @@ impl PreviewSession {
     }
 
     /// Accept only the currently outstanding request, exactly once.
-    pub(crate) fn complete(&mut self, ticket: Ticket, sample: Scalar, now: Instant) -> bool {
+    pub(crate) fn complete(&mut self, ticket: Ticket, sample: Observation, now: Instant) -> bool {
         let Some(pending) = self.pending.as_ref() else {
             return false;
         };
@@ -184,8 +214,7 @@ impl PreviewSession {
             return "Timed out".into();
         }
         self.sample
-            .as_ref()
-            .map_or_else(|| "Unavailable".into(), format_synthetic_rpm)
+            .map_or_else(|| "Unavailable".into(), Observation::text)
     }
 }
 
@@ -195,19 +224,12 @@ impl Drop for PreviewSession {
     }
 }
 
-pub(crate) fn format_synthetic_rpm(sample: &Scalar) -> String {
-    if sample.unit != Unit::RPM || !sample.value.is_finite() || sample.value < 0.0 {
-        return "Unavailable".into();
-    }
-    format!("{} rpm (synthetic)", sample.value)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn rpm(value: f32) -> Scalar {
-        Scalar::new(value, Unit::RPM, None)
+    fn rpm(value: f32) -> Observation {
+        Observation::from_scalar(&Scalar::new(value, Unit::RPM, None))
     }
 
     #[test]
@@ -277,8 +299,8 @@ mod tests {
         assert!(!session.cancel(first));
         let second = session.request(now).expect("second");
         assert!(!session.complete(first, rpm(5000.0), now));
-        assert!(session.complete(second, Scalar::no_data(), now));
-        assert_eq!(session.rpm_text(), "Unavailable");
+        assert!(session.complete(second, Observation::NoData, now));
+        assert_eq!(session.rpm_text(), "No data");
     }
 
     #[test]
@@ -399,5 +421,21 @@ mod tests {
         assert!(permit.is_live(now));
         drop(session);
         assert!(!duplicate.is_live(now));
+    }
+
+    #[test]
+    fn typed_failure_cannot_replace_newer_observation() {
+        let now = Instant::now();
+        let mut session = PreviewSession::default();
+        assert!(session.start());
+        let old = session.request(now).expect("old");
+        assert!(session.complete(old, Observation::SourceFailure, now));
+        assert_eq!(session.rpm_text(), "Source read failed");
+        let current = session.request(now).expect("current");
+        assert_eq!(session.rpm_text(), "Unavailable");
+        assert!(!session.complete(old, Observation::Invalid, now));
+        assert!(session.complete(current, rpm(0.0), now));
+        assert!(!session.complete(old, Observation::SourceFailure, now));
+        assert_eq!(session.rpm_text(), "0 rpm (synthetic)");
     }
 }

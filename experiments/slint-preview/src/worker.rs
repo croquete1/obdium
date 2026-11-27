@@ -1,4 +1,4 @@
-use crate::session::{Permit, Ticket};
+use crate::session::{Observation, Permit, Ticket};
 use obdium::scalar::{Scalar, Unit};
 use std::io;
 use std::sync::mpsc::{self, Receiver, SyncSender, TryRecvError, TrySendError};
@@ -7,7 +7,7 @@ use std::time::Instant;
 
 pub(crate) struct Completion {
     pub(crate) ticket: Ticket,
-    pub(crate) sample: Scalar,
+    pub(crate) sample: Observation,
 }
 
 /// One worker, one queued command and one queued completion.
@@ -64,19 +64,26 @@ impl DemoWorker {
 /// Read-only observation boundary, owned by the worker thread.
 /// Production transport is deliberately not implemented here.
 trait ObservationSource {
-    fn read_engine_speed(&mut self) -> Scalar;
+    fn read_engine_speed(&mut self) -> io::Result<Scalar>;
 }
 
 struct SyntheticSource;
 
 impl ObservationSource for SyntheticSource {
-    fn read_engine_speed(&mut self) -> Scalar {
-        Scalar::new(1726.0, Unit::RPM, None)
+    fn read_engine_speed(&mut self) -> io::Result<Scalar> {
+        Ok(Scalar::new(1726.0, Unit::RPM, None))
     }
 }
 
-fn observe(source: &mut impl ObservationSource, permit: &Permit, now: Instant) -> Option<Scalar> {
-    permit.claim(now).then(|| source.read_engine_speed())
+fn observe(
+    source: &mut impl ObservationSource,
+    permit: &Permit,
+    now: Instant,
+) -> Option<Observation> {
+    permit.claim(now).then(|| match source.read_engine_speed() {
+        Ok(sample) => Observation::from_scalar(&sample),
+        Err(_) => Observation::SourceFailure,
+    })
 }
 
 #[cfg(test)]
@@ -98,8 +105,7 @@ mod tests {
             .recv_timeout(Duration::from_secs(10))
             .expect("reply");
         assert_eq!(reply.ticket, ticket);
-        assert_eq!(reply.sample.unit, Unit::RPM);
-        assert_eq!(reply.sample.value, 1726.0);
+        assert_eq!(reply.sample, Observation::Rpm(1726.0));
         drop(worker);
         thread.join().expect("shutdown");
     }
@@ -173,9 +179,9 @@ mod tests {
         }
 
         impl ObservationSource for MissingSource {
-            fn read_engine_speed(&mut self) -> Scalar {
+            fn read_engine_speed(&mut self) -> io::Result<Scalar> {
                 self.reads += 1;
-                Scalar::no_data()
+                Ok(Scalar::no_data())
             }
         }
 
@@ -187,8 +193,31 @@ mod tests {
         let mut source = MissingSource::default();
         let sample = observe(&mut source, &permit, now).expect("observation");
         assert!(session.complete(ticket, sample, now));
-        assert_eq!(session.rpm_text(), "Unavailable");
+        assert_eq!(session.rpm_text(), "No data");
         assert!(observe(&mut source, &permit, now).is_none());
         assert_eq!(source.reads, 1);
+    }
+
+    #[test]
+    fn source_error_is_delivered_once_without_inventing_measurement() {
+        struct FailedSource;
+
+        impl ObservationSource for FailedSource {
+            fn read_engine_speed(&mut self) -> io::Result<Scalar> {
+                Err(io::Error::other("synthetic failure"))
+            }
+        }
+
+        let now = Instant::now();
+        let mut session = PreviewSession::default();
+        assert!(session.start());
+        let ticket = session.request(now).expect("ticket");
+        let permit = session.permit(ticket).expect("permit");
+        let mut source = FailedSource;
+        let outcome = observe(&mut source, &permit, now).expect("outcome");
+        assert_eq!(outcome, Observation::SourceFailure);
+        assert!(session.complete(ticket, outcome, now));
+        assert_eq!(session.rpm_text(), "Source read failed");
+        assert!(observe(&mut source, &permit, now).is_none());
     }
 }
