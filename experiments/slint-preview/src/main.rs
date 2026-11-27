@@ -8,7 +8,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::mpsc::{TryRecvError, TrySendError};
 use std::time::{Duration, Instant};
-use worker::DemoWorker;
+use worker::{Completion, DemoWorker};
 
 slint::include_modules!();
 
@@ -23,6 +23,13 @@ fn core_status(core: &OBD) -> &'static str {
 fn render_session(ui: &PreviewWindow, state: &PreviewSession) {
     ui.set_demo_active(state.is_active());
     ui.set_rpm_text(state.rpm_text().into());
+}
+
+// Expire first so that a rejected late reply still triggers a UI refresh.
+fn accept_completion(state: &mut PreviewSession, reply: Completion, now: Instant) -> bool {
+    let expired = state.expire(now);
+    let accepted = state.complete(reply.ticket, reply.sample, now);
+    expired || accepted
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -79,12 +86,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             return;
         };
         let mut state = timer_state.borrow_mut();
-        let now = Instant::now();
-        let mut changed = state.expire(now);
+        let mut changed = state.expire(Instant::now());
         if let Some(worker) = timer_worker.borrow().as_ref() {
             match worker.receive() {
                 Ok(reply) => {
-                    changed |= state.complete(reply.ticket, reply.sample, now);
+                    changed |= accept_completion(&mut state, reply, Instant::now());
                 }
                 Err(TryRecvError::Disconnected) if state.is_active() => {
                     state.stop();
@@ -139,5 +145,33 @@ mod core_boundary_tests {
         ] {
             assert_eq!(Observation::from_scalar(&sample), Observation::Invalid);
         }
+    }
+
+    #[test]
+    fn late_completion_updates_timeout_without_publishing_sample() {
+        let now = Instant::now();
+        let mut state = PreviewSession::default();
+        assert!(state.start());
+        let ticket = state.request(now).expect("ticket");
+        let reply = Completion {
+            ticket,
+            sample: Observation::Rpm(1726.0),
+        };
+        assert!(accept_completion(
+            &mut state,
+            reply,
+            now + Duration::from_secs(2)
+        ));
+        assert_eq!(state.rpm_text(), "Timed out");
+        let duplicate = Completion {
+            ticket,
+            sample: Observation::Rpm(0.0),
+        };
+        assert!(!accept_completion(
+            &mut state,
+            duplicate,
+            now + Duration::from_secs(2)
+        ));
+        assert_eq!(state.rpm_text(), "Timed out");
     }
 }

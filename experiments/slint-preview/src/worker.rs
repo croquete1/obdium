@@ -26,7 +26,7 @@ impl DemoWorker {
             .spawn(move || {
                 let mut source = SyntheticSource;
                 while let Ok(permit) = requests.recv() {
-                    let Some(sample) = observe(&mut source, &permit, Instant::now()) else {
+                    let Some(sample) = observe(&mut source, &permit, Instant::now) else {
                         continue;
                     };
                     if !permit.is_live(Instant::now()) {
@@ -79,9 +79,9 @@ impl ObservationSource for SyntheticSource {
 fn observe(
     source: &mut impl ObservationSource,
     permit: &Permit,
-    now: Instant,
+    mut now: impl FnMut() -> Instant,
 ) -> Option<Observation> {
-    if !permit.claim(now) {
+    if !permit.claim(now()) {
         return None;
     }
     let outcome = match source.read_engine_speed(permit) {
@@ -97,9 +97,9 @@ fn observe(
             _ => Observation::SourceFailure,
         },
     };
-    // Check cooperative cancellation again after the source returns. The
-    // worker also checks a fresh clock immediately before publication.
-    permit.is_live(now).then_some(outcome)
+    // Sample the clock again after the source returns; its work may have
+    // consumed the remaining budget even if the initial claim succeeded.
+    permit.is_live(now()).then_some(outcome)
 }
 
 #[cfg(test)]
@@ -182,9 +182,9 @@ mod tests {
         let ticket = session.request(now).expect("ticket");
         let permit = session.permit(ticket).expect("permit");
         let mut source = SyntheticSource;
-        assert!(observe(&mut source, &permit, now + Duration::from_secs(2)).is_none());
+        assert!(observe(&mut source, &permit, || now + Duration::from_secs(2)).is_none());
         session.stop();
-        assert!(observe(&mut source, &permit, now).is_none());
+        assert!(observe(&mut source, &permit, || now).is_none());
     }
 
     #[test]
@@ -207,10 +207,10 @@ mod tests {
         let ticket = session.request(now).expect("ticket");
         let permit = session.permit(ticket).expect("permit");
         let mut source = MissingSource::default();
-        let sample = observe(&mut source, &permit, now).expect("observation");
+        let sample = observe(&mut source, &permit, || now).expect("observation");
         assert!(session.complete(ticket, sample, now));
         assert_eq!(session.rpm_text(), "No data");
-        assert!(observe(&mut source, &permit, now).is_none());
+        assert!(observe(&mut source, &permit, || now).is_none());
         assert_eq!(source.reads, 1);
     }
 
@@ -230,11 +230,11 @@ mod tests {
         let ticket = session.request(now).expect("ticket");
         let permit = session.permit(ticket).expect("permit");
         let mut source = FailedSource;
-        let outcome = observe(&mut source, &permit, now).expect("outcome");
+        let outcome = observe(&mut source, &permit, || now).expect("outcome");
         assert_eq!(outcome, Observation::SourceFailure);
         assert!(session.complete(ticket, outcome, now));
         assert_eq!(session.rpm_text(), "Source read failed");
-        assert!(observe(&mut source, &permit, now).is_none());
+        assert!(observe(&mut source, &permit, || now).is_none());
     }
 
     #[test]
@@ -264,10 +264,10 @@ mod tests {
             let ticket = session.request(now).expect("ticket");
             let permit = session.permit(ticket).expect("permit");
             let mut source = FailedSource(kind);
-            let outcome = observe(&mut source, &permit, now).expect("outcome");
+            let outcome = observe(&mut source, &permit, || now).expect("outcome");
             assert_eq!(outcome, expected);
             assert!(session.complete(ticket, outcome, now));
-            assert!(observe(&mut source, &permit, now).is_none());
+            assert!(observe(&mut source, &permit, || now).is_none());
         }
     }
 
@@ -288,8 +288,28 @@ mod tests {
         let ticket = session.request(now).expect("ticket");
         let permit = session.permit(ticket).expect("permit");
         let mut source = CancelledSource(&mut session);
-        assert!(observe(&mut source, &permit, now).is_none());
+        assert!(observe(&mut source, &permit, || now).is_none());
         assert!(!session.is_active());
         assert_eq!(session.rpm_text(), "Unavailable");
+    }
+
+    #[test]
+    fn observation_crossing_deadline_is_discarded_without_retry() {
+        let now = Instant::now();
+        let mut session = PreviewSession::default();
+        assert!(session.start());
+        let ticket = session.request(now).expect("ticket");
+        let permit = session.permit(ticket).expect("permit");
+        let deadline = now + Duration::from_secs(2);
+        let mut clock = [now, deadline].into_iter();
+        let mut source = SyntheticSource;
+        assert!(observe(&mut source, &permit, || {
+            clock.next().expect("clock sample")
+        })
+        .is_none());
+        assert!(clock.next().is_none());
+        assert!(observe(&mut source, &permit, || now).is_none());
+        assert!(session.expire(deadline));
+        assert_eq!(session.rpm_text(), "Timed out");
     }
 }
