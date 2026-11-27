@@ -498,6 +498,23 @@ fn dbc_comment_closed(body: &str) -> Result<bool, ReferenceError> {
     Ok(false)
 }
 
+// This line-oriented subset supports multiline strings only inside CM_.
+// Refuse an open quote in any other record before consuming subsequent lines.
+fn dbc_line_quotes_balanced(line: &str) -> bool {
+    let mut quoted = false;
+    let mut escaped = false;
+    for byte in line.bytes() {
+        if escaped {
+            escaped = false;
+        } else if quoted && byte == b'\\' {
+            escaped = true;
+        } else if byte == b'"' {
+            quoted = !quoted;
+        }
+    }
+    !quoted && !escaped
+}
+
 /// Validate one explicitly selected DBC message, including simple multiplexing.
 /// Multiple or nested multiplexers and extended multiplex metadata are rejected.
 /// The caller supplies the encoded DBC ID, including bit 31 for extended IDs.
@@ -586,6 +603,11 @@ pub fn parse_dbc_message(dbc: &str, message_id: u32) -> Result<DbcMessage, Refer
                 .ok_or_else(|| ReferenceError::Dbc("missing comment string".into()))?;
             in_comment = !dbc_comment_closed(body)?;
             continue;
+        }
+        if !dbc_line_quotes_balanced(line) {
+            return Err(ReferenceError::Dbc(
+                "unterminated or multiline non-comment string".into(),
+            ));
         }
         if keyword == Some("BO_") {
             seen_message = true;

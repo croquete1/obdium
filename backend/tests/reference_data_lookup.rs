@@ -452,3 +452,33 @@ fn dbc_comments_cannot_supply_missing_definitions() {
         Err(ReferenceError::Dbc(_))
     ));
 }
+
+#[test]
+fn dbc_rejects_multiline_non_comment_strings_before_decoding() {
+    let frame = "BO_ 123 Real: 1 ECU\n SG_ Value : 0|8@1+ (1,0) [0|255] \"\" ECU\n";
+    for prefix in [
+        "VERSION \"open\n",
+        "BA_ \"Name\" \"open\n",
+        "VAL_ 456 Other 0 \"open\n",
+        "BO_ 456 Other: 1 ECU\n SG_ Other : 0|8@1+ (1,0) [0|255] \"open\n",
+    ] {
+        let dbc = format!("{prefix}{frame}end\";\n");
+        assert!(matches!(
+            parse_dbc_message(&dbc, 123),
+            Err(ReferenceError::Dbc(_))
+        ));
+    }
+}
+
+#[test]
+fn dbc_accepts_balanced_non_comment_strings_with_escapes() {
+    let dbc = concat!(
+        "VERSION \"quoted \\\"value\\\"\"\n",
+        "BO_ 123 Real: 1 ECU\n",
+        " SG_ Value : 0|8@1+ (1,0) [0|255] \"\" ECU\n",
+        "VAL_ 123 Value 0 \"zero; \\\"quoted\\\"\" 1 \"one\";\n",
+        "BA_ \"Name\" \"backslash \\\\\";\n",
+    );
+    let sample = decode_dbc_signal(dbc, 123, "Value", &[0]).expect("balanced strings");
+    assert_eq!(sample.raw, 0);
+}

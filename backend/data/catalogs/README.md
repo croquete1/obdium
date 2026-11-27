@@ -46,3 +46,7 @@ The staged DBC reader distinguishes bare, known `NS_` declarations from actual e
 ### Quoted comment boundary
 
 The limited parser now skips `CM_` quoted comments spanning multiple lines, including semicolons and escaped quotes inside the text, before interpreting message, namespace and metadata keywords. Missing quotes/terminators, dangling escapes and trailing statements on the closing line fail closed. It intentionally requires the closing quote and semicolon on the same line and does not implement a general DBC lexer (multiline non-comment records remain unsupported and must not be assumed safe). Three synthetic regressions exercise spoofed definitions, real metadata after a comment, and malformed comments. No live activation or data import.
+
+### Non-comment quoted strings
+
+Outside recognized `CM_` comments, every line must have balanced double-quoted strings, respecting backslash escapes inside quotes. Unterminated and multiline non-comment strings now fail closed before apparent message/signal declarations can be interpreted as definitions. Balanced ordinary version, attribute, signal-unit and value-label strings remain acceptable to the existing limited reader; the strings' metadata semantics are not interpreted. This is a conservative line-boundary check, not a full DBC lexer or universal compatibility guarantee.
