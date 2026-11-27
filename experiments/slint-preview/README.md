@@ -25,3 +25,5 @@ Linux bootstrap [45976526678](https://github.com/croquete1/obdium/actions/runs/4
 ## Native three-platform baseline — 2026-11-27
 
 Commit `4337a5b` passed [Slint CI 45979089641](https://github.com/croquete1/obdium/actions/runs/45979089641): format and locked native matrix on Linux, Windows and macOS. Legacy CI 45979089490 and House Rules 45979089639 passed. All twelve then-open PR heads had successful CI evidence. F22.02 compilation evidence is complete for this baseline; actual UI launch, accessibility, dependency audit and independent review remain pending. F22.03 begins as a separate headless feasibility package at `../core-probe`, referencing actual library sources without editing shared protocol code. Its own candidate lock and CI remain pending. No merge or release.
+
+- Headless feasibility `744c9fe` passed CI 45981742440; Slint matrix 45981742312, legacy CI 45981742320 and House Rules 45981742438 passed. The core lock is now fixed and its independent three-OS CI configured. See `../core-probe/README.md`. Existing diagnostic sources remain unmodified. No production UI integration yet.

@@ -12,9 +12,51 @@ permissions:
   contents: read
 
 jobs:
-  core:
+  format:
+    name: Core probe / format
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: experiments/core-probe
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install pinned Rust toolchain
+        run: |
+          rustup toolchain install 1.100.0 --profile minimal --component rustfmt
+          rustup default 1.100.0
+      - name: Require committed lock
+        run: git ls-files --error-unmatch Cargo.lock
+      - name: Fast format check
+        id: fmt
+        run: cargo fmt --all -- --check
+      - name: Capture official format patch
+        if: failure() && steps.fmt.outcome == 'failure'
+        working-directory: .
+        shell: bash
+        run: |
+          cargo fmt --manifest-path experiments/core-probe/Cargo.toml --all
+          git diff --binary -- backend/src experiments/core-probe > "$RUNNER_TEMP/core-rustfmt.patch"
+          git restore --worktree -- backend/src experiments/core-probe
+      - name: Upload official format patch
+        if: failure() && steps.fmt.outcome == 'failure'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: core-rustfmt-patch
+          path: ${{ runner.temp }}/core-rustfmt.patch
+          if-no-files-found: error
+          retention-days: 7
+  core:
+    name: Core probe / ${{ matrix.os }}
+    needs: format
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-latest, macos-latest]
     defaults:
       run:
         working-directory: experiments/core-probe
@@ -26,30 +68,12 @@ jobs:
           persist-credentials: false
       - name: Install pinned Rust toolchain
         run: |
-          rustup toolchain install 1.100.0 --profile minimal --component rustfmt --component clippy
+          rustup toolchain install 1.100.0 --profile minimal --component clippy
           rustup default 1.100.0
-      - name: Fast format check
-        run: cargo fmt --all -- --check
-      - name: Resolve candidate lock
-        run: |
-          if [ ! -f Cargo.lock ]; then cargo generate-lockfile; fi
-          cargo metadata --locked --format-version 1 --no-deps
-      - name: Export candidate lock
-        shell: bash
-        run: |
-          if ! git ls-files --error-unmatch Cargo.lock >/dev/null 2>&1; then
-            sha256sum Cargo.lock
-            test "$(wc -c < Cargo.lock)" -le 524288
-            base64 -w 768 Cargo.lock | sed 's/^/CORE_LOCK_CANDIDATE:/'
-          fi
-      - name: Upload lock candidate
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
-        with:
-          name: core-probe-lock
-          path: experiments/core-probe/Cargo.lock
-          if-no-files-found: error
-          retention-days: 7
+      - name: Verify locked resolution
+        run: cargo metadata --locked --format-version 1 --no-deps
       - name: Install serial prerequisites only
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y libudev-dev pkg-config
@@ -58,7 +82,7 @@ jobs:
         run: |
           cargo tree --locked --prefix none --edges normal,build --format '{p}' > "$RUNNER_TEMP/core-tree.txt"
           cat "$RUNNER_TEMP/core-tree.txt"
-          if grep -E '^(tauri([ -]|$)|wry |webkit2gtk([ -]|$)|slint([ -]|$)|i-slint-)' "$RUNNER_TEMP/core-tree.txt"; then
+          if grep -E '^(tauri([ -]|$)|wry([ -]|$)|webkit2gtk([ -]|$)|slint([ -]|$)|i-slint-)' "$RUNNER_TEMP/core-tree.txt"; then
             echo 'GUI dependency in headless core'
             exit 1
           fi
@@ -69,4 +93,5 @@ jobs:
       - name: Release build (no publishing)
         run: cargo build --release --locked
       - name: Verify tracked manifests unchanged
-        run: git diff --exit-code -- Cargo.toml Cargo.lock
+        working-directory: .
+        run: git diff --exit-code -- backend/src experiments/core-probe
