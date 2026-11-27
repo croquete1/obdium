@@ -442,21 +442,50 @@ impl DbcSignal {
     }
 }
 
-/// Decode one explicitly selected integer signal, including simple multiplexing.
+/// A validated, reusable message definition. No vehicle or bus is opened.
+pub struct DbcMessage {
+    size: usize,
+    signals: BTreeMap<String, DbcSignal>,
+    selector: Option<(usize, u8, BitOrder)>,
+}
+
+impl DbcMessage {
+    /// Decode only an explicitly named signal from an exact-length payload.
+    pub fn decode(
+        &self,
+        signal_name: &str,
+        payload: &[u8],
+    ) -> Result<DecodedSignal, ReferenceError> {
+        if self.size != payload.len() {
+            return Err(ReferenceError::Truncated);
+        }
+        let definition = self
+            .signals
+            .get(signal_name)
+            .ok_or_else(|| ReferenceError::Dbc("signal not found".into()))?;
+        if let Multiplex::Branch(value) = definition.multiplex {
+            let (start, width, order) = self
+                .selector
+                .ok_or_else(|| ReferenceError::Dbc("missing multiplexer".into()))?;
+            let raw = decode_signal(payload, start, width, order, false, 1.0, 0.0)?.raw;
+            if raw != i128::from(value) {
+                return Err(ReferenceError::InactiveSignal);
+            }
+        }
+        definition.decode(payload)
+    }
+}
+
+/// Validate one explicitly selected DBC message, including simple multiplexing.
 /// Multiple or nested multiplexers and extended multiplex metadata are rejected.
 /// The caller supplies the encoded DBC ID, including bit 31 for extended IDs.
 /// This is a strict subset, not a general DBC importer or vehicle capability check.
 /// Metadata such as value labels, checksum rules and range constraints is not interpreted.
-pub fn decode_dbc_signal(
-    dbc: &str,
-    message_id: u32,
-    signal_name: &str,
-    payload: &[u8],
-) -> Result<DecodedSignal, ReferenceError> {
+pub fn parse_dbc_message(dbc: &str, message_id: u32) -> Result<DbcMessage, ReferenceError> {
     if dbc.len() > MAX_CATALOG_BYTES {
         return Err(ReferenceError::TooLarge);
     }
-    if !valid_dbc_id(message_id) || signal_name.is_empty() || signal_name.len() > 128 {
+    if !valid_dbc_id(message_id) {
         return Err(ReferenceError::Layout);
     }
     let message = regex::Regex::new(r"^BO_\s+([0-9]+)\s+\S+\s*:\s*([0-9]+)\s+\S+\s*$")
@@ -467,8 +496,7 @@ pub fn decode_dbc_signal(
     .map_err(|error| ReferenceError::Dbc(error.to_string()))?;
     let mut selected = false;
     let mut length = None;
-    let mut definition = None;
-    let mut names = BTreeSet::new();
+    let mut signals = BTreeMap::new();
     let mut selector = None;
     let mut branches = Vec::new();
     let mut occupancy = SignalOccupancy::default();
@@ -496,7 +524,10 @@ pub fn decode_dbc_signal(
                 ReferenceError::Dbc("unsupported signal syntax or multiplexing".into())
             })?;
             let name = fields[1].to_owned();
-            if !names.insert(name.clone()) {
+            if name.len() > 128 || signals.len() >= 4096 {
+                return Err(ReferenceError::Layout);
+            }
+            if signals.contains_key(&name) {
                 return Err(ReferenceError::Dbc("duplicate signal".into()));
             }
             let multiplex = match fields.get(2).map(|value| value.as_str()) {
@@ -536,9 +567,7 @@ pub fn decode_dbc_signal(
             if let Multiplex::Branch(value) = multiplex {
                 branches.push(value);
             }
-            if name == signal_name {
-                definition = Some(signal);
-            }
+            signals.insert(name, signal);
         } else if matches!(keyword, Some("SIG_VALTYPE_" | "SG_MUL_VAL_")) {
             let id = line
                 .split_whitespace()
@@ -551,28 +580,32 @@ pub fn decode_dbc_signal(
         }
     }
     let size = length.ok_or_else(|| ReferenceError::Dbc("message not found".into()))?;
-    if size != payload.len() {
-        return Err(ReferenceError::Truncated);
-    }
-    let definition = definition.ok_or_else(|| ReferenceError::Dbc("signal not found".into()))?;
-    let selector_value = if let Some((start, width, order)) = selector {
+    if let Some((_, width, _)) = selector {
         if branches
             .iter()
             .any(|value| u64::BITS - value.leading_zeros() > u32::from(width))
         {
             return Err(ReferenceError::Dbc("branch outside selector range".into()));
         }
-        Some(decode_signal(payload, start, width, order, false, 1.0, 0.0)?.raw)
-    } else {
-        if !branches.is_empty() {
-            return Err(ReferenceError::Dbc("missing multiplexer".into()));
-        }
-        None
-    };
-    if let Multiplex::Branch(value) = definition.multiplex {
-        if selector_value != Some(i128::from(value)) {
-            return Err(ReferenceError::InactiveSignal);
-        }
+    } else if !branches.is_empty() {
+        return Err(ReferenceError::Dbc("missing multiplexer".into()));
     }
-    definition.decode(payload)
+    Ok(DbcMessage {
+        size,
+        signals,
+        selector,
+    })
+}
+
+/// Convenience wrapper for a single offline observation.
+pub fn decode_dbc_signal(
+    dbc: &str,
+    message_id: u32,
+    signal_name: &str,
+    payload: &[u8],
+) -> Result<DecodedSignal, ReferenceError> {
+    if signal_name.is_empty() || signal_name.len() > 128 {
+        return Err(ReferenceError::Layout);
+    }
+    parse_dbc_message(dbc, message_id)?.decode(signal_name, payload)
 }

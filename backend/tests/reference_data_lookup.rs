@@ -5,6 +5,7 @@ use reference_data::{
     decode_dbc_signal, decode_signal, translation_preview, BitOrder, ReferenceCatalogs,
     ReferenceError,
 };
+use reference_data::parse_dbc_message;
 
 #[test]
 fn bundled_catalogs_return_known_and_unknown_reference_values() {
@@ -319,5 +320,49 @@ fn dbc_bit_ownership_handles_cross_byte_and_64_byte_boundaries() {
     assert!(matches!(
         decode_dbc_signal(&outside, 123, "Last", &payload),
         Err(ReferenceError::Truncated)
+    ));
+}
+
+#[test]
+fn parsed_dbc_message_reuses_definition_without_reusing_observations() {
+    let dbc = concat!(
+        "BO_ 123 Example: 2 ECU\n",
+        " SG_ Selector M : 0|2@1+ (1,0) [0|3] \"\" ECU\n",
+        " SG_ First m1 : 8|8@1+ (1,0) [0|255] \"\" ECU\n",
+        " SG_ Second m2 : 8|8@1+ (2,0) [0|510] \"\" ECU\n",
+    );
+    let message = parse_dbc_message(dbc, 123).expect("valid definition");
+    assert_eq!(message.decode("First", &[1, 7]).expect("first").raw, 7);
+    assert_eq!(message.decode("First", &[1, 0]).expect("zero").raw, 0);
+    assert!(matches!(
+        message.decode("First", &[2, 8]),
+        Err(ReferenceError::InactiveSignal)
+    ));
+    assert_eq!(message.decode("Second", &[2, 8]).expect("second").scaled, 16.0);
+    assert!(matches!(
+        message.decode("Second", &[2]),
+        Err(ReferenceError::Truncated)
+    ));
+    assert!(message.decode("Unknown", &[2, 8]).is_err());
+}
+
+#[test]
+fn parsed_dbc_message_rejects_invalid_unobserved_definitions() {
+    let dbc = concat!(
+        "BO_ 123 Example: 1 ECU\n",
+        " SG_ First : 0|8@1+ (1,0) [0|255] \"\" ECU\n",
+        " SG_ Other : 7|1@1+ (1,0) [0|1] \"\" ECU\n",
+    );
+    assert!(matches!(
+        parse_dbc_message(dbc, 123),
+        Err(ReferenceError::SignalOverlap)
+    ));
+    let long_name = "X".repeat(129);
+    let oversized = format!(
+        "BO_ 123 Example: 1 ECU\n SG_ {long_name} : 0|8@1+ (1,0) [0|255] \"\" ECU"
+    );
+    assert!(matches!(
+        parse_dbc_message(&oversized, 123),
+        Err(ReferenceError::Layout)
     ));
 }
