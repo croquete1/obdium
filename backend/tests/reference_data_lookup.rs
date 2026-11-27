@@ -167,3 +167,47 @@ fn dbc_preview_rejects_ambiguous_and_unsupported_layouts() {
     }
     assert!(decode_dbc_signal(&valid, 0x8000_007b, "Value", &[0x34, 0x12]).is_err());
 }
+
+#[test]
+fn dbc_preview_preserves_standard_and_extended_identity() {
+    let dbc = concat!(
+        "BO_ 123 Standard: 1 ECU\n",
+        " SG_ Value : 0|8@1+ (1,0) [0|255] \"\" ECU\n",
+        "BO_ 2147483771 Extended: 1 ECU\n",
+        " SG_ Value : 0|8@1+ (2,0) [0|510] \"\" ECU\n",
+        "BO_ 2684354559 MaxExtended: 1 ECU\n",
+        " SG_ Value : 0|8@1+ (3,0) [0|765] \"\" ECU\n",
+    );
+    let standard = decode_dbc_signal(dbc, 123, "Value", &[10]).expect("standard");
+    let extended = decode_dbc_signal(dbc, 0x8000_007b, "Value", &[10]).expect("extended");
+    let maximum = decode_dbc_signal(dbc, 0x9fff_ffff, "Value", &[10]).expect("maximum");
+    assert_eq!(standard.scaled, 10.0);
+    assert_eq!(extended.scaled, 20.0);
+    assert_eq!(maximum.scaled, 30.0);
+    for invalid in [0x800, 0x1fff_ffff, 0xa000_007b, 0xc000_007b, u32::MAX] {
+        assert!(matches!(
+            decode_dbc_signal(dbc, invalid, "Value", &[10]),
+            Err(ReferenceError::Layout)
+        ));
+    }
+}
+
+#[test]
+fn dbc_preview_rejects_tab_separated_extended_metadata() {
+    let dbc = concat!(
+        "BO_ 2147483771 Extended: 1 ECU\n",
+        " SG_ Value : 0|8@1+ (1,0) [0|255] \"\" ECU\n",
+    );
+    for metadata in [
+        "SIG_VALTYPE_\t2147483771 Value : 1;",
+        "SG_MUL_VAL_\t2147483771 Value Switch 1-2;",
+    ] {
+        let input = format!("{dbc}{metadata}");
+        assert!(matches!(
+            decode_dbc_signal(&input, 0x8000_007b, "Value", &[10]),
+            Err(ReferenceError::Dbc(_))
+        ));
+    }
+    let unrelated = format!("{dbc}SIG_VALTYPE_\t123 Value : 1;");
+    assert!(decode_dbc_signal(&unrelated, 0x8000_007b, "Value", &[10]).is_ok());
+}

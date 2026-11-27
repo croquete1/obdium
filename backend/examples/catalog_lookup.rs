@@ -82,7 +82,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             )?)?;
         }
         _ => {
-            return Err("usage: catalog_lookup obd|dtc|nrc KEY; translate LOCALE KEY; dbc PATH DECIMAL_ID SIGNAL HEX; or decode HEX START WIDTH intel|motorola signed|unsigned FACTOR OFFSET".into());
+            return Err("usage: catalog_lookup obd|dtc|nrc KEY; translate LOCALE KEY; dbc PATH DECIMAL_DBC_ID SIGNAL HEX; or decode HEX START WIDTH intel|motorola signed|unsigned FACTOR OFFSET".into());
         }
     }
     Ok(())

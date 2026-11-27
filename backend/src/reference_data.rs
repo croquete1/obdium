@@ -334,7 +334,14 @@ pub fn translation_preview(
     }))
 }
 
+/// DBC wire identity: standard 11-bit IDs are unflagged; extended 29-bit
+/// IDs carry bit 31. Bits 29 and 30 are reserved, not part of the CAN ID.
+fn valid_dbc_id(id: u32) -> bool {
+    id <= 0x7ff || (id & 0xe000_0000) == 0x8000_0000
+}
+
 /// Decode one explicitly selected, non-multiplexed integer signal from a DBC.
+/// The caller supplies the encoded DBC ID, including bit 31 for extended IDs.
 /// This is a strict subset, not a general DBC importer or vehicle capability check.
 /// Metadata such as value labels, checksum rules and range constraints is not interpreted.
 pub fn decode_dbc_signal(
@@ -346,9 +353,7 @@ pub fn decode_dbc_signal(
     if dbc.len() > MAX_CATALOG_BYTES {
         return Err(ReferenceError::TooLarge);
     }
-    // DBC uses bit 31 to distinguish extended identifiers. This preview
-    // deliberately accepts only standard identifiers, avoiding aliasing.
-    if message_id > 0x7ff || signal_name.is_empty() || signal_name.len() > 128 {
+    if !valid_dbc_id(message_id) || signal_name.is_empty() || signal_name.len() > 128 {
         return Err(ReferenceError::Layout);
     }
     let message = regex::Regex::new(r"^BO_\s+([0-9]+)\s+\S+\s*:\s*([0-9]+)\s+\S+\s*$")
@@ -362,7 +367,8 @@ pub fn decode_dbc_signal(
     let mut definition = None;
     let mut names = BTreeSet::new();
     for line in dbc.lines().map(str::trim) {
-        if line.starts_with("BO_ ") || line.starts_with("BO_\t") {
+        let keyword = line.split_whitespace().next();
+        if keyword == Some("BO_") {
             let fields = message
                 .captures(line)
                 .ok_or_else(|| ReferenceError::Dbc("invalid message header".into()))?;
@@ -379,7 +385,7 @@ pub fn decode_dbc_signal(
                 }
                 length = Some(size);
             }
-        } else if selected && (line.starts_with("SG_ ") || line.starts_with("SG_\t")) {
+        } else if selected && keyword == Some("SG_") {
             let fields = signal.captures(line).ok_or_else(|| {
                 ReferenceError::Dbc("unsupported signal syntax or multiplexing".into())
             })?;
@@ -410,7 +416,7 @@ pub fn decode_dbc_signal(
                     .map_err(|_| ReferenceError::Scaling)?;
                 definition = Some((start, width, order, signed, factor, offset));
             }
-        } else if line.starts_with("SIG_VALTYPE_ ") || line.starts_with("SG_MUL_VAL_ ") {
+        } else if matches!(keyword, Some("SIG_VALTYPE_" | "SG_MUL_VAL_")) {
             let id = line
                 .split_whitespace()
                 .nth(1)

@@ -22,3 +22,7 @@ From backend: `cargo run --locked --example catalog_lookup -- obd 010C`, `cargo 
 ### Limited DBC preview
 
 `cargo run --locked --example catalog_lookup -- dbc data/catalogs/fixtures/dbc/opendbc-test.dbc 316 COUNTER 000F000000000000` reads a synthetic fixture, selects a decimal standard CAN identifier and exact signal name, validates frame length, and decodes a simple integer signal. Rejects duplicate target messages/signals, multiplexing and extended signal metadata for the selected message; extended IDs are not supported. Bounds file read at 2 MiB. No transmit, automatic vehicle selection, value labels, checksum/counter validation, full DBC parsing or hardware compatibility claims.
+
+### Extended CAN identifiers
+
+The offline DBC selector accepts decimal DBC IDs: standard 0–2047, or extended 29-bit IDs encoded with bit 31 set (0x80000000–0x9fffffff). Reserved bits and unflagged values above 2047 are rejected; no automatic conversion or inference. Standard and extended frames with the same lower bits remain distinct. This is not a transport change. Multiplexed and floating-point definitions remain unsupported; metadata keywords separated by tabs are recognized and rejected for the selected frame.
