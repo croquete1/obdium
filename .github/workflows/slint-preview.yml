@@ -34,18 +34,23 @@ jobs:
         id: fmt
         run: cargo fmt --all -- --check
       - name: Capture formatting patch
+        id: capture
         if: failure() && steps.fmt.outcome == 'failure'
+        working-directory: .
+        shell: bash
         run: |
-          cargo fmt --all
-          git diff --binary -- . > "$RUNNER_TEMP/slint-rustfmt.patch"
-          git restore --worktree -- .
+          cargo fmt --manifest-path experiments/slint-preview/Cargo.toml --all
+          git diff --binary -- backend/src experiments/core-probe experiments/slint-preview > "$RUNNER_TEMP/slint-rustfmt.patch"
+          git restore --worktree -- backend/src experiments/core-probe experiments/slint-preview
+          test -s "$RUNNER_TEMP/slint-rustfmt.patch"
+          git apply --check "$RUNNER_TEMP/slint-rustfmt.patch"
       - name: Upload formatting patch
-        if: failure() && steps.fmt.outcome == 'failure'
+        if: failure() && steps.fmt.outcome == 'failure' && steps.capture.outcome == 'success'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: slint-rustfmt-patch
           path: ${{ runner.temp }}/slint-rustfmt.patch
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 7
   native:
     name: Slint preview / ${{ matrix.os }}
