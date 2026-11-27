@@ -4,6 +4,8 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(2);
+// Standard OBD-II Mode 01 PID 0C: unsigned 16-bit value divided by four.
+const MAX_STANDARD_RPM: f32 = u16::MAX as f32 / 4.0;
 
 /// A ticket belongs to one demo session and one request within that session.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -71,7 +73,7 @@ impl Observation {
     pub(crate) fn from_scalar(sample: &Scalar) -> Self {
         if sample.unit == Unit::NoData {
             Self::NoData
-        } else if sample.unit != Unit::RPM || !sample.value.is_finite() || sample.value < 0.0 {
+        } else if sample.unit != Unit::RPM || !(0.0..=MAX_STANDARD_RPM).contains(&sample.value) {
             Self::Invalid
         } else {
             Self::Rpm(sample.value)

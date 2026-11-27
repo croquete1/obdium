@@ -417,4 +417,40 @@ mod tests {
         assert!(observe(&mut source, &permit, || clock.get()).is_none());
         assert_eq!(source.budgets, [Duration::from_millis(500)]);
     }
+
+    #[test]
+    fn standard_rpm_source_rejects_values_outside_pid_range() {
+        struct RpmSource(f32);
+
+        impl ObservationSource for RpmSource {
+            fn read_engine_speed(
+                &mut self,
+                _permit: &Permit,
+                _budget: Duration,
+            ) -> io::Result<Scalar> {
+                Ok(Scalar::new(self.0, Unit::RPM, None))
+            }
+        }
+
+        let now = Instant::now();
+        let mut session = PreviewSession::default();
+        assert!(session.start());
+        for (value, expected) in [
+            (0.0, Observation::Rpm(0.0)),
+            (16383.75, Observation::Rpm(16383.75)),
+            (16384.0, Observation::Invalid),
+            (f32::MAX, Observation::Invalid),
+            (-0.25, Observation::Invalid),
+            (f32::NAN, Observation::Invalid),
+            (f32::INFINITY, Observation::Invalid),
+        ] {
+            let ticket = session.request(now).expect("ticket");
+            let permit = session.permit(ticket).expect("permit");
+            let mut source = RpmSource(value);
+            let sample = observe(&mut source, &permit, || now).expect("observation");
+            assert_eq!(sample, expected);
+            assert!(session.complete(ticket, sample, now));
+            assert_eq!(session.rpm_text(), expected.text());
+        }
+    }
 }
