@@ -3,14 +3,16 @@ import { Button, VerticalBox } from "std-widgets.slint";
 export component PreviewWindow inherits Window {
     title: "OBDium | Slint preview";
     preferred-width: 720px;
-    preferred-height: 420px;
+    preferred-height: 480px;
     min-width: 360px;
-    min-height: 340px;
+    min-height: 420px;
     in property <bool> demo-active: false;
     in property <bool> demo-available: false;
+    in property <bool> sample-available: false;
     in property <string> rpm-text: "Unavailable";
     in property <string> core-status: "Core: not initialized";
     callback toggle-demo();
+    callback request-sample();
 
     VerticalBox {
         padding: 24px;
@@ -44,6 +46,11 @@ export component PreviewWindow inherits Window {
             text: root.demo-active ? "End synthetic demo" : "Start synthetic demo";
             enabled: root.demo-available;
             clicked => { root.toggle-demo(); }
+        }
+        Button {
+            text: "Read synthetic sample again";
+            enabled: root.demo-available && root.sample-available;
+            clicked => { root.request-sample(); }
         }
         Text {
             text: "Offline preview only. No adapter access, ECU commands or database writes.";

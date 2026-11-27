@@ -2,7 +2,7 @@ mod session;
 mod worker;
 
 use obdium::OBD;
-use session::PreviewSession;
+use session::{Permit, PreviewSession};
 use slint::{ComponentHandle, Timer, TimerMode};
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -22,6 +22,7 @@ fn core_status(core: &OBD) -> &'static str {
 
 fn render_session(ui: &PreviewWindow, state: &PreviewSession) {
     ui.set_demo_active(state.is_active());
+    ui.set_sample_available(state.can_request());
     ui.set_rpm_text(state.rpm_text().into());
 }
 
@@ -61,6 +62,65 @@ fn handle_worker_event(
     }
 }
 
+#[derive(Debug, PartialEq, Eq)]
+enum Dispatch {
+    Submitted,
+    NotReady,
+    Busy,
+    Disconnected,
+    RequestFailed,
+}
+
+fn dispatch_sample(
+    state: &mut PreviewSession,
+    now: Instant,
+    submit: impl FnOnce(Permit) -> Result<(), TrySendError<Permit>>,
+) -> Dispatch {
+    if !state.can_request() {
+        return Dispatch::NotReady;
+    }
+    let Some(permit) = state.request(now).and_then(|ticket| state.permit(ticket)) else {
+        state.stop();
+        return Dispatch::RequestFailed;
+    };
+    let ticket = permit.ticket();
+    match submit(permit) {
+        Ok(()) => Dispatch::Submitted,
+        Err(TrySendError::Full(_)) => {
+            state.cancel(ticket);
+            Dispatch::Busy
+        }
+        Err(TrySendError::Disconnected(_)) => {
+            state.stop();
+            Dispatch::Disconnected
+        }
+    }
+}
+
+fn request_demo_sample(
+    ui: &PreviewWindow,
+    state: &mut PreviewSession,
+    worker_slot: &mut Option<DemoWorker>,
+) {
+    let Some(worker) = worker_slot.as_ref() else {
+        state.stop();
+        ui.set_demo_available(false);
+        ui.set_core_status("Demo worker unavailable".into());
+        return;
+    };
+    match dispatch_sample(state, Instant::now(), |permit| worker.submit(permit)) {
+        Dispatch::Submitted => ui.set_core_status("Core: initialized, disconnected".into()),
+        Dispatch::NotReady => {}
+        Dispatch::Busy => ui.set_core_status("Demo worker busy; request again".into()),
+        Dispatch::Disconnected => {
+            worker_slot.take();
+            ui.set_demo_available(false);
+            ui.set_core_status("Demo worker unavailable".into());
+        }
+        Dispatch::RequestFailed => ui.set_core_status("Could not start sample request".into()),
+    }
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let ui = PreviewWindow::new()?;
     let core = OBD::new();
@@ -82,30 +142,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let mut worker_slot = callback_worker.borrow_mut();
             if state.is_active() {
                 state.stop();
-            } else if let Some(worker) = worker_slot.as_ref() {
+            } else if worker_slot.is_some() {
                 if state.start() {
-                    if let Some(permit) = state
-                        .request(Instant::now())
-                        .and_then(|ticket| state.permit(ticket))
-                    {
-                        match worker.submit(permit) {
-                            Ok(()) => {
-                                ui.set_core_status("Core: initialized, disconnected".into());
-                            }
-                            Err(TrySendError::Full(_)) => {
-                                state.stop();
-                                ui.set_core_status("Demo worker busy; try again".into());
-                            }
-                            Err(TrySendError::Disconnected(_)) => {
-                                state.stop();
-                                worker_slot.take();
-                                ui.set_demo_available(false);
-                                ui.set_core_status("Demo worker unavailable".into());
-                            }
-                        }
-                    }
+                    request_demo_sample(&ui, &mut state, &mut worker_slot);
+                } else {
+                    ui.set_core_status("Could not start demo session".into());
                 }
             }
+            render_session(&ui, &state);
+        }
+    });
+
+    let weak = ui.as_weak();
+    let callback_state = Rc::clone(&state);
+    let callback_worker = Rc::clone(&worker);
+    ui.on_request_sample(move || {
+        if let Some(ui) = weak.upgrade() {
+            let mut state = callback_state.borrow_mut();
+            request_demo_sample(&ui, &mut state, &mut callback_worker.borrow_mut());
             render_session(&ui, &state);
         }
     });
@@ -257,6 +311,85 @@ mod core_boundary_tests {
             ),
             WorkerEvent::Unchanged
         );
+    }
+
+    #[test]
+    fn manual_dispatch_is_single_flight_and_clears_previous_sample() {
+        let now = Instant::now();
+        let mut state = PreviewSession::default();
+        assert_eq!(
+            dispatch_sample(&mut state, now, |_| panic!("inactive session")),
+            Dispatch::NotReady
+        );
+        assert!(state.start());
+        let mut first = None;
+        assert_eq!(
+            dispatch_sample(&mut state, now, |permit| {
+                first = Some(permit);
+                Ok(())
+            }),
+            Dispatch::Submitted
+        );
+        let first = first.expect("first permit");
+        assert!(!state.can_request());
+        assert_eq!(
+            dispatch_sample(&mut state, now, |_| panic!("duplicate request")),
+            Dispatch::NotReady
+        );
+        assert!(state.complete(first.ticket(), Observation::Rpm(1726.0), now));
+        assert!(state.can_request());
+        assert_eq!(state.rpm_text(), "1726 rpm (synthetic)");
+        assert_eq!(
+            dispatch_sample(&mut state, now, |permit| {
+                assert_ne!(permit.ticket(), first.ticket());
+                Ok(())
+            }),
+            Dispatch::Submitted
+        );
+        assert_eq!(state.rpm_text(), "Waiting for sample");
+        assert!(!state.complete(first.ticket(), Observation::Rpm(0.0), now));
+    }
+
+    #[test]
+    fn full_queue_cancels_only_current_request_and_allows_manual_retry() {
+        let now = Instant::now();
+        let mut state = PreviewSession::default();
+        assert!(state.start());
+        let mut rejected = None;
+        assert_eq!(
+            dispatch_sample(&mut state, now, |permit| {
+                rejected = Some(permit.clone());
+                Err(TrySendError::Full(permit))
+            }),
+            Dispatch::Busy
+        );
+        assert!(state.is_active());
+        assert!(state.can_request());
+        assert_eq!(state.rpm_text(), "Unavailable");
+        assert!(!rejected.expect("rejected permit").is_live(now));
+        assert_eq!(
+            dispatch_sample(&mut state, now, |_| Ok(())),
+            Dispatch::Submitted
+        );
+    }
+
+    #[test]
+    fn disconnected_dispatch_revokes_permit_and_stops_session() {
+        let now = Instant::now();
+        let mut state = PreviewSession::default();
+        assert!(state.start());
+        let mut rejected = None;
+        assert_eq!(
+            dispatch_sample(&mut state, now, |permit| {
+                rejected = Some(permit.clone());
+                Err(TrySendError::Disconnected(permit))
+            }),
+            Dispatch::Disconnected
+        );
+        assert!(!state.is_active());
+        assert!(!state.can_request());
+        assert!(!rejected.expect("rejected permit").is_live(now));
+        assert_eq!(state.rpm_text(), "Unavailable");
     }
 
     #[test]

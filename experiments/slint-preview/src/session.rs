@@ -129,6 +129,10 @@ impl PreviewSession {
         self.active
     }
 
+    pub(crate) fn can_request(&self) -> bool {
+        self.active && self.pending.is_none()
+    }
+
     /// At most one request may be outstanding. Clear the old observation
     /// before asking for a new one.
     pub(crate) fn request(&mut self, now: Instant) -> Option<Ticket> {
