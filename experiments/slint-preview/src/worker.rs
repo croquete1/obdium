@@ -3,7 +3,7 @@ use obdium::scalar::{Scalar, Unit};
 use std::io;
 use std::sync::mpsc::{self, Receiver, SyncSender, TryRecvError, TrySendError};
 use std::thread::{self, JoinHandle};
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 pub(crate) struct Completion {
     pub(crate) ticket: Ticket,
@@ -63,15 +63,16 @@ impl DemoWorker {
 
 /// Read-only observation boundary, owned by the worker thread.
 /// Production transport is deliberately not implemented here. A future
-/// source must check the permit and bound every I/O by the remaining budget.
+/// source must bound its first I/O by the supplied budget, refresh the
+/// permit before subsequent operations and never extend the deadline.
 trait ObservationSource {
-    fn read_engine_speed(&mut self, permit: &Permit) -> io::Result<Scalar>;
+    fn read_engine_speed(&mut self, permit: &Permit, budget: Duration) -> io::Result<Scalar>;
 }
 
 struct SyntheticSource;
 
 impl ObservationSource for SyntheticSource {
-    fn read_engine_speed(&mut self, _permit: &Permit) -> io::Result<Scalar> {
+    fn read_engine_speed(&mut self, _permit: &Permit, _budget: Duration) -> io::Result<Scalar> {
         Ok(Scalar::new(1726.0, Unit::RPM, None))
     }
 }
@@ -84,7 +85,10 @@ fn observe(
     if !permit.claim(now()) {
         return None;
     }
-    let outcome = match source.read_engine_speed(permit) {
+    // Claiming a permit does not freeze time. Refresh the remaining budget
+    // immediately before dispatching the first transport operation.
+    let budget = permit.remaining(now())?;
+    let outcome = match source.read_engine_speed(permit, budget) {
         Ok(sample) => Observation::from_scalar(&sample),
         Err(error) => match error.kind() {
             io::ErrorKind::TimedOut => Observation::SourceTimeout,
@@ -106,7 +110,7 @@ fn observe(
 mod tests {
     use super::*;
     use crate::session::PreviewSession;
-    use std::time::Duration;
+    use std::cell::Cell;
 
     #[test]
     fn worker_returns_correlated_synthetic_sample_and_shuts_down() {
@@ -195,7 +199,11 @@ mod tests {
         }
 
         impl ObservationSource for MissingSource {
-            fn read_engine_speed(&mut self, _permit: &Permit) -> io::Result<Scalar> {
+            fn read_engine_speed(
+                &mut self,
+                _permit: &Permit,
+                _budget: Duration,
+            ) -> io::Result<Scalar> {
                 self.reads += 1;
                 Ok(Scalar::no_data())
             }
@@ -219,7 +227,11 @@ mod tests {
         struct FailedSource;
 
         impl ObservationSource for FailedSource {
-            fn read_engine_speed(&mut self, _permit: &Permit) -> io::Result<Scalar> {
+            fn read_engine_speed(
+                &mut self,
+                _permit: &Permit,
+                _budget: Duration,
+            ) -> io::Result<Scalar> {
                 Err(io::Error::other("synthetic failure"))
             }
         }
@@ -242,7 +254,11 @@ mod tests {
         struct FailedSource(io::ErrorKind);
 
         impl ObservationSource for FailedSource {
-            fn read_engine_speed(&mut self, _permit: &Permit) -> io::Result<Scalar> {
+            fn read_engine_speed(
+                &mut self,
+                _permit: &Permit,
+                _budget: Duration,
+            ) -> io::Result<Scalar> {
                 Err(self.0.into())
             }
         }
@@ -276,7 +292,11 @@ mod tests {
         struct CancelledSource<'a>(&'a mut PreviewSession);
 
         impl ObservationSource for CancelledSource<'_> {
-            fn read_engine_speed(&mut self, _permit: &Permit) -> io::Result<Scalar> {
+            fn read_engine_speed(
+                &mut self,
+                _permit: &Permit,
+                _budget: Duration,
+            ) -> io::Result<Scalar> {
                 self.0.stop();
                 Ok(Scalar::new(1726.0, Unit::RPM, None))
             }
@@ -301,7 +321,7 @@ mod tests {
         let ticket = session.request(now).expect("ticket");
         let permit = session.permit(ticket).expect("permit");
         let deadline = now + Duration::from_secs(2);
-        let mut clock = [now, deadline].into_iter();
+        let mut clock = [now, now, deadline].into_iter();
         let mut source = SyntheticSource;
         assert!(observe(&mut source, &permit, || {
             clock.next().expect("clock sample")
@@ -311,5 +331,90 @@ mod tests {
         assert!(observe(&mut source, &permit, || now).is_none());
         assert!(session.expire(deadline));
         assert_eq!(session.rpm_text(), "Timed out");
+    }
+
+    // Deterministic fake transport: its configured read cost cannot consume
+    // more than the caller's remaining budget. No wall-clock sleeps or I/O.
+    struct TimedSource<'a> {
+        clock: &'a Cell<Instant>,
+        cost: Duration,
+        budgets: Vec<Duration>,
+    }
+
+    impl ObservationSource for TimedSource<'_> {
+        fn read_engine_speed(&mut self, _permit: &Permit, budget: Duration) -> io::Result<Scalar> {
+            self.budgets.push(budget);
+            self.clock.set(self.clock.get() + self.cost.min(budget));
+            if self.cost >= budget {
+                Err(io::ErrorKind::TimedOut.into())
+            } else {
+                Ok(Scalar::new(1726.0, Unit::RPM, None))
+            }
+        }
+    }
+
+    #[test]
+    fn transport_receives_remaining_budget_not_original_timeout() {
+        let now = Instant::now();
+        let mut session = PreviewSession::default();
+        assert!(session.start());
+        let ticket = session.request(now).expect("ticket");
+        let permit = session.permit(ticket).expect("permit");
+        let clock = Cell::new(now + Duration::from_millis(750));
+        let mut source = TimedSource {
+            clock: &clock,
+            cost: Duration::from_millis(250),
+            budgets: Vec::new(),
+        };
+        let sample = observe(&mut source, &permit, || clock.get()).expect("sample");
+        assert_eq!(source.budgets, [Duration::from_millis(1250)]);
+        assert_eq!(clock.get(), now + Duration::from_secs(1));
+        assert!(session.complete(ticket, sample, clock.get()));
+        assert_eq!(session.rpm_text(), "1726 rpm (synthetic)");
+    }
+
+    #[test]
+    fn deadline_between_claim_and_dispatch_prevents_transport_read() {
+        let now = Instant::now();
+        let mut session = PreviewSession::default();
+        assert!(session.start());
+        let ticket = session.request(now).expect("ticket");
+        let permit = session.permit(ticket).expect("permit");
+        let deadline = now + Duration::from_secs(2);
+        let clock = Cell::new(now);
+        let mut source = TimedSource {
+            clock: &clock,
+            cost: Duration::ZERO,
+            budgets: Vec::new(),
+        };
+        let mut times = [now, deadline].into_iter();
+        assert!(observe(&mut source, &permit, || {
+            times.next().expect("clock sample")
+        })
+        .is_none());
+        assert!(source.budgets.is_empty());
+        assert!(session.expire(deadline));
+        assert_eq!(session.rpm_text(), "Timed out");
+    }
+
+    #[test]
+    fn over_budget_transport_stops_at_deadline_without_retry() {
+        let now = Instant::now();
+        let mut session = PreviewSession::default();
+        assert!(session.start());
+        let ticket = session.request(now).expect("ticket");
+        let permit = session.permit(ticket).expect("permit");
+        let clock = Cell::new(now + Duration::from_millis(1500));
+        let mut source = TimedSource {
+            clock: &clock,
+            cost: Duration::from_secs(5),
+            budgets: Vec::new(),
+        };
+        assert!(observe(&mut source, &permit, || clock.get()).is_none());
+        assert_eq!(clock.get(), now + Duration::from_secs(2));
+        assert!(session.expire(clock.get()));
+        assert_eq!(session.rpm_text(), "Timed out");
+        assert!(observe(&mut source, &permit, || clock.get()).is_none());
+        assert_eq!(source.budgets, [Duration::from_millis(500)]);
     }
 }
