@@ -75,7 +75,8 @@ test("actual graph listener ignores malformed identities and uses monotonic elap
   let tick;
   let released = 0;
   const context = {
-    createGraphSampler, createTrackerRegistry,
+    createGraphSampler: () => createGraphSampler(() => monotonic),
+    createTrackerRegistry,
     window: { connected: true },
     Chart: { getChart: () => graph },
     performance: { now: () => monotonic },
@@ -108,10 +109,46 @@ test("actual graph listener ignores malformed identities and uses monotonic elap
   tick();
   assert.deepEqual(Array.from(graph.data.labels), ["0:01", "0:02"]);
   assert.deepEqual(Array.from(graph.data.datasets[0].data), [0, null]);
+  // A delayed timer must not present an old queued reading as current.
+  listener({ payload: { name: "RPM", value: 1200, unit: "RPM" } });
+  monotonic = 4100;
+  tick();
+  assert.deepEqual(Array.from(graph.data.labels), ["0:01", "0:02", "0:04"]);
+  assert.deepEqual(Array.from(graph.data.datasets[0].data), [0, null, null]);
   context.stopGraphTracking();
   assert.equal(released, 2);
   listener({ payload: { name: "RPM", value: 5000, unit: "RPM" } });
-  monotonic = 3100;
+  monotonic = 5100;
   tick();
-  assert.deepEqual(Array.from(graph.data.datasets[0].data), [0, null]);
+  assert.deepEqual(Array.from(graph.data.datasets[0].data), [0, null, null]);
+});
+
+test("queued measurement expires at the exclusive age boundary", () => {
+  let now = 100;
+  const sampler = createGraphSampler(() => now);
+  sampler.push({ value: 0, unit: "RPM" });
+  now = 2099;
+  assert.deepEqual(sampler.take(), { value: 0, unit: "RPM" });
+  sampler.push({ value: 1200, unit: "RPM" });
+  now = 4099;
+  assert.equal(sampler.take(), null);
+  assert.equal(sampler.take(), null);
+  sampler.push({ value: 800, unit: "RPM" });
+  now = 4100;
+  assert.deepEqual(sampler.take(), { value: 800, unit: "RPM" });
+});
+
+test("invalid or reversed receipt clock cannot publish a measurement", () => {
+  let now = 100;
+  const sampler = createGraphSampler(() => now);
+  sampler.push({ value: 1200, unit: "RPM" });
+  now = 99;
+  assert.equal(sampler.take(), null);
+  now = NaN;
+  sampler.push({ value: 1200, unit: "RPM" });
+  now = 100;
+  assert.equal(sampler.take(), null);
+  sampler.push({ value: 1200, unit: "RPM" });
+  now = Infinity;
+  assert.equal(sampler.take(), null);
 });
