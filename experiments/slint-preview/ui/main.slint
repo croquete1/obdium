@@ -8,6 +8,7 @@ export component PreviewWindow inherits Window {
     min-height: 340px;
     in property <bool> demo-active: false;
     in property <string> rpm-text: "Unavailable";
+    in property <string> core-status: "Core: not initialized";
     callback toggle-demo();
 
     VerticalBox {
@@ -24,6 +25,10 @@ export component PreviewWindow inherits Window {
         }
         Text {
             text: root.demo-active ? "SYNTHETIC DEMO — no vehicle connected" : "DISCONNECTED — no vehicle connected";
+            wrap: word-wrap;
+        }
+        Text {
+            text: root.core-status;
             wrap: word-wrap;
         }
         Text {
