@@ -446,11 +446,7 @@ fn dbc_rejects_unterminated_and_ambiguous_comments() {
 
 #[test]
 fn dbc_comments_cannot_supply_missing_definitions() {
-    let dbc = concat!(
-        "CM_ \"fake message\n",
-        "BO_ 123 Fake: 1 ECU\n",
-        "end\";\n",
-    );
+    let dbc = concat!("CM_ \"fake message\n", "BO_ 123 Fake: 1 ECU\n", "end\";\n",);
     assert!(matches!(
         parse_dbc_message(dbc, 123),
         Err(ReferenceError::Dbc(_))
