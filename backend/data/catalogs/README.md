@@ -42,3 +42,7 @@ Every signal in the selected message now undergoes bit-bound and finite-scaling 
 ### Namespace declaration handling
 
 The staged DBC reader distinguishes bare, known `NS_` declarations from actual extended metadata. The declaration list is recognized only once before a message, and ends at the first non-declaration statement. Selected-message `SIG_VALTYPE_`/`SG_MUL_VAL_` records and malformed bare keywords outside that section remain errors. Added synthetic regressions and a staged Acura definition with synthetic payload. No new catalog data, no vehicle-specific compatibility claim, and no full DBC grammar support. Multiline quoted comment parsing remains a separate limitation; do not trust arbitrary imported DBC input for live diagnostics.
+
+### Quoted comment boundary
+
+The limited parser now skips `CM_` quoted comments spanning multiple lines, including semicolons and escaped quotes inside the text, before interpreting message, namespace and metadata keywords. Missing quotes/terminators, dangling escapes and trailing statements on the closing line fail closed. It intentionally requires the closing quote and semicolon on the same line and does not implement a general DBC lexer (multiline non-comment records remain unsupported and must not be assumed safe). Three synthetic regressions exercise spoofed definitions, real metadata after a comment, and malformed comments. No live activation or data import.

@@ -401,3 +401,58 @@ fn dbc_reads_staged_definition_with_namespace_header() {
     assert_eq!(sample.raw, 42);
     assert_eq!(sample.scaled, 42.0);
 }
+
+#[test]
+fn dbc_multiline_comments_do_not_create_messages_or_metadata() {
+    let dbc = concat!(
+        "CM_ \"comment with a semicolon; and an escaped quote \\\"\n",
+        "BO_ 123 Fake: 1 ECU\n",
+        "SIG_VALTYPE_ 123 Fake : 1;\n",
+        "NS_ :\n",
+        "end\";\n",
+        "BO_ 123 Real: 1 ECU\n",
+        " SG_ Value : 0|8@1+ (1,0) [0|255] \"\" ECU\n",
+        "CM_ BO_ 123 \"another comment\n",
+        "SG_MUL_VAL_ 123 Value Selector 1-2;\n",
+        "BO_ 123 Duplicate: 1 ECU\n",
+        "end\";\n",
+    );
+    let sample = decode_dbc_signal(dbc, 123, "Value", &[42]).expect("real definition");
+    assert_eq!(sample.raw, 42);
+    let actual_metadata = format!("{dbc}SIG_VALTYPE_ 123 Value : 1;");
+    assert!(decode_dbc_signal(&actual_metadata, 123, "Value", &[42]).is_err());
+}
+
+#[test]
+fn dbc_rejects_unterminated_and_ambiguous_comments() {
+    let dbc = concat!(
+        "BO_ 123 Example: 1 ECU\n",
+        " SG_ Value : 0|8@1+ (1,0) [0|255] \"\" ECU\n",
+    );
+    for suffix in [
+        "CM_ \"never closed",
+        "CM_ \"missing semicolon\"",
+        "CM_ \"closed\"; SIG_VALTYPE_ 123 Value : 1;",
+        "CM_ without_string;",
+        "CM_ \"dangling escape\\",
+    ] {
+        let input = format!("{dbc}{suffix}");
+        assert!(matches!(
+            parse_dbc_message(&input, 123),
+            Err(ReferenceError::Dbc(_))
+        ));
+    }
+}
+
+#[test]
+fn dbc_comments_cannot_supply_missing_definitions() {
+    let dbc = concat!(
+        "CM_ \"fake message\n",
+        "BO_ 123 Fake: 1 ECU\n",
+        "end\";\n",
+    );
+    assert!(matches!(
+        parse_dbc_message(dbc, 123),
+        Err(ReferenceError::Dbc(_))
+    ));
+}

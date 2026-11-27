@@ -476,6 +476,28 @@ impl DbcMessage {
     }
 }
 
+// Scan the quoted body of a CM_ statement, not its prefix. A semicolon
+// inside the string is text; escaped quotes do not close the comment.
+fn dbc_comment_closed(body: &str) -> Result<bool, ReferenceError> {
+    let mut escaped = false;
+    for (index, byte) in body.bytes().enumerate() {
+        if escaped {
+            escaped = false;
+        } else if byte == b'\\' {
+            escaped = true;
+        } else if byte == b'"' {
+            if body[index + 1..].trim() != ";" {
+                return Err(ReferenceError::Dbc("invalid comment terminator".into()));
+            }
+            return Ok(true);
+        }
+    }
+    if escaped {
+        return Err(ReferenceError::Dbc("dangling comment escape".into()));
+    }
+    Ok(false)
+}
+
 /// Validate one explicitly selected DBC message, including simple multiplexing.
 /// Multiple or nested multiplexers and extended multiplex metadata are rejected.
 /// The caller supplies the encoded DBC ID, including bit 31 for extended IDs.
@@ -534,7 +556,12 @@ pub fn parse_dbc_message(dbc: &str, message_id: u32) -> Result<DbcMessage, Refer
     let mut namespace_seen = false;
     let mut in_namespace = false;
     let mut seen_message = false;
+    let mut in_comment = false;
     for line in dbc.lines().map(str::trim) {
+        if in_comment {
+            in_comment = !dbc_comment_closed(line)?;
+            continue;
+        }
         if line
             .strip_prefix("NS_")
             .is_some_and(|rest| rest.trim() == ":")
@@ -553,6 +580,13 @@ pub fn parse_dbc_message(dbc: &str, message_id: u32) -> Result<DbcMessage, Refer
             in_namespace = false;
         }
         let keyword = line.split_whitespace().next();
+        if keyword == Some("CM_") {
+            let (_, body) = line
+                .split_once('"')
+                .ok_or_else(|| ReferenceError::Dbc("missing comment string".into()))?;
+            in_comment = !dbc_comment_closed(body)?;
+            continue;
+        }
         if keyword == Some("BO_") {
             seen_message = true;
             let fields = message
@@ -630,6 +664,9 @@ pub fn parse_dbc_message(dbc: &str, message_id: u32) -> Result<DbcMessage, Refer
                 return Err(ReferenceError::Dbc("extended signal metadata".into()));
             }
         }
+    }
+    if in_comment {
+        return Err(ReferenceError::Dbc("unterminated comment".into()));
     }
     let size = length.ok_or_else(|| ReferenceError::Dbc("message not found".into()))?;
     if let Some((_, width, _)) = selector {
