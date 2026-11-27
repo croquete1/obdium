@@ -305,6 +305,48 @@ pub fn confirm_can_probe(
     Ok(protocol)
 }
 
+/// Evidence returned by an explicit automatic protocol probe.
+#[derive(Debug, PartialEq, Eq)]
+pub enum ProtocolEvidence {
+    Can(ObdProtocol),
+    Legacy(ObdProtocol, Vec<LegacyProbe>),
+}
+
+/// Require a complete reply compatible with at least one supported layout
+/// before asking the adapter which protocol it selected. This is not detection:
+/// multiple protocols can share identical frame layouts.
+pub(crate) fn has_supported_probe_reply(reply: &str) -> bool {
+    can_probe_identifier_width(reply).is_ok()
+        || (1..=5).any(|id| {
+            ObdProtocol::try_from(id).is_ok_and(|protocol| {
+                confirm_legacy_probe(
+                    ProtocolSelection::Automatic,
+                    ReportedProtocol {
+                        automatic: true,
+                        protocol: Some(protocol),
+                    },
+                    reply,
+                )
+                .is_ok()
+            })
+        })
+}
+
+/// Confirm only the actual automatic adapter report against the ECU reply.
+/// Never infer a specific bus rate or initialization method from frame bytes.
+pub fn confirm_automatic_probe(
+    report: ReportedProtocol,
+    reply: &str,
+) -> Result<ProtocolEvidence, ProtocolError> {
+    let protocol = report.protocol.ok_or(ProtocolError::Malformed)?;
+    if protocol.can_parameters().is_some() {
+        confirm_can_probe(ProtocolSelection::Automatic, report, reply).map(ProtocolEvidence::Can)
+    } else {
+        confirm_legacy_probe(ProtocolSelection::Automatic, report, reply)
+            .map(|(protocol, probes)| ProtocolEvidence::Legacy(protocol, probes))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
