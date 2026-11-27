@@ -228,11 +228,21 @@ pub fn confirm_legacy_probe(
     Ok((protocol, probes))
 }
 
+/// Source identifier and supported-PID bitmap from one validated CAN frame.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct CanProbe {
+    pub identifier: u32,
+    pub identifier_width: u8,
+    pub bitmap: [u8; 4],
+}
+
 /// Conservative evidence for the standard Mode 01 PID 00 CAN reply.
 /// Requires ELM headers, spaces and the single-frame length byte.
 /// Other valid adapter layouts are deliberately unverified here.
-pub fn can_probe_identifier_width(reply: &str) -> Result<u8, ProtocolError> {
+pub fn parse_can_probes(reply: &str) -> Result<Vec<CanProbe>, ProtocolError> {
     let mut width = None;
+    let mut seen = [false; 256];
+    let mut probes = Vec::new();
     for line in reply.split(['\r', '\n']).map(str::trim_ascii) {
         if line.is_empty() || line == "SEARCHING..." {
             continue;
@@ -278,9 +288,32 @@ pub fn can_probe_identifier_width(reply: &str) -> Result<u8, ProtocolError> {
         if !(7..=8).contains(&count) || bytes[..3] != [0x06, 0x41, 0x00] {
             return Err(ProtocolError::Malformed);
         }
+        // For each accepted width the low byte uniquely identifies the source.
+        // Width mixing is rejected above; compact and split IDs share a slot.
+        let source = (id & 0xFF) as usize;
+        if seen[source] {
+            return Err(ProtocolError::Malformed);
+        }
+        seen[source] = true;
+        probes.push(CanProbe {
+            identifier: id,
+            identifier_width: current_width,
+            bitmap: [bytes[3], bytes[4], bytes[5], bytes[6]],
+        });
         width = Some(current_width);
     }
-    width.ok_or(ProtocolError::Malformed)
+    if probes.is_empty() {
+        return Err(ProtocolError::Malformed);
+    }
+    Ok(probes)
+}
+
+/// Keep the existing width-only API for callers that need no ECU metadata.
+pub fn can_probe_identifier_width(reply: &str) -> Result<u8, ProtocolError> {
+    parse_can_probes(reply)?
+        .first()
+        .map(|probe| probe.identifier_width)
+        .ok_or(ProtocolError::Malformed)
 }
 
 /// Correlate a positive CAN probe with the adapter's reported configuration.
@@ -308,7 +341,7 @@ pub fn confirm_can_probe(
 /// Evidence returned by an explicit automatic protocol probe.
 #[derive(Debug, PartialEq, Eq)]
 pub enum ProtocolEvidence {
-    Can(ObdProtocol),
+    Can(ObdProtocol, Vec<CanProbe>),
     Legacy(ObdProtocol, Vec<LegacyProbe>),
 }
 
@@ -340,7 +373,8 @@ pub fn confirm_automatic_probe(
 ) -> Result<ProtocolEvidence, ProtocolError> {
     let protocol = report.protocol.ok_or(ProtocolError::Malformed)?;
     if protocol.can_parameters().is_some() {
-        confirm_can_probe(ProtocolSelection::Automatic, report, reply).map(ProtocolEvidence::Can)
+        let protocol = confirm_can_probe(ProtocolSelection::Automatic, report, reply)?;
+        Ok(ProtocolEvidence::Can(protocol, parse_can_probes(reply)?))
     } else {
         confirm_legacy_probe(ProtocolSelection::Automatic, report, reply)
             .map(|(protocol, probes)| ProtocolEvidence::Legacy(protocol, probes))
@@ -467,6 +501,47 @@ mod tests {
             "SEARCHING...",
         ] {
             assert!(can_probe_identifier_width(reply).is_err(), "{reply:?}");
+        }
+    }
+
+    #[test]
+    fn can_probe_retains_source_identifiers_and_individual_bitmaps() {
+        let reply = "7E8 06 41 00 00 00 00 00\r7E9 06 41 00 FF 01 02 03";
+        assert_eq!(
+            parse_can_probes(reply).unwrap(),
+            vec![
+                CanProbe {
+                    identifier: 0x7E8,
+                    identifier_width: 11,
+                    bitmap: [0; 4],
+                },
+                CanProbe {
+                    identifier: 0x7E9,
+                    identifier_width: 11,
+                    bitmap: [255, 1, 2, 3],
+                },
+            ]
+        );
+        let reply = "18 DA F1 10 06 41 00 01 02 03 04";
+        assert_eq!(
+            parse_can_probes(reply).unwrap(),
+            vec![CanProbe {
+                identifier: 0x18DAF110,
+                identifier_width: 29,
+                bitmap: [1, 2, 3, 4],
+            }]
+        );
+    }
+
+    #[test]
+    fn can_probe_rejects_duplicate_sources_even_with_different_identifier_layouts() {
+        for reply in [
+            "7E8 06 41 00 00 00 00 00\r7E8 06 41 00 FF FF FF FF",
+            "18DAF110 06 41 00 00 00 00 00\r18 DA F1 10 06 41 00 00 00 00 00",
+        ] {
+            assert!(parse_can_probes(reply).is_err());
+            assert!(can_probe_identifier_width(reply).is_err());
+            assert!(!has_supported_probe_reply(reply));
         }
     }
 

@@ -1621,9 +1621,15 @@ mod serial_prompt_tests {
             });
             let expected = ObdProtocol::try_from(id).unwrap();
             match obd.probe_automatic_protocol().unwrap() {
-                ProtocolEvidence::Can(protocol) => {
+                ProtocolEvidence::Can(protocol, probes) => {
                     assert_eq!(protocol, expected);
                     assert!(id >= 6);
+                    assert_eq!(probes.len(), 1);
+                    assert_eq!(probes[0].bitmap, [255; 4]);
+                    assert_eq!(
+                        probes[0].identifier_width,
+                        expected.can_parameters().unwrap().0
+                    );
                 }
                 ProtocolEvidence::Legacy(protocol, probes) => {
                     assert_eq!(protocol, expected);
@@ -1642,6 +1648,7 @@ mod serial_prompt_tests {
             b"NO DATA\r>".as_slice(),
             b"48 6B 10 41 00 00 00 00 00 05\r>",
             b"7E8 06 41 00 FF FF FF FF\r48 6B 10 41 00 00 00 00 00 04\r>",
+            b"7E8 06 41 00 FF FF FF FF\r7E8 06 41 00 00 00 00 00\r>",
         ] {
             let (mut obd, state) = fixture_obd(FixtureState {
                 scripted_replies: VecDeque::from([reply.to_vec()]),
