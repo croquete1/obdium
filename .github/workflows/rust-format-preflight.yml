@@ -1,0 +1,48 @@
+name: Rust format preflight
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, edited]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rust-format-preflight-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  format:
+    name: Rust format / preflight
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install pinned formatter
+        run: rustup toolchain install 1.100.0 --profile minimal --component rustfmt
+      - name: Rustfmt
+        id: rustfmt
+        run: cargo +1.100.0 fmt --all -- --check
+      - name: Capture official formatting patch on failure
+        if: ${{ failure() && steps.rustfmt.outcome == 'failure' }}
+        run: |
+          cargo +1.100.0 fmt --all
+          git diff --binary -- . > "$RUNNER_TEMP/rustfmt-preflight.patch"
+          git restore --worktree -- .
+      - name: Upload formatting patch
+        if: ${{ failure() && steps.rustfmt.outcome == 'failure' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: rustfmt-preflight-patch
+          path: ${{ runner.temp }}/rustfmt-preflight.patch
+          if-no-files-found: error
+          retention-days: 7
