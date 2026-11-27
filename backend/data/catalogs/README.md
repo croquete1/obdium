@@ -38,3 +38,7 @@ Every signal in the selected message now undergoes bit-bound and finite-scaling 
 ### Reusable validated message
 
 `parse_dbc_message` validates one selected definition once and returns an immutable `DbcMessage` with a bounded signal index (up to 4096 signals, names up to 128 bytes). `DbcMessage::decode` validates each new payload and resolves the selector from that payload, never caching observed values. The single-observation wrapper retains the same public interface. This removes repeated definition parsing when a consumer reuses the returned object; no throughput improvement is quantified without measurement. Still offline; no live frame or GUI integration.
+
+### Namespace declaration handling
+
+The staged DBC reader distinguishes bare, known `NS_` declarations from actual extended metadata. The declaration list is recognized only once before a message, and ends at the first non-declaration statement. Selected-message `SIG_VALTYPE_`/`SG_MUL_VAL_` records and malformed bare keywords outside that section remain errors. Added synthetic regressions and a staged Acura definition with synthetic payload. No new catalog data, no vehicle-specific compatibility claim, and no full DBC grammar support. Multiline quoted comment parsing remains a separate limitation; do not trust arbitrary imported DBC input for live diagnostics.

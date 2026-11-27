@@ -482,6 +482,37 @@ impl DbcMessage {
 /// This is a strict subset, not a general DBC importer or vehicle capability check.
 /// Metadata such as value labels, checksum rules and range constraints is not interpreted.
 pub fn parse_dbc_message(dbc: &str, message_id: u32) -> Result<DbcMessage, ReferenceError> {
+    // These are declarations in NS_, not actual metadata records.
+    const NAMESPACE_SYMBOLS: &[&str] = &[
+        "NS_DESC_",
+        "CM_",
+        "BA_DEF_",
+        "BA_",
+        "VAL_",
+        "CAT_DEF_",
+        "CAT_",
+        "FILTER",
+        "BA_DEF_DEF_",
+        "EV_DATA_",
+        "ENVVAR_DATA_",
+        "SGTYPE_",
+        "SGTYPE_VAL_",
+        "BA_DEF_SGTYPE_",
+        "BA_SGTYPE_",
+        "SIG_TYPE_REF_",
+        "VAL_TABLE_",
+        "SIG_GROUP_",
+        "SIG_VALTYPE_",
+        "SIGTYPE_VALTYPE_",
+        "BO_TX_BU_",
+        "BA_DEF_REL_",
+        "BA_REL_",
+        "BA_DEF_DEF_REL_",
+        "BU_SG_REL_",
+        "BU_EV_REL_",
+        "BU_BO_REL_",
+        "SG_MUL_VAL_",
+    ];
     if dbc.len() > MAX_CATALOG_BYTES {
         return Err(ReferenceError::TooLarge);
     }
@@ -500,9 +531,30 @@ pub fn parse_dbc_message(dbc: &str, message_id: u32) -> Result<DbcMessage, Refer
     let mut selector = None;
     let mut branches = Vec::new();
     let mut occupancy = SignalOccupancy::default();
+    let mut namespace_seen = false;
+    let mut in_namespace = false;
+    let mut seen_message = false;
     for line in dbc.lines().map(str::trim) {
+        if line
+            .strip_prefix("NS_")
+            .is_some_and(|rest| rest.trim() == ":")
+        {
+            if namespace_seen || seen_message {
+                return Err(ReferenceError::Dbc("misplaced namespace section".into()));
+            }
+            namespace_seen = true;
+            in_namespace = true;
+            continue;
+        }
+        if in_namespace {
+            if line.is_empty() || NAMESPACE_SYMBOLS.contains(&line) {
+                continue;
+            }
+            in_namespace = false;
+        }
         let keyword = line.split_whitespace().next();
         if keyword == Some("BO_") {
+            seen_message = true;
             let fields = message
                 .captures(line)
                 .ok_or_else(|| ReferenceError::Dbc("invalid message header".into()))?;

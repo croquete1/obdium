@@ -368,3 +368,36 @@ fn parsed_dbc_message_rejects_invalid_unobserved_definitions() {
         Err(ReferenceError::Layout)
     ));
 }
+
+#[test]
+fn dbc_namespace_symbols_do_not_trigger_extended_metadata_errors() {
+    let header = "VERSION \"\"\nNS_ :\n\tSIG_VALTYPE_\n\tBU_SG_REL_\n\tSG_MUL_VAL_\n\nBS_:\n";
+    let frame = concat!(
+        "BO_ 123 Example: 1 ECU\n",
+        " SG_ Value : 0|8@1+ (1,0) [0|255] \"\" ECU\n",
+    );
+    let dbc = format!("{header}{frame}");
+    let result = decode_dbc_signal(&dbc, 123, "Value", &[42]).expect("namespace declarations");
+    assert_eq!(result.raw, 42);
+    for suffix in [
+        "SIG_VALTYPE_ 123 Value : 1;",
+        "SG_MUL_VAL_ 123 Value Selector 1-2;",
+        "SIG_VALTYPE_",
+        "NS_ :\nSG_MUL_VAL_",
+    ] {
+        assert!(decode_dbc_signal(&format!("{dbc}{suffix}"), 123, "Value", &[42]).is_err());
+    }
+    let misplaced = format!("NS_:\nSIG_VALTYPE_ 123 Value : 1;\n{frame}");
+    assert!(decode_dbc_signal(&misplaced, 123, "Value", &[42]).is_err());
+}
+
+#[test]
+fn dbc_reads_staged_definition_with_namespace_header() {
+    let dbc = include_str!("../data/catalogs/dbc/acura_ilx_2016_nidec.dbc");
+    let message = parse_dbc_message(dbc, 768).expect("reference definition");
+    let sample = message
+        .decode("VEHICLE_SPEED", &[0, 42, 0, 0, 0, 0, 0, 0])
+        .expect("synthetic payload");
+    assert_eq!(sample.raw, 42);
+    assert_eq!(sample.scaled, 42.0);
+}
