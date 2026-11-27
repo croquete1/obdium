@@ -432,9 +432,9 @@ pub fn decode_dbc_signal(
             let multiplex = match fields.get(2).map(|value| value.as_str()) {
                 None => Multiplex::None,
                 Some("M") => Multiplex::Selector,
-                Some(value) => Multiplex::Branch(
-                    value[1..].parse().map_err(|_| ReferenceError::Layout)?,
-                ),
+                Some(value) => {
+                    Multiplex::Branch(value[1..].parse().map_err(|_| ReferenceError::Layout)?)
+                }
             };
             let signal = DbcSignal {
                 start: fields[3].parse().map_err(|_| ReferenceError::Layout)?,
@@ -445,8 +445,14 @@ pub fn decode_dbc_signal(
                     BitOrder::Motorola
                 },
                 signed: &fields[6] == "-",
-                factor: fields[7].trim().parse().map_err(|_| ReferenceError::Scaling)?,
-                offset: fields[8].trim().parse().map_err(|_| ReferenceError::Scaling)?,
+                factor: fields[7]
+                    .trim()
+                    .parse()
+                    .map_err(|_| ReferenceError::Scaling)?,
+                offset: fields[8]
+                    .trim()
+                    .parse()
+                    .map_err(|_| ReferenceError::Scaling)?,
                 multiplex,
             };
             if matches!(multiplex, Multiplex::Selector) {
@@ -478,7 +484,10 @@ pub fn decode_dbc_signal(
     }
     let definition = definition.ok_or_else(|| ReferenceError::Dbc("signal not found".into()))?;
     let selector_value = if let Some((start, width, order)) = selector {
-        if branches.iter().any(|value| u64::BITS - value.leading_zeros() > u32::from(width)) {
+        if branches
+            .iter()
+            .any(|value| u64::BITS - value.leading_zeros() > u32::from(width))
+        {
             return Err(ReferenceError::Dbc("branch outside selector range".into()));
         }
         Some(decode_signal(payload, start, width, order, false, 1.0, 0.0)?.raw)
