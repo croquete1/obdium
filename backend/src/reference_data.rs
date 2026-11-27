@@ -449,6 +449,13 @@ pub struct DbcMessage {
     selector: Option<(usize, u8, BitOrder)>,
 }
 
+fn validate_signal_name(signal_name: &str) -> Result<(), ReferenceError> {
+    if signal_name.is_empty() || signal_name.len() > 128 {
+        return Err(ReferenceError::Layout);
+    }
+    Ok(())
+}
+
 impl DbcMessage {
     /// Decode only an explicitly named signal from an exact-length payload.
     pub fn decode(
@@ -456,6 +463,7 @@ impl DbcMessage {
         signal_name: &str,
         payload: &[u8],
     ) -> Result<DecodedSignal, ReferenceError> {
+        validate_signal_name(signal_name)?;
         if self.size != payload.len() {
             return Err(ReferenceError::Truncated);
         }
@@ -715,8 +723,6 @@ pub fn decode_dbc_signal(
     signal_name: &str,
     payload: &[u8],
 ) -> Result<DecodedSignal, ReferenceError> {
-    if signal_name.is_empty() || signal_name.len() > 128 {
-        return Err(ReferenceError::Layout);
-    }
+    validate_signal_name(signal_name)?;
     parse_dbc_message(dbc, message_id)?.decode(signal_name, payload)
 }

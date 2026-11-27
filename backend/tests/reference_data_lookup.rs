@@ -482,3 +482,43 @@ fn dbc_accepts_balanced_non_comment_strings_with_escapes() {
     let sample = decode_dbc_signal(dbc, 123, "Value", &[0]).expect("balanced strings");
     assert_eq!(sample.raw, 0);
 }
+
+#[test]
+fn reusable_and_one_shot_dbc_decoders_share_signal_name_limits() {
+    let name = "X".repeat(128);
+    let dbc = format!(
+        "BO_ 123 Example: 1 ECU\n SG_ {name} : 0|8@1+ (1,0) [0|255] \"\" ECU\n"
+    );
+    let message = parse_dbc_message(&dbc, 123).expect("valid maximum-length name");
+    assert_eq!(message.decode(&name, &[42]).expect("reusable").raw, 42);
+    assert_eq!(
+        decode_dbc_signal(&dbc, 123, &name, &[42])
+            .expect("one shot")
+            .raw,
+        42
+    );
+    let oversized = "X".repeat(129);
+    for invalid in ["", oversized.as_str()] {
+        assert!(matches!(
+            message.decode(invalid, &[42]),
+            Err(ReferenceError::Layout)
+        ));
+        assert!(matches!(
+            decode_dbc_signal(&dbc, 123, invalid, &[42]),
+            Err(ReferenceError::Layout)
+        ));
+        // Both entry points must reject invalid names before other work.
+        assert!(matches!(
+            message.decode(invalid, &[]),
+            Err(ReferenceError::Layout)
+        ));
+        assert!(matches!(
+            decode_dbc_signal("not a DBC", 123, invalid, &[]),
+            Err(ReferenceError::Layout)
+        ));
+    }
+    assert!(matches!(
+        message.decode("unknown", &[42]),
+        Err(ReferenceError::Dbc(_))
+    ));
+}
