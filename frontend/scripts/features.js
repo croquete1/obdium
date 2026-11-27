@@ -179,7 +179,7 @@ export async function trackGraph(graphId, name, unit) {
   });
 
   graph.options.scales.x.title.text = "TIME";
-  graph.startTime = Date.now();
+  graph.startTime = performance.now();
   graph.update();
 
   const sampler = createGraphSampler();
@@ -191,9 +191,10 @@ export async function trackGraph(graphId, name, unit) {
 
   const listener = (event) => {
     if (!ticket.isCurrent()) return;
-    const incomingName = event.payload.name?.trim().toUpperCase();
-    if (incomingName === myName) {
-      sampler.push(event.payload);
+    const payload = event?.payload;
+    if (typeof payload?.name !== "string") return;
+    if (payload.name.trim().toUpperCase() === myName) {
+      sampler.push(payload);
     }
   };
 
@@ -210,8 +211,7 @@ export async function trackGraph(graphId, name, unit) {
   const intervalId = setInterval(() => {
     if (!ticket.isCurrent() || !graph.config?.options) return;
 
-    const now = Date.now();
-    const elapsedMs = now - graph.startTime;
+    const elapsedMs = performance.now() - graph.startTime;
     const minutes = Math.floor(elapsedMs / 60000);
     const seconds = Math.floor((elapsedMs % 60000) / 1000);
     const elapsed = `${minutes}:${seconds.toString().padStart(2, "0")}`;

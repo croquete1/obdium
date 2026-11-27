@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { readFileSync } from "node:fs";
+import { runInNewContext } from "node:vm";
+import { createTrackerRegistry } from "../scripts/connection-lifecycle.mjs";
 import { createGraphSampler } from "../scripts/graph-samples.mjs";
 
 test("an actual zero is a valid sample", () => {
@@ -54,4 +57,61 @@ test("dimensionless and negative measurements are preserved", () => {
   const sampler = createGraphSampler();
   sampler.push({ value: -2, unit: "" });
   assert.deepEqual(sampler.take(), { value: -2, unit: "" });
+});
+
+test("actual graph listener ignores malformed identities and uses monotonic elapsed time", async () => {
+  const source = readFileSync(new URL("../scripts/features.js", import.meta.url), "utf8");
+  const start = source.indexOf("const activeTrackers = createTrackerRegistry();");
+  const end = source.indexOf("export function appendTerminalOutput", start);
+  assert.ok(start >= 0 && end > start);
+  const graph = {
+    data: { labels: [], datasets: [{ data: [] }] },
+    options: { scales: { x: { title: {} }, y: { title: { text: "RPM" } } } },
+    config: { options: {} },
+    update() {},
+  };
+  let monotonic = 100;
+  let listener;
+  let tick;
+  let released = 0;
+  const context = {
+    createGraphSampler, createTrackerRegistry,
+    window: { connected: true },
+    Chart: { getChart: () => graph },
+    performance: { now: () => monotonic },
+    Date: { now: () => { throw new Error("wall clock must not be used"); } },
+    listen: async (name, callback) => {
+      assert.equal(name, "update-graphs");
+      listener = callback;
+      return () => released++;
+    },
+    setInterval(callback) { tick = callback; return 1; },
+    clearInterval() { released++; },
+  };
+  runInNewContext(
+    source.slice(start, end).replaceAll("export ", "") +
+      "\nthis.trackGraph = trackGraph; this.stopGraphTracking = stopGraphTracking;",
+    context,
+  );
+  await context.trackGraph("rpm", "RPM", "RPM");
+  listener({ payload: { name: " rpm ", value: 0, unit: "rpm" } });
+  for (const event of [undefined, {}, { payload: null }, { payload: { name: 7 } },
+    { payload: { name: {} } }, { payload: { name: "speed", value: 42, unit: "mph" } }]) {
+    listener(event);
+  }
+  monotonic = 1100;
+  tick();
+  assert.deepEqual(Array.from(graph.data.labels), ["0:01"]);
+  assert.deepEqual(Array.from(graph.data.datasets[0].data), [0]);
+  listener({ payload: { name: "RPM", value: 0, unit: "NO DATA" } });
+  monotonic = 2100;
+  tick();
+  assert.deepEqual(Array.from(graph.data.labels), ["0:01", "0:02"]);
+  assert.deepEqual(Array.from(graph.data.datasets[0].data), [0, null]);
+  context.stopGraphTracking();
+  assert.equal(released, 2);
+  listener({ payload: { name: "RPM", value: 5000, unit: "RPM" } });
+  monotonic = 3100;
+  tick();
+  assert.deepEqual(Array.from(graph.data.datasets[0].data), [0, null]);
 });
