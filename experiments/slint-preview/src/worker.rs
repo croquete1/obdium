@@ -24,8 +24,9 @@ impl DemoWorker {
         let thread = thread::Builder::new()
             .name("obdium-synthetic-demo".into())
             .spawn(move || {
+                let mut source = SyntheticSource;
                 while let Ok(permit) = requests.recv() {
-                    let Some(sample) = synthetic_sample(&permit, Instant::now()) else {
+                    let Some(sample) = observe(&mut source, &permit, Instant::now()) else {
                         continue;
                     };
                     if !permit.is_live(Instant::now()) {
@@ -60,10 +61,22 @@ impl DemoWorker {
     }
 }
 
-fn synthetic_sample(permit: &Permit, now: Instant) -> Option<Scalar> {
-    permit
-        .is_live(now)
-        .then(|| Scalar::new(1726.0, Unit::RPM, None))
+/// Read-only observation boundary, owned by the worker thread.
+/// Production transport is deliberately not implemented here.
+trait ObservationSource {
+    fn read_engine_speed(&mut self) -> Scalar;
+}
+
+struct SyntheticSource;
+
+impl ObservationSource for SyntheticSource {
+    fn read_engine_speed(&mut self) -> Scalar {
+        Scalar::new(1726.0, Unit::RPM, None)
+    }
+}
+
+fn observe(source: &mut impl ObservationSource, permit: &Permit, now: Instant) -> Option<Scalar> {
+    permit.claim(now).then(|| source.read_engine_speed())
 }
 
 #[cfg(test)]
@@ -104,7 +117,10 @@ mod tests {
         let ticket = session.request(Instant::now()).expect("ticket");
         let permit = session.permit(ticket).expect("permit");
         assert!(worker.submit(permit.clone()).is_ok());
-        assert!(matches!(worker.submit(permit.clone()), Err(TrySendError::Full(_))));
+        assert!(matches!(
+            worker.submit(permit.clone()),
+            Err(TrySendError::Full(_))
+        ));
         assert!(matches!(worker.receive(), Err(TryRecvError::Empty)));
         drop(requests);
         drop(replies);
@@ -122,12 +138,15 @@ mod tests {
         assert!(session.start());
         let ticket = session.request(Instant::now()).expect("ticket");
         let permit = session.permit(ticket).expect("permit");
-        worker.submit(permit.clone()).expect("first submit");
-        // Wait for the first result, then leave the next reply unconsumed.
-        worker
+        worker.submit(permit).expect("first submit");
+        // Wait for the first result, then leave a distinct reply unconsumed.
+        let reply = worker
             .completions
             .recv_timeout(Duration::from_secs(10))
             .expect("first reply");
+        assert!(session.complete(reply.ticket, reply.sample, Instant::now()));
+        let next = session.request(Instant::now()).expect("next ticket");
+        let permit = session.permit(next).expect("next permit");
         worker.submit(permit).expect("second submit");
         drop(worker);
         thread.join().expect("shutdown");
@@ -140,9 +159,36 @@ mod tests {
         assert!(session.start());
         let ticket = session.request(now).expect("ticket");
         let permit = session.permit(ticket).expect("permit");
-        assert!(synthetic_sample(&permit, now).is_some());
-        assert!(synthetic_sample(&permit, now + Duration::from_secs(2)).is_none());
+        let mut source = SyntheticSource;
+        assert!(observe(&mut source, &permit, now + Duration::from_secs(2)).is_none());
         session.stop();
-        assert!(synthetic_sample(&permit, now).is_none());
+        assert!(observe(&mut source, &permit, now).is_none());
+    }
+
+    #[test]
+    fn observation_boundary_reads_only_once_and_preserves_missing_data() {
+        #[derive(Default)]
+        struct MissingSource {
+            reads: usize,
+        }
+
+        impl ObservationSource for MissingSource {
+            fn read_engine_speed(&mut self) -> Scalar {
+                self.reads += 1;
+                Scalar::no_data()
+            }
+        }
+
+        let now = Instant::now();
+        let mut session = PreviewSession::default();
+        assert!(session.start());
+        let ticket = session.request(now).expect("ticket");
+        let permit = session.permit(ticket).expect("permit");
+        let mut source = MissingSource::default();
+        let sample = observe(&mut source, &permit, now).expect("observation");
+        assert!(session.complete(ticket, sample, now));
+        assert_eq!(session.rpm_text(), "Unavailable");
+        assert!(observe(&mut source, &permit, now).is_none());
+        assert_eq!(source.reads, 1);
     }
 }

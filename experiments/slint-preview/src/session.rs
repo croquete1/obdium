@@ -19,6 +19,7 @@ pub(crate) struct Permit {
     started: Instant,
     deadline: Instant,
     cancelled: Arc<AtomicBool>,
+    claimed: Arc<AtomicBool>,
 }
 
 impl Permit {
@@ -28,6 +29,17 @@ impl Permit {
 
     pub(crate) fn is_live(&self, now: Instant) -> bool {
         !self.cancelled.load(Ordering::Acquire) && now >= self.started && now < self.deadline
+    }
+
+    /// Clones share the same execution claim: at most one worker may start
+    /// this observation. A concurrent cancellation is checked again.
+    pub(crate) fn claim(&self, now: Instant) -> bool {
+        self.is_live(now)
+            && self
+                .claimed
+                .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
+                .is_ok()
+            && self.is_live(now)
     }
 
     fn invalidate(&self) {
@@ -98,6 +110,7 @@ impl PreviewSession {
             started: now,
             deadline,
             cancelled: Arc::new(AtomicBool::new(false)),
+            claimed: Arc::new(AtomicBool::new(false)),
         });
         Some(ticket)
     }
@@ -173,6 +186,12 @@ impl PreviewSession {
         self.sample
             .as_ref()
             .map_or_else(|| "Unavailable".into(), format_synthetic_rpm)
+    }
+}
+
+impl Drop for PreviewSession {
+    fn drop(&mut self) {
+        self.invalidate_pending();
     }
 }
 
@@ -361,5 +380,20 @@ mod tests {
         let permit = session.permit(fourth).expect("permit");
         assert!(session.complete(fourth, rpm(0.0), now));
         assert!(!permit.is_live(now));
+    }
+
+    #[test]
+    fn cloned_permits_can_be_claimed_only_once() {
+        let now = Instant::now();
+        let mut session = PreviewSession::default();
+        assert!(session.start());
+        let ticket = session.request(now).expect("ticket");
+        let permit = session.permit(ticket).expect("permit");
+        let duplicate = permit.clone();
+        assert!(permit.claim(now));
+        assert!(!duplicate.claim(now));
+        assert!(permit.is_live(now));
+        drop(session);
+        assert!(!duplicate.is_live(now));
     }
 }
