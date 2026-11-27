@@ -95,8 +95,20 @@ export async function connectElm(baudRate, serialPort, protocol) {
 }
 
 export async function disconnectElm() {
-  connectButton.disabled = true;
-  emit("disconnect-elm");
+  if (!window.connected || disconnectButton.disabled) return;
+
+  const attempt = connectionAttempt;
+  disconnectButton.disabled = true;
+  try {
+    await emit("disconnect-elm");
+    // Only the backend connection-status event can confirm disconnection.
+  } catch (error) {
+    if (attempt === connectionAttempt && window.connected) {
+      disconnectButton.disabled = false;
+      addNotification("DISCONNECTION REQUEST FAILED", "Could not send the disconnection request.");
+    }
+    console.error("Disconnection request dispatch failed", error);
+  }
 }
 
 export function freezeFrameDisclaimer(show) {

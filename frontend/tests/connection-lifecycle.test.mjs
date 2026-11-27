@@ -250,3 +250,95 @@ test("rejection after backend reports a connected session cannot unlock controls
   assert.equal(fixture.connectButton.disabled, true);
   assert.equal(fixture.notices.length, 0);
 });
+
+function disconnectFixture(emit) {
+  const source = readFileSync(new URL("../scripts/features.js", import.meta.url), "utf8");
+  const start = source.indexOf("let connectionAttempt = 0;");
+  const end = source.indexOf("export function freezeFrameDisclaimer", start);
+  assert.ok(start >= 0 && end > start);
+  const window = { connected: true };
+  const connectButton = { disabled: true };
+  const disconnectButton = { disabled: false };
+  const notices = [];
+  const context = {
+    window, connectButton, disconnectButton, emit,
+    addNotification: (...args) => notices.push(args),
+    console: { error() {} },
+  };
+  runInNewContext(
+    source.slice(start, end).replaceAll("export async function", "async function") +
+      "\nthis.connectElm = connectElm; this.disconnectElm = disconnectElm;",
+    context,
+  );
+  return {
+    connect: context.connectElm, disconnect: context.disconnectElm,
+    window, connectButton, disconnectButton, notices,
+  };
+}
+
+test("disconnect rejection restores retry controls without claiming disconnection", async () => {
+  const events = [];
+  const fixture = disconnectFixture(async (event) => {
+    events.push(event);
+    throw new Error("IPC rejected");
+  });
+  await fixture.disconnect();
+  assert.deepEqual(events, ["disconnect-elm"]);
+  assert.equal(fixture.window.connected, true);
+  assert.equal(fixture.connectButton.disabled, true);
+  assert.equal(fixture.disconnectButton.disabled, false);
+  assert.equal(fixture.notices.length, 1);
+});
+
+test("successful disconnect dispatch waits for backend and blocks duplicates", async () => {
+  const events = [];
+  let resolveDispatch;
+  const fixture = disconnectFixture((event) => {
+    events.push(event);
+    return new Promise((resolve) => { resolveDispatch = resolve; });
+  });
+  const pending = fixture.disconnect();
+  assert.equal(fixture.disconnectButton.disabled, true);
+  await fixture.disconnect();
+  assert.deepEqual(events, ["disconnect-elm"]);
+  resolveDispatch();
+  await pending;
+  assert.equal(fixture.window.connected, true);
+  assert.equal(fixture.disconnectButton.disabled, true);
+  assert.equal(fixture.notices.length, 0);
+});
+
+test("late disconnect rejection cannot change an already disconnected session", async () => {
+  let rejectDispatch;
+  const fixture = disconnectFixture(() => new Promise((_, reject) => { rejectDispatch = reject; }));
+  const pending = fixture.disconnect();
+  fixture.window.connected = false;
+  fixture.connectButton.disabled = false;
+  rejectDispatch(new Error("late rejection"));
+  await pending;
+  assert.equal(fixture.connectButton.disabled, false);
+  assert.equal(fixture.disconnectButton.disabled, true);
+  assert.equal(fixture.notices.length, 0);
+  await fixture.disconnect();
+});
+
+test("late disconnect rejection cannot unlock a newer session's pending disconnect", async () => {
+  const rejects = [];
+  const fixture = disconnectFixture((event) => event === "disconnect-elm"
+    ? new Promise((_, reject) => rejects.push(reject))
+    : Promise.resolve());
+  const old = fixture.disconnect();
+  fixture.window.connected = false;
+  await fixture.connect("38400", "COM2", "0");
+  fixture.window.connected = true;
+  fixture.disconnectButton.disabled = false;
+  const current = fixture.disconnect();
+  rejects[0](new Error("old request rejected"));
+  await old;
+  assert.equal(fixture.disconnectButton.disabled, true);
+  assert.equal(fixture.notices.length, 0);
+  rejects[1](new Error("current request rejected"));
+  await current;
+  assert.equal(fixture.disconnectButton.disabled, false);
+  assert.equal(fixture.notices.length, 1);
+});
