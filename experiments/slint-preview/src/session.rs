@@ -4,6 +4,8 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(2);
+// Preview policy only, not a vehicle-specific sampling requirement.
+const SAMPLE_MAX_AGE: Duration = Duration::from_secs(5);
 // Standard OBD-II Mode 01 PID 0C: unsigned 16-bit value divided by four.
 const MAX_STANDARD_RPM: f32 = u16::MAX as f32 / 4.0;
 
@@ -93,13 +95,21 @@ impl Observation {
     }
 }
 
+#[derive(Clone, Copy, Debug, Default)]
+enum SampleState {
+    #[default]
+    Unavailable,
+    Observed(Observation, Instant),
+    Stale,
+}
+
 #[derive(Debug, Default)]
 pub(crate) struct PreviewSession {
     generation: u64,
     sequence: u64,
     active: bool,
     pending: Option<Permit>,
-    sample: Option<Observation>,
+    sample: SampleState,
     timed_out: bool,
 }
 
@@ -121,7 +131,7 @@ impl PreviewSession {
         if let Some(pending) = self.pending.as_ref() {
             self.cancel(pending.ticket);
         }
-        self.sample = None;
+        self.sample = SampleState::Unavailable;
         self.timed_out = false;
     }
 
@@ -153,7 +163,7 @@ impl PreviewSession {
             generation: self.generation,
             sequence,
         };
-        self.sample = None;
+        self.sample = SampleState::Unavailable;
         self.timed_out = false;
         self.pending = Some(Permit {
             ticket,
@@ -189,11 +199,13 @@ impl PreviewSession {
             return false;
         }
         self.invalidate_pending();
-        self.sample = Some(sample);
+        // Use request start as a conservative age bound, not UI receipt time.
+        self.sample = SampleState::Observed(sample, started);
         true
     }
 
-    /// The deadline is exclusive: completion at or after it is too late.
+    /// Expire pending requests and successful measurements independently.
+    /// A request deadline is exclusive; a stale sample is not a timeout.
     pub(crate) fn expire(&mut self, now: Instant) -> bool {
         if self
             .pending
@@ -201,11 +213,20 @@ impl PreviewSession {
             .is_some_and(|pending| now >= pending.deadline)
         {
             self.invalidate_pending();
-            self.sample = None;
+            self.sample = SampleState::Unavailable;
             self.timed_out = true;
             return true;
         }
-        false
+        let stale = match self.sample {
+            SampleState::Observed(Observation::Rpm(_), started) => now
+                .checked_duration_since(started)
+                .is_none_or(|age| age >= SAMPLE_MAX_AGE),
+            _ => false,
+        };
+        if stale {
+            self.sample = SampleState::Stale;
+        }
+        stale
     }
 
     /// Explicit failure or cancellation for the matching request.
@@ -218,7 +239,7 @@ impl PreviewSession {
             return false;
         }
         self.invalidate_pending();
-        self.sample = None;
+        self.sample = SampleState::Unavailable;
         self.timed_out = false;
         true
     }
@@ -236,8 +257,11 @@ impl PreviewSession {
         if self.pending.is_some() {
             return "Waiting for sample".into();
         }
-        self.sample
-            .map_or_else(|| "Unavailable".into(), Observation::text)
+        match self.sample {
+            SampleState::Unavailable => "Unavailable".into(),
+            SampleState::Observed(sample, _) => sample.text(),
+            SampleState::Stale => "Stale sample — request again".into(),
+        }
     }
 }
 
@@ -335,7 +359,7 @@ mod tests {
             sequence: 0,
             active: false,
             pending: None,
-            sample: None,
+            sample: SampleState::Unavailable,
             timed_out: false,
         };
         assert!(!session.start());
@@ -462,6 +486,45 @@ mod tests {
         assert!(session.complete(current, rpm(0.0), now));
         assert!(!session.complete(old, Observation::SourceFailure, now));
         assert_eq!(session.rpm_text(), "0 rpm (synthetic)");
+    }
+
+    #[test]
+    fn successful_sample_ages_from_request_start_not_receipt() {
+        let now = Instant::now();
+        let mut session = PreviewSession::default();
+        assert!(session.start());
+        let first = session.request(now).expect("first");
+        assert!(session.complete(first, rpm(0.0), now + Duration::from_secs(1)));
+        let stale_at = now + SAMPLE_MAX_AGE;
+        assert!(!session.expire(stale_at - Duration::from_nanos(1)));
+        assert_eq!(session.rpm_text(), "0 rpm (synthetic)");
+        assert!(session.expire(stale_at));
+        assert_eq!(session.rpm_text(), "Stale sample — request again");
+        assert!(!session.expire(stale_at));
+        assert!(session.can_request());
+        assert!(!session.complete(first, rpm(5000.0), stale_at));
+        let second = session.request(stale_at).expect("second");
+        assert_eq!(session.rpm_text(), "Waiting for sample");
+        assert!(session.complete(second, rpm(200.0), stale_at));
+        assert_eq!(session.rpm_text(), "200 rpm (synthetic)");
+    }
+
+    #[test]
+    fn stale_state_is_distinct_from_source_errors_and_clears_on_stop() {
+        let now = Instant::now();
+        let mut session = PreviewSession::default();
+        assert!(session.start());
+        let first = session.request(now).expect("first");
+        assert!(session.complete(first, Observation::NoData, now));
+        let later = now + SAMPLE_MAX_AGE;
+        assert!(!session.expire(later));
+        assert_eq!(session.rpm_text(), "No data");
+        let second = session.request(later).expect("second");
+        assert!(session.complete(second, rpm(100.0), later));
+        assert!(session.expire(now));
+        assert_eq!(session.rpm_text(), "Stale sample — request again");
+        session.stop();
+        assert_eq!(session.rpm_text(), "Unavailable");
     }
 
     #[test]
