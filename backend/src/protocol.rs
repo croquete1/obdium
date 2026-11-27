@@ -190,6 +190,44 @@ pub fn parse_legacy_probe(protocol: ObdProtocol, line: &str) -> Result<LegacyPro
     })
 }
 
+/// Correlate legacy PID 00 evidence with the adapter report and requested mode.
+/// All non-status lines must validate; duplicate source addresses are ambiguous.
+/// Bus timing and the initialization method remain adapter-reported.
+pub fn confirm_legacy_probe(
+    selection: ProtocolSelection,
+    report: ReportedProtocol,
+    reply: &str,
+) -> Result<(ObdProtocol, Vec<LegacyProbe>), ProtocolError> {
+    let protocol = report.protocol.ok_or(ProtocolError::Malformed)?;
+    if protocol.can_parameters().is_some() {
+        return Err(ProtocolError::Malformed);
+    }
+    match selection {
+        ProtocolSelection::Manual(requested) if requested == protocol && !report.automatic => {}
+        ProtocolSelection::Automatic if report.automatic => {}
+        _ => return Err(ProtocolError::Unacknowledged),
+    }
+
+    let mut seen = [false; 256];
+    let mut probes = Vec::new();
+    for line in reply.split(['\r', '\n']).map(str::trim_ascii) {
+        if line.is_empty() || line == "SEARCHING..." {
+            continue;
+        }
+        let probe = parse_legacy_probe(protocol, line)?;
+        let source = usize::from(probe.source);
+        if seen[source] {
+            return Err(ProtocolError::Malformed);
+        }
+        seen[source] = true;
+        probes.push(probe);
+    }
+    if probes.is_empty() {
+        return Err(ProtocolError::Malformed);
+    }
+    Ok((protocol, probes))
+}
+
 /// Conservative evidence for the standard Mode 01 PID 00 CAN reply.
 /// Requires ELM headers, spaces and the single-frame length byte.
 /// Other valid adapter layouts are deliberately unverified here.
@@ -485,6 +523,67 @@ mod tests {
             parse_legacy_probe(ObdProtocol::J1850Vpw, "48 6B 10 41 00 00 00 00 00 04").is_err()
         );
         assert!(parse_legacy_probe(ObdProtocol::KwpFast, "85 F1 11 41 00 FF FF FF FF C4").is_err());
+    }
+
+    #[test]
+    fn legacy_confirmation_correlates_selection_report_and_all_five_layouts() {
+        for (id, line) in [
+            (1, "41 6B 10 41 00 00 00 00 00 9C"),
+            (2, "48 6B 10 41 00 00 00 00 00 F6"),
+            (3, "48 6B 10 41 00 00 00 00 00 04"),
+            (4, "86 F1 11 41 00 FF FF FF FF C5"),
+            (5, "86 F1 11 41 00 FF FF FF FF C5"),
+        ] {
+            let protocol = ObdProtocol::try_from(id).unwrap();
+            let manual = parse_reported_protocol(&id.to_string()).unwrap();
+            let automatic = parse_reported_protocol(&format!("A{id}")).unwrap();
+            let expected = vec![parse_legacy_probe(protocol, line).unwrap()];
+            assert_eq!(
+                confirm_legacy_probe(ProtocolSelection::Manual(protocol), manual, line),
+                Ok((protocol, expected.clone()))
+            );
+            assert_eq!(
+                confirm_legacy_probe(ProtocolSelection::Automatic, automatic, line),
+                Ok((protocol, expected))
+            );
+            assert_eq!(
+                confirm_legacy_probe(ProtocolSelection::Automatic, manual, line),
+                Err(ProtocolError::Unacknowledged)
+            );
+            assert_eq!(
+                confirm_legacy_probe(ProtocolSelection::Manual(protocol), automatic, line),
+                Err(ProtocolError::Unacknowledged)
+            );
+        }
+    }
+
+    #[test]
+    fn legacy_confirmation_preserves_distinct_ecus_and_rejects_ambiguous_replies() {
+        let selection = ProtocolSelection::Manual(ObdProtocol::Iso9141);
+        let report = parse_reported_protocol("3").unwrap();
+        let valid = "48 6B 10 41 00 00 00 00 00 04\r48 6B 11 41 00 00 00 00 00 05";
+        let (_, probes) = confirm_legacy_probe(selection, report, valid).unwrap();
+        assert_eq!(
+            probes.iter().map(|probe| probe.source).collect::<Vec<_>>(),
+            vec![0x10, 0x11]
+        );
+        for reply in [
+            "",
+            "SEARCHING...",
+            "48 6B 10 41 00 00 00 00 00 04\r48 6B 10 41 00 00 00 00 00 04",
+            "48 6B 10 41 00 00 00 00 00 04\r48 6B 11 41 00 00 00 00 00 06",
+            "48 6B 10 41 00 00 00 00 00 04\rNO DATA",
+        ] {
+            assert!(confirm_legacy_probe(selection, report, reply).is_err());
+        }
+        for invalid_report in ["0", "6", "5"] {
+            assert!(confirm_legacy_probe(
+                selection,
+                parse_reported_protocol(invalid_report).unwrap(),
+                valid
+            )
+            .is_err());
+        }
     }
 
     #[test]
