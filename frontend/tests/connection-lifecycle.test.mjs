@@ -342,3 +342,52 @@ test("late disconnect rejection cannot unlock a newer session's pending disconne
   assert.equal(fixture.disconnectButton.disabled, false);
   assert.equal(fixture.notices.length, 1);
 });
+
+test("notification messages are rendered as literal text, not HTML", () => {
+  const source = readFileSync(new URL("../scripts/features.js", import.meta.url), "utf8");
+  const start = source.indexOf("export function removeNotification");
+  const end = source.indexOf("export function listenExpandPID", start);
+  assert.ok(start >= 0 && end > start);
+  const fields = new Map([
+    [".notification-title", { textContent: "" }],
+    [".notification-desc", { textContent: "" }],
+    [".notification-close", { addEventListener() {} }],
+  ]);
+  const notification = {
+    innerHTML: "",
+    style: {},
+    querySelector: (selector) => fields.get(selector),
+    remove() {},
+  };
+  const container = {
+    children: [],
+    appendChild(node) { this.children.push(node); },
+  };
+  const timers = [];
+  const context = {
+    window: { hideNotifications: false },
+    console: { log() {} },
+    document: {
+      getElementById: () => container,
+      createElement: () => notification,
+    },
+    setTimeout: (callback, delay) => { timers.push({ callback, delay }); },
+  };
+  runInNewContext(
+    source.slice(start, end).replaceAll("export ", "") +
+      "\nthis.addNotification = addNotification;",
+    context,
+  );
+  const title = "<b>Adapter</b>";
+  const description = "<img src=x onerror=alert(1)>";
+  context.addNotification(title, description);
+  assert.equal(container.children.length, 1);
+  assert.equal(fields.get(".notification-title").textContent, title);
+  assert.equal(fields.get(".notification-desc").textContent, description);
+  assert.ok(!notification.innerHTML.includes(title));
+  assert.ok(!notification.innerHTML.includes(description));
+  assert.equal(timers[0].delay, 6000);
+  timers[0].callback();
+  assert.equal(notification.style.transition, "opacity 0.2s");
+  assert.equal(timers[1].delay, 200);
+});

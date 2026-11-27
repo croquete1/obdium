@@ -254,7 +254,7 @@ export function appendTerminalOutput(msg) {
 }
 
 export function removeNotification(el) {
-  el.style.transition = "opacity 0.2ss";
+  el.style.transition = "opacity 0.2s";
   el.style.opacity = "0";
   setTimeout(() => el.remove(), 200);
 }
@@ -276,10 +276,14 @@ export function addNotification(title, desc) {
         <path d="m6 6 12 12" />
       </svg>
     </button>
-    <div class="notification-title">${title}</div>
-    <div class="notification-desc">${desc}</div>
+    <div class="notification-title"></div>
+    <div class="notification-desc"></div>
     <div class="notification-progress"></div>
   `;
+
+  // Adapter and backend messages are data, never executable markup.
+  notification.querySelector(".notification-title").textContent = title ?? "";
+  notification.querySelector(".notification-desc").textContent = desc ?? "";
 
   notification
     .querySelector(".notification-close")
