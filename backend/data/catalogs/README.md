@@ -26,3 +26,7 @@ From backend: `cargo run --locked --example catalog_lookup -- obd 010C`, `cargo 
 ### Extended CAN identifiers
 
 The offline DBC selector accepts decimal DBC IDs: standard 0–2047, or extended 29-bit IDs encoded with bit 31 set (0x80000000–0x9fffffff). Reserved bits and unflagged values above 2047 are rejected; no automatic conversion or inference. Standard and extended frames with the same lower bits remain distinct. This is not a transport change. Multiplexed and floating-point definitions remain unsupported; metadata keywords separated by tabs are recognized and rejected for the selected frame.
+
+### Simple multiplexing
+
+The preview accepts one unsigned integer selector (`M`) and branches (`m<number>`). Branch activation uses raw selector bits, never the scaled display value. Inactive signals produce an explicit error, distinct from zero. Missing/duplicate selectors, unrepresentable branch values, nested multiplexing and `SG_MUL_VAL_` metadata are rejected. This is an offline subset; signal overlap, floating-point definitions, complete DBC validation and live integration remain outside this implementation.

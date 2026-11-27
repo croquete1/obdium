@@ -211,3 +211,45 @@ fn dbc_preview_rejects_tab_separated_extended_metadata() {
     let unrelated = format!("{dbc}SIG_VALTYPE_\t123 Value : 1;");
     assert!(decode_dbc_signal(&unrelated, 0x8000_007b, "Value", &[10]).is_ok());
 }
+
+#[test]
+fn simple_multiplex_uses_raw_selector_and_rejects_inactive_signals() {
+    let dbc = concat!(
+        "BO_ 123 Example: 2 ECU\n",
+        " SG_ First m1 : 8|8@1+ (2,0) [0|510] \"\" ECU\n",
+        " SG_ Second m2 : 8|8@1+ (3,0) [0|765] \"\" ECU\n",
+        " SG_ Selector M : 0|2@1+ (10,5) [5|35] \"\" ECU\n",
+        " SG_ Common : 2|6@1+ (1,0) [0|63] \"\" ECU\n",
+    );
+    let first = decode_dbc_signal(dbc, 123, "First", &[1, 0]).expect("active zero");
+    assert_eq!(first.raw, 0);
+    assert_eq!(first.scaled, 0.0);
+    assert!(matches!(
+        decode_dbc_signal(dbc, 123, "Second", &[1, 0]),
+        Err(ReferenceError::InactiveSignal)
+    ));
+    let second = decode_dbc_signal(dbc, 123, "Second", &[2, 10]).expect("second branch");
+    assert_eq!(second.scaled, 30.0);
+    let selector = decode_dbc_signal(dbc, 123, "Selector", &[1, 0]).expect("selector");
+    assert_eq!(selector.scaled, 15.0);
+    assert!(decode_dbc_signal(dbc, 123, "Common", &[3, 0]).is_ok());
+}
+
+#[test]
+fn simple_multiplex_rejects_missing_duplicate_and_unrepresentable_selectors() {
+    let dbc = concat!(
+        "BO_ 123 Example: 2 ECU\n",
+        " SG_ Value m1 : 8|8@1+ (1,0) [0|255] \"\" ECU\n",
+        " SG_ Selector M : 0|2@1+ (1,0) [0|3] \"\" ECU\n",
+    );
+    for invalid in [
+        dbc.replace("Value m1", "Value m4"),
+        dbc.replace("Selector M", "Selector"),
+        dbc.replace("Selector M", "Selector m1M"),
+        dbc.replace("0|2@1+", "0|2@1-"),
+        format!("{dbc} SG_ Other M : 2|2@1+ (1,0) [0|3] \"\" ECU\n"),
+        format!("{dbc}SG_MUL_VAL_ 123 Value Selector 1-2;"),
+    ] {
+        assert!(decode_dbc_signal(&invalid, 123, "Value", &[1, 10]).is_err());
+    }
+}

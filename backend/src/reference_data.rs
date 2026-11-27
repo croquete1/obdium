@@ -21,6 +21,8 @@ pub enum ReferenceError {
     Layout,
     #[error("unsupported DBC definition: {0}")]
     Dbc(String),
+    #[error("signal is inactive for the observed multiplexer value")]
+    InactiveSignal,
     #[error("signal exceeds frame payload")]
     Truncated,
     #[error("non-finite scaling or result")]
@@ -340,7 +342,39 @@ fn valid_dbc_id(id: u32) -> bool {
     id <= 0x7ff || (id & 0xe000_0000) == 0x8000_0000
 }
 
-/// Decode one explicitly selected, non-multiplexed integer signal from a DBC.
+#[derive(Clone, Copy)]
+enum Multiplex {
+    None,
+    Selector,
+    Branch(u64),
+}
+
+struct DbcSignal {
+    start: usize,
+    width: u8,
+    order: BitOrder,
+    signed: bool,
+    factor: f64,
+    offset: f64,
+    multiplex: Multiplex,
+}
+
+impl DbcSignal {
+    fn decode(&self, payload: &[u8]) -> Result<DecodedSignal, ReferenceError> {
+        decode_signal(
+            payload,
+            self.start,
+            self.width,
+            self.order,
+            self.signed,
+            self.factor,
+            self.offset,
+        )
+    }
+}
+
+/// Decode one explicitly selected integer signal, including simple multiplexing.
+/// Multiple or nested multiplexers and extended multiplex metadata are rejected.
 /// The caller supplies the encoded DBC ID, including bit 31 for extended IDs.
 /// This is a strict subset, not a general DBC importer or vehicle capability check.
 /// Metadata such as value labels, checksum rules and range constraints is not interpreted.
@@ -359,13 +393,15 @@ pub fn decode_dbc_signal(
     let message = regex::Regex::new(r"^BO_\s+([0-9]+)\s+\S+\s*:\s*([0-9]+)\s+\S+\s*$")
         .map_err(|error| ReferenceError::Dbc(error.to_string()))?;
     let signal = regex::Regex::new(
-        r#"^SG_\s+([A-Za-z0-9_]+)\s*:\s*([0-9]+)\|([0-9]+)@([01])([+-])\s*\(\s*([^,]+),\s*([^\)]+)\)\s*\[[^\]]*\]\s*"[^"]*"\s+.+$"#,
+        r#"^SG_\s+([A-Za-z0-9_]+)(?:\s+(M|m[0-9]+))?\s*:\s*([0-9]+)\|([0-9]+)@([01])([+-])\s*\(\s*([^,]+),\s*([^\)]+)\)\s*\[[^\]]*\]\s*"[^"]*"\s+.+$"#,
     )
     .map_err(|error| ReferenceError::Dbc(error.to_string()))?;
     let mut selected = false;
     let mut length = None;
     let mut definition = None;
     let mut names = BTreeSet::new();
+    let mut selector = None;
+    let mut branches = Vec::new();
     for line in dbc.lines().map(str::trim) {
         let keyword = line.split_whitespace().next();
         if keyword == Some("BO_") {
@@ -393,28 +429,37 @@ pub fn decode_dbc_signal(
             if !names.insert(name.clone()) {
                 return Err(ReferenceError::Dbc("duplicate signal".into()));
             }
-            if name == signal_name {
-                let start = fields[2]
-                    .parse::<usize>()
-                    .map_err(|_| ReferenceError::Layout)?;
-                let width = fields[3]
-                    .parse::<u8>()
-                    .map_err(|_| ReferenceError::Layout)?;
-                let order = if &fields[4] == "1" {
+            let multiplex = match fields.get(2).map(|value| value.as_str()) {
+                None => Multiplex::None,
+                Some("M") => Multiplex::Selector,
+                Some(value) => Multiplex::Branch(
+                    value[1..].parse().map_err(|_| ReferenceError::Layout)?,
+                ),
+            };
+            let signal = DbcSignal {
+                start: fields[3].parse().map_err(|_| ReferenceError::Layout)?,
+                width: fields[4].parse().map_err(|_| ReferenceError::Layout)?,
+                order: if &fields[5] == "1" {
                     BitOrder::Intel
                 } else {
                     BitOrder::Motorola
-                };
-                let signed = &fields[5] == "-";
-                let factor = fields[6]
-                    .trim()
-                    .parse::<f64>()
-                    .map_err(|_| ReferenceError::Scaling)?;
-                let offset = fields[7]
-                    .trim()
-                    .parse::<f64>()
-                    .map_err(|_| ReferenceError::Scaling)?;
-                definition = Some((start, width, order, signed, factor, offset));
+                },
+                signed: &fields[6] == "-",
+                factor: fields[7].trim().parse().map_err(|_| ReferenceError::Scaling)?,
+                offset: fields[8].trim().parse().map_err(|_| ReferenceError::Scaling)?,
+                multiplex,
+            };
+            if matches!(multiplex, Multiplex::Selector) {
+                if selector.is_some() || signal.signed || !(1..=64).contains(&signal.width) {
+                    return Err(ReferenceError::Dbc("invalid or multiple selectors".into()));
+                }
+                selector = Some((signal.start, signal.width, signal.order));
+            }
+            if let Multiplex::Branch(value) = multiplex {
+                branches.push(value);
+            }
+            if name == signal_name {
+                definition = Some(signal);
             }
         } else if matches!(keyword, Some("SIG_VALTYPE_" | "SG_MUL_VAL_")) {
             let id = line
@@ -431,7 +476,22 @@ pub fn decode_dbc_signal(
     if size != payload.len() {
         return Err(ReferenceError::Truncated);
     }
-    let (start, width, order, signed, factor, offset) =
-        definition.ok_or_else(|| ReferenceError::Dbc("signal not found".into()))?;
-    decode_signal(payload, start, width, order, signed, factor, offset)
+    let definition = definition.ok_or_else(|| ReferenceError::Dbc("signal not found".into()))?;
+    let selector_value = if let Some((start, width, order)) = selector {
+        if branches.iter().any(|value| u64::BITS - value.leading_zeros() > u32::from(width)) {
+            return Err(ReferenceError::Dbc("branch outside selector range".into()));
+        }
+        Some(decode_signal(payload, start, width, order, false, 1.0, 0.0)?.raw)
+    } else {
+        if !branches.is_empty() {
+            return Err(ReferenceError::Dbc("missing multiplexer".into()));
+        }
+        None
+    };
+    if let Multiplex::Branch(value) = definition.multiplex {
+        if selector_value != Some(i128::from(value)) {
+            return Err(ReferenceError::InactiveSignal);
+        }
+    }
+    definition.decode(payload)
 }
