@@ -285,7 +285,11 @@ mod tests {
     fn counters_never_wrap_or_reuse_tickets() {
         let mut session = PreviewSession {
             generation: u64::MAX,
-            ..Default::default()
+            sequence: 0,
+            active: false,
+            pending: None,
+            sample: None,
+            timed_out: false,
         };
         assert!(!session.start());
         assert!(!session.is_active());
