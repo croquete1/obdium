@@ -253,3 +253,71 @@ fn simple_multiplex_rejects_missing_duplicate_and_unrepresentable_selectors() {
         assert!(decode_dbc_signal(&invalid, 123, "Value", &[1, 10]).is_err());
     }
 }
+
+#[test]
+fn dbc_rejects_simultaneously_active_overlap_in_both_orders() {
+    let dbc = concat!(
+        "BO_ 123 Example: 2 ECU\n",
+        " SG_ Selector M : 0|2@1+ (1,0) [0|3] \"\" ECU\n",
+        " SG_ First m1 : 8|8@1+ (1,0) [0|255] \"\" ECU\n",
+        " SG_ Second m2 : 8|8@1+ (1,0) [0|255] \"\" ECU\n",
+    );
+    assert!(decode_dbc_signal(dbc, 123, "First", &[1, 10]).is_ok());
+    let common = " SG_ Common : 15|8@0+ (1,0) [0|255] \"\" ECU\n";
+    let same = " SG_ Other m1 : 12|4@1+ (1,0) [0|15] \"\" ECU\n";
+    let before = dbc.replace(" SG_ Selector", &format!("{common} SG_ Selector"));
+    for invalid in [
+        format!("{dbc}{common}"),
+        before,
+        format!("{dbc}{same}"),
+        dbc.replace("0|2@1+", "8|2@1+"),
+    ] {
+        assert!(matches!(
+            decode_dbc_signal(&invalid, 123, "First", &[1, 10]),
+            Err(ReferenceError::SignalOverlap)
+        ));
+    }
+}
+
+#[test]
+fn dbc_validates_inactive_and_unselected_signal_definitions() {
+    let dbc = concat!(
+        "BO_ 123 Example: 2 ECU\n",
+        " SG_ Selector M : 0|2@1+ (1,0) [0|3] \"\" ECU\n",
+        " SG_ First m1 : 8|8@1+ (1,0) [0|255] \"\" ECU\n",
+        " SG_ Second m2 : 8|8@1+ (1,0) [0|255] \"\" ECU\n",
+    );
+    let bad_layout = dbc.replace("Second m2 : 8|8", "Second m2 : 12|8");
+    assert!(matches!(
+        decode_dbc_signal(&bad_layout, 123, "First", &[1, 10]),
+        Err(ReferenceError::Truncated)
+    ));
+    let bad_scale = dbc.replace("Second m2 : 8|8@1+ (1,0)", "Second m2 : 8|8@1+ (NaN,0)");
+    assert!(matches!(
+        decode_dbc_signal(&bad_scale, 123, "First", &[1, 10]),
+        Err(ReferenceError::Scaling)
+    ));
+}
+
+#[test]
+fn dbc_bit_ownership_handles_cross_byte_and_64_byte_boundaries() {
+    let dbc = concat!(
+        "BO_ 123 Example: 64 ECU\n",
+        " SG_ First : 63|16@0+ (1,0) [0|65535] \"\" ECU\n",
+        " SG_ Last : 511|1@1+ (1,0) [0|1] \"\" ECU\n",
+    );
+    let mut payload = [0; 64];
+    payload[63] = 128;
+    let last = decode_dbc_signal(dbc, 123, "Last", &payload).expect("last bit");
+    assert_eq!(last.raw, 1);
+    let overlap = format!("{dbc} SG_ Other : 64|1@1+ (1,0) [0|1] \"\" ECU\n");
+    assert!(matches!(
+        decode_dbc_signal(&overlap, 123, "Last", &payload),
+        Err(ReferenceError::SignalOverlap)
+    ));
+    let outside = dbc.replace("511|1", "511|2");
+    assert!(matches!(
+        decode_dbc_signal(&outside, 123, "Last", &payload),
+        Err(ReferenceError::Truncated)
+    ));
+}

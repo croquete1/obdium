@@ -30,3 +30,7 @@ The offline DBC selector accepts decimal DBC IDs: standard 0–2047, or extended
 ### Simple multiplexing
 
 The preview accepts one unsigned integer selector (`M`) and branches (`m<number>`). Branch activation uses raw selector bits, never the scaled display value. Inactive signals produce an explicit error, distinct from zero. Missing/duplicate selectors, unrepresentable branch values, nested multiplexing and `SG_MUL_VAL_` metadata are rejected. This is an offline subset; signal overlap, floating-point definitions, complete DBC validation and live integration remain outside this implementation.
+
+### Signal ownership validation
+
+Every signal in the selected message now undergoes bit-bound and finite-scaling validation before decoding, including inactive branches. A 512-bit occupancy mask distinguishes common signals and each simple multiplex branch; overlapping bits in mutually exclusive branches are allowed, simultaneous overlap returns `SignalOverlap`. This conservative subset rejects ambiguous aliases rather than guessing. Intel and Motorola traversal share the same helper. No claim of support for every staged DBC or physical CAN FD framing.

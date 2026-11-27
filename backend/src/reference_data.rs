@@ -23,6 +23,8 @@ pub enum ReferenceError {
     Dbc(String),
     #[error("signal is inactive for the observed multiplexer value")]
     InactiveSignal,
+    #[error("overlapping simultaneously active DBC signals")]
+    SignalOverlap,
     #[error("signal exceeds frame payload")]
     Truncated,
     #[error("non-finite scaling or result")]
@@ -204,6 +206,14 @@ pub struct DecodedSignal {
     pub scaled: f64,
 }
 
+fn next_signal_bit(bit: usize, order: BitOrder) -> usize {
+    match order {
+        BitOrder::Intel => bit + 1,
+        BitOrder::Motorola if bit.is_multiple_of(8) => bit + 15,
+        BitOrder::Motorola => bit - 1,
+    }
+}
+
 /// DBC start-bit semantics: Intel starts at LSB; Motorola at MSB (sawtooth).
 /// No frame transmission, multiplex selection or checksum inference.
 pub fn decode_signal(
@@ -231,11 +241,7 @@ pub fn decode_signal(
             BitOrder::Motorola => raw = (raw << 1) | value,
         }
         if index + 1 < width {
-            bit = match order {
-                BitOrder::Intel => bit + 1,
-                BitOrder::Motorola if bit.is_multiple_of(8) => bit + 15,
-                BitOrder::Motorola => bit - 1,
-            };
+            bit = next_signal_bit(bit, order);
         }
     }
     let raw = if signed && raw & (1u64 << (width - 1)) != 0 {
@@ -359,7 +365,70 @@ struct DbcSignal {
     multiplex: Multiplex,
 }
 
+type BitMask = [u64; 8];
+
+fn masks_overlap(left: &BitMask, right: &BitMask) -> bool {
+    left.iter().zip(right).any(|(a, b)| a & b != 0)
+}
+
+fn merge_mask(target: &mut BitMask, source: &BitMask) {
+    for (word, bits) in target.iter_mut().zip(source) {
+        *word |= bits;
+    }
+}
+
+#[derive(Default)]
+struct SignalOccupancy {
+    common: BitMask,
+    all_branches: BitMask,
+    branches: BTreeMap<u64, BitMask>,
+}
+
+impl SignalOccupancy {
+    fn add(&mut self, signal: &DbcSignal, size: usize) -> Result<(), ReferenceError> {
+        let mask = signal.bit_mask(size)?;
+        match signal.multiplex {
+            Multiplex::Branch(value) => {
+                let branch = self.branches.entry(value).or_default();
+                if masks_overlap(&self.common, &mask) || masks_overlap(branch, &mask) {
+                    return Err(ReferenceError::SignalOverlap);
+                }
+                merge_mask(branch, &mask);
+                merge_mask(&mut self.all_branches, &mask);
+            }
+            Multiplex::None | Multiplex::Selector => {
+                if masks_overlap(&self.common, &mask) || masks_overlap(&self.all_branches, &mask) {
+                    return Err(ReferenceError::SignalOverlap);
+                }
+                merge_mask(&mut self.common, &mask);
+            }
+        }
+        Ok(())
+    }
+}
+
 impl DbcSignal {
+    fn bit_mask(&self, size: usize) -> Result<BitMask, ReferenceError> {
+        if !(1..=64).contains(&self.width) || self.start >= 512 || size > 64 {
+            return Err(ReferenceError::Layout);
+        }
+        if !self.factor.is_finite() || !self.offset.is_finite() {
+            return Err(ReferenceError::Scaling);
+        }
+        let mut mask = [0; 8];
+        let mut bit = self.start;
+        for index in 0..self.width {
+            if bit >= size * 8 {
+                return Err(ReferenceError::Truncated);
+            }
+            mask[bit / 64] |= 1u64 << (bit % 64);
+            if index + 1 < self.width {
+                bit = next_signal_bit(bit, self.order);
+            }
+        }
+        Ok(mask)
+    }
+
     fn decode(&self, payload: &[u8]) -> Result<DecodedSignal, ReferenceError> {
         decode_signal(
             payload,
@@ -402,6 +471,7 @@ pub fn decode_dbc_signal(
     let mut names = BTreeSet::new();
     let mut selector = None;
     let mut branches = Vec::new();
+    let mut occupancy = SignalOccupancy::default();
     for line in dbc.lines().map(str::trim) {
         let keyword = line.split_whitespace().next();
         if keyword == Some("BO_") {
@@ -455,6 +525,8 @@ pub fn decode_dbc_signal(
                     .map_err(|_| ReferenceError::Scaling)?,
                 multiplex,
             };
+            let size = length.ok_or(ReferenceError::Layout)?;
+            occupancy.add(&signal, size)?;
             if matches!(multiplex, Multiplex::Selector) {
                 if selector.is_some() || signal.signed || !(1..=64).contains(&signal.width) {
                     return Err(ReferenceError::Dbc("invalid or multiple selectors".into()));
