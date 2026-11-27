@@ -229,6 +229,9 @@ impl PreviewSession {
         if self.timed_out {
             return "Timed out".into();
         }
+        if self.pending.is_some() {
+            return "Waiting for sample".into();
+        }
         self.sample
             .map_or_else(|| "Unavailable".into(), Observation::text)
     }
@@ -284,7 +287,7 @@ mod tests {
         assert_ne!(old, current);
         assert!(!session.complete(old, rpm(5000.0), now));
         assert!(!session.cancel(old));
-        assert_eq!(session.rpm_text(), "Unavailable");
+        assert_eq!(session.rpm_text(), "Waiting for sample");
         assert!(session.complete(current, rpm(0.0), now));
         assert_eq!(session.rpm_text(), "0 rpm (synthetic)");
     }
@@ -298,7 +301,7 @@ mod tests {
         assert!(session.request(now).is_none());
         assert!(session.complete(first, rpm(100.0), now));
         let second = session.request(now).expect("second");
-        assert_eq!(session.rpm_text(), "Unavailable");
+        assert_eq!(session.rpm_text(), "Waiting for sample");
         assert!(!session.complete(first, rpm(5000.0), now));
         assert!(session.complete(second, rpm(200.0), now));
         assert!(!session.complete(second, rpm(5000.0), now));
@@ -311,7 +314,9 @@ mod tests {
         let mut session = PreviewSession::default();
         assert!(session.start());
         let first = session.request(now).expect("first");
+        assert_eq!(session.rpm_text(), "Waiting for sample");
         assert!(session.cancel(first));
+        assert_eq!(session.rpm_text(), "Unavailable");
         assert!(!session.cancel(first));
         let second = session.request(now).expect("second");
         assert!(!session.complete(first, rpm(5000.0), now));
@@ -355,7 +360,7 @@ mod tests {
         assert_eq!(session.rpm_text(), "Timed out");
         assert!(!session.complete(second, rpm(10.0), second_deadline));
         let third = session.request(second_deadline).expect("third");
-        assert_eq!(session.rpm_text(), "Unavailable");
+        assert_eq!(session.rpm_text(), "Waiting for sample");
         assert!(!session.complete(
             third,
             rpm(10.0),
@@ -448,7 +453,7 @@ mod tests {
         assert!(session.complete(old, Observation::SourceFailure, now));
         assert_eq!(session.rpm_text(), "Source read failed");
         let current = session.request(now).expect("current");
-        assert_eq!(session.rpm_text(), "Unavailable");
+        assert_eq!(session.rpm_text(), "Waiting for sample");
         assert!(!session.complete(old, Observation::Invalid, now));
         assert!(session.complete(current, rpm(0.0), now));
         assert!(!session.complete(old, Observation::SourceFailure, now));

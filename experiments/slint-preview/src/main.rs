@@ -25,11 +25,12 @@ fn render_session(ui: &PreviewWindow, state: &PreviewSession) {
     ui.set_rpm_text(state.rpm_text().into());
 }
 
-// Expire first so that a rejected late reply still triggers a UI refresh.
+// Refresh even if a rejected reply changed the visible request state.
 fn accept_completion(state: &mut PreviewSession, reply: Completion, now: Instant) -> bool {
+    let previous = state.rpm_text();
     let expired = state.expire(now);
     let accepted = state.complete(reply.ticket, reply.sample, now);
-    expired || accepted
+    expired || accepted || state.rpm_text() != previous
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -145,6 +146,36 @@ mod core_boundary_tests {
         ] {
             assert_eq!(Observation::from_scalar(&sample), Observation::Invalid);
         }
+    }
+
+    #[test]
+    fn rejected_clock_order_refreshes_pending_state_but_stale_reply_does_not() {
+        let now = Instant::now();
+        let mut state = PreviewSession::default();
+        assert!(state.start());
+        let old = state.request(now).expect("old ticket");
+        assert!(state.cancel(old));
+        let started = now + Duration::from_secs(1);
+        let ticket = state.request(started).expect("current ticket");
+        assert_eq!(state.rpm_text(), "Waiting for sample");
+        assert!(!accept_completion(
+            &mut state,
+            Completion {
+                ticket: old,
+                sample: Observation::Rpm(100.0),
+            },
+            started
+        ));
+        assert_eq!(state.rpm_text(), "Waiting for sample");
+        assert!(accept_completion(
+            &mut state,
+            Completion {
+                ticket,
+                sample: Observation::Rpm(100.0),
+            },
+            now
+        ));
+        assert_eq!(state.rpm_text(), "Unavailable");
     }
 
     #[test]
