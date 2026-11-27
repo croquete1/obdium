@@ -1,11 +1,11 @@
 #[path = "../src/reference_data.rs"]
 mod reference_data;
 
+use reference_data::parse_dbc_message;
 use reference_data::{
     decode_dbc_signal, decode_signal, translation_preview, BitOrder, ReferenceCatalogs,
     ReferenceError,
 };
-use reference_data::parse_dbc_message;
 
 #[test]
 fn bundled_catalogs_return_known_and_unknown_reference_values() {
@@ -338,7 +338,10 @@ fn parsed_dbc_message_reuses_definition_without_reusing_observations() {
         message.decode("First", &[2, 8]),
         Err(ReferenceError::InactiveSignal)
     ));
-    assert_eq!(message.decode("Second", &[2, 8]).expect("second").scaled, 16.0);
+    assert_eq!(
+        message.decode("Second", &[2, 8]).expect("second").scaled,
+        16.0
+    );
     assert!(matches!(
         message.decode("Second", &[2]),
         Err(ReferenceError::Truncated)
@@ -358,9 +361,8 @@ fn parsed_dbc_message_rejects_invalid_unobserved_definitions() {
         Err(ReferenceError::SignalOverlap)
     ));
     let long_name = "X".repeat(129);
-    let oversized = format!(
-        "BO_ 123 Example: 1 ECU\n SG_ {long_name} : 0|8@1+ (1,0) [0|255] \"\" ECU"
-    );
+    let oversized =
+        format!("BO_ 123 Example: 1 ECU\n SG_ {long_name} : 0|8@1+ (1,0) [0|255] \"\" ECU");
     assert!(matches!(
         parse_dbc_message(&oversized, 123),
         Err(ReferenceError::Layout)
