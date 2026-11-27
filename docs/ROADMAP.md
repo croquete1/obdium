@@ -7,8 +7,8 @@
 
 ## 1. Princípios e limites
 
-- Manter Rust, Tauri 2, SQLite, suporte Windows/macOS/Linux, VIN offline, PIDs personalizados, modo demo e licença GPL-3.0. Preservar autoria e histórico do upstream; cumprir licenças de dependências e dados distribuídos.
-- Melhorar incrementalmente, sem reescrita total. TypeScript/Vite e React são propostas a validar por decisão arquitetural, não pré-requisitos para corrigir o motor.
+- Manter Rust, SQLite, suporte Windows/macOS/Linux, VIN offline, PIDs personalizados, modo demo e licença GPL-3.0. Preservar autoria e histórico do upstream; cumprir licenças de dependências e dados distribuídos.
+- Migrar a apresentação desktop de Tauri 2 + HTML/CSS/JavaScript para Slint + Rust por fases, conforme [ADR-001](decisions/ADR-001-slint-migration.md). React não está instalado e deixa de ser uma proposta-alvo. Tauri permanece operacional até cumprir os critérios de substituição; nenhuma redução de segurança ou de testes.
 - Offline por defeito; sem conta, telemetria obrigatória, IA obrigatória ou subscrição. Dados pertencem ao utilizador. Sem ativação de serviços pagos sem autorização explícita.
 - Separar capacidades OBD genéricas de funções OEM/UDS. Disponibilidade depende do veículo, ECU, protocolo, adaptador e plataforma. Nunca apresentar um PID/ECU como suportado sem evidência.
 - Operações de leitura por defeito. Escritas e ativações exigem confirmação explícita, precondições documentadas, política de autorização no backend, exclusão mútua, auditoria e testes físicos. Não implementar manipulação de odómetros, contorno de imobilizadores/gateways, desativação de sistemas de emissões ou programação indiscriminada.
@@ -311,3 +311,7 @@ A auditoria foi estática, sobre árvore do repositório, ficheiros selecionados
 - PR #3 integrada: main `d12f46336fbfb782fb78be873c77880f4bb123b6`, CI pré-merge [45890495779](https://github.com/croquete1/obdium/actions/runs/45890495779), preview 45890495686 e House Rules 45890495638 aprovados. CI pós-merge 45892953641 pendente à data deste registo.
 - PR #2: a primeira atualização de base (`47cd042`) aparentava não ter conflitos, mas a comparação com main revelou remoção dos workflows e reversões Rust da PR #3. Corrigida por construção a partir da árvore exata da main, preservando apenas os cinco caminhos próprios da PR #2, incluindo a remoção do lockfile de raiz obsoleto. Validar novamente o diff final e todos os workflows; não considerar mergeable=true prova de preservação de alterações.
 - Candidato integrado #9 `8365da146e0f389a9ad851cc0a4d7e3fede0af0f`: CI [45889596251](https://github.com/croquete1/obdium/actions/runs/45889596251), preview 45889596216 e House Rules 45889596213 aprovados. 68+3 Rust, 40 Node, 9 Python = 120 testes distintos. Validação conjunta, não merge. Ensaios físicos e WebView ainda pendentes.
+
+## F22 — Migração nativa Slint (proposta de governação)
+
+Estado **REVIEW** para ADR-001; implementação **TODO**, até evidência independente. Plano autorizado pelo mantenedor em 27/11/2026. Critérios detalhados em [ADR-001](decisions/ADR-001-slint-migration.md). F22.01 aprovação da arquitetura; F22.02 prova de compilação isolada; F22.03 separação do núcleo; F22.04 sessão tipada e worker; F22.05 paridade UI leitura/demo; F22.06 ficheiros, bases, i18n e acessibilidade; F22.07 ações sensíveis e evidência; F22.08 CI/instalação/rollback; F22.09 substituição e remoção do legado. Preservar F01–F21 (F14–F21 estão em PR #13, não em main) e coordenar os conflitos de roadmap com #11 e #13. A PR #9 de validação conjunta não pode ser merged. Nenhuma funcionalidade está concluída por efeito desta proposta.
