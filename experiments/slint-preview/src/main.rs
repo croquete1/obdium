@@ -33,6 +33,34 @@ fn accept_completion(state: &mut PreviewSession, reply: Completion, now: Instant
     expired || accepted || state.rpm_text() != previous
 }
 
+#[derive(Debug, PartialEq, Eq)]
+enum WorkerEvent {
+    Unchanged,
+    Changed,
+    Disconnected,
+}
+
+fn handle_worker_event(
+    state: &mut PreviewSession,
+    result: Result<Completion, TryRecvError>,
+    now: Instant,
+) -> WorkerEvent {
+    match result {
+        Ok(reply) => {
+            if accept_completion(state, reply, now) {
+                WorkerEvent::Changed
+            } else {
+                WorkerEvent::Unchanged
+            }
+        }
+        Err(TryRecvError::Empty) => WorkerEvent::Unchanged,
+        Err(TryRecvError::Disconnected) => {
+            state.stop();
+            WorkerEvent::Disconnected
+        }
+    }
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let ui = PreviewWindow::new()?;
     let core = OBD::new();
@@ -42,6 +70,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Explicitly close both channels after the event loop, even if the UI
     // retains callback closures until component destruction.
     let worker = Rc::new(RefCell::new(Some(worker)));
+    ui.set_demo_available(true);
     render_session(&ui, &state.borrow());
 
     let weak = ui.as_weak();
@@ -50,9 +79,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     ui.on_toggle_demo(move || {
         if let Some(ui) = weak.upgrade() {
             let mut state = callback_state.borrow_mut();
+            let mut worker_slot = callback_worker.borrow_mut();
             if state.is_active() {
                 state.stop();
-            } else if let Some(worker) = callback_worker.borrow().as_ref() {
+            } else if let Some(worker) = worker_slot.as_ref() {
                 if state.start() {
                     if let Some(permit) = state
                         .request(Instant::now())
@@ -68,6 +98,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             }
                             Err(TrySendError::Disconnected(_)) => {
                                 state.stop();
+                                worker_slot.take();
+                                ui.set_demo_available(false);
                                 ui.set_core_status("Demo worker unavailable".into());
                             }
                         }
@@ -88,17 +120,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         };
         let mut state = timer_state.borrow_mut();
         let mut changed = state.expire(Instant::now());
-        if let Some(worker) = timer_worker.borrow().as_ref() {
-            match worker.receive() {
-                Ok(reply) => {
-                    changed |= accept_completion(&mut state, reply, Instant::now());
-                }
-                Err(TryRecvError::Disconnected) if state.is_active() => {
-                    state.stop();
+        let mut worker_slot = timer_worker.borrow_mut();
+        if let Some(worker) = worker_slot.as_ref() {
+            let result = worker.receive();
+            match handle_worker_event(&mut state, result, Instant::now()) {
+                WorkerEvent::Unchanged => {}
+                WorkerEvent::Changed => changed = true,
+                WorkerEvent::Disconnected => {
+                    worker_slot.take();
+                    ui.set_demo_available(false);
                     ui.set_core_status("Demo worker unavailable".into());
                     changed = true;
                 }
-                Err(_) => {}
             }
         }
         if changed {
@@ -176,6 +209,54 @@ mod core_boundary_tests {
             now
         ));
         assert_eq!(state.rpm_text(), "Unavailable");
+    }
+
+    #[test]
+    fn worker_disconnection_is_visible_even_when_demo_is_inactive() {
+        let now = Instant::now();
+        let mut state = PreviewSession::default();
+        assert_eq!(
+            handle_worker_event(&mut state, Err(TryRecvError::Empty), now),
+            WorkerEvent::Unchanged
+        );
+        assert_eq!(
+            handle_worker_event(&mut state, Err(TryRecvError::Disconnected), now),
+            WorkerEvent::Disconnected
+        );
+        assert!(!state.is_active());
+        assert_eq!(state.rpm_text(), "Unavailable");
+    }
+
+    #[test]
+    fn worker_disconnection_revokes_pending_request_and_rejects_late_sample() {
+        let now = Instant::now();
+        let mut state = PreviewSession::default();
+        assert!(state.start());
+        let ticket = state.request(now).expect("ticket");
+        let permit = state.permit(ticket).expect("permit");
+        assert_eq!(
+            handle_worker_event(&mut state, Err(TryRecvError::Empty), now),
+            WorkerEvent::Unchanged
+        );
+        assert!(permit.is_live(now));
+        assert_eq!(
+            handle_worker_event(&mut state, Err(TryRecvError::Disconnected), now),
+            WorkerEvent::Disconnected
+        );
+        assert!(!permit.is_live(now));
+        assert!(!state.is_active());
+        assert_eq!(state.rpm_text(), "Unavailable");
+        assert_eq!(
+            handle_worker_event(
+                &mut state,
+                Ok(Completion {
+                    ticket,
+                    sample: Observation::Rpm(1726.0),
+                }),
+                now
+            ),
+            WorkerEvent::Unchanged
+        );
     }
 
     #[test]
