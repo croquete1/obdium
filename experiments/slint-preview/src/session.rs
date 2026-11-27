@@ -28,7 +28,15 @@ impl Permit {
     }
 
     pub(crate) fn is_live(&self, now: Instant) -> bool {
-        !self.cancelled.load(Ordering::Acquire) && now >= self.started && now < self.deadline
+        self.remaining(now).is_some()
+    }
+
+    /// Sources must refresh this budget before each bounded I/O operation.
+    pub(crate) fn remaining(&self, now: Instant) -> Option<Duration> {
+        if self.cancelled.load(Ordering::Acquire) || now < self.started || now >= self.deadline {
+            return None;
+        }
+        self.deadline.checked_duration_since(now)
     }
 
     /// Clones share the same execution claim: at most one worker may start
@@ -53,6 +61,9 @@ pub(crate) enum Observation {
     Rpm(f32),
     NoData,
     Invalid,
+    SourceTimeout,
+    SourceDisconnected,
+    Unsupported,
     SourceFailure,
 }
 
@@ -72,6 +83,9 @@ impl Observation {
             Self::Rpm(value) => format!("{value} rpm (synthetic)"),
             Self::NoData => "No data".into(),
             Self::Invalid => "Invalid measurement".into(),
+            Self::SourceTimeout => "Source read timed out".into(),
+            Self::SourceDisconnected => "Source disconnected".into(),
+            Self::Unsupported => "Unsupported observation".into(),
             Self::SourceFailure => "Source read failed".into(),
         }
     }
@@ -437,5 +451,22 @@ mod tests {
         assert!(session.complete(current, rpm(0.0), now));
         assert!(!session.complete(old, Observation::SourceFailure, now));
         assert_eq!(session.rpm_text(), "0 rpm (synthetic)");
+    }
+
+    #[test]
+    fn remaining_budget_is_exclusive_and_revocable() {
+        let now = Instant::now();
+        let mut session = PreviewSession::default();
+        assert!(session.start());
+        let ticket = session.request(now).expect("ticket");
+        let permit = session.permit(ticket).expect("permit");
+        assert_eq!(permit.remaining(now), Some(REQUEST_TIMEOUT));
+        assert_eq!(
+            permit.remaining(now + Duration::from_secs(1)),
+            Some(Duration::from_secs(1))
+        );
+        assert_eq!(permit.remaining(now + REQUEST_TIMEOUT), None);
+        session.stop();
+        assert_eq!(permit.remaining(now), None);
     }
 }

@@ -62,15 +62,16 @@ impl DemoWorker {
 }
 
 /// Read-only observation boundary, owned by the worker thread.
-/// Production transport is deliberately not implemented here.
+/// Production transport is deliberately not implemented here. A future
+/// source must check the permit and bound every I/O by the remaining budget.
 trait ObservationSource {
-    fn read_engine_speed(&mut self) -> io::Result<Scalar>;
+    fn read_engine_speed(&mut self, permit: &Permit) -> io::Result<Scalar>;
 }
 
 struct SyntheticSource;
 
 impl ObservationSource for SyntheticSource {
-    fn read_engine_speed(&mut self) -> io::Result<Scalar> {
+    fn read_engine_speed(&mut self, _permit: &Permit) -> io::Result<Scalar> {
         Ok(Scalar::new(1726.0, Unit::RPM, None))
     }
 }
@@ -80,10 +81,25 @@ fn observe(
     permit: &Permit,
     now: Instant,
 ) -> Option<Observation> {
-    permit.claim(now).then(|| match source.read_engine_speed() {
+    if !permit.claim(now) {
+        return None;
+    }
+    let outcome = match source.read_engine_speed(permit) {
         Ok(sample) => Observation::from_scalar(&sample),
-        Err(_) => Observation::SourceFailure,
-    })
+        Err(error) => match error.kind() {
+            io::ErrorKind::TimedOut => Observation::SourceTimeout,
+            io::ErrorKind::NotConnected
+            | io::ErrorKind::ConnectionReset
+            | io::ErrorKind::ConnectionAborted
+            | io::ErrorKind::BrokenPipe => Observation::SourceDisconnected,
+            io::ErrorKind::Unsupported => Observation::Unsupported,
+            io::ErrorKind::InvalidData => Observation::Invalid,
+            _ => Observation::SourceFailure,
+        },
+    };
+    // Check cooperative cancellation again after the source returns. The
+    // worker also checks a fresh clock immediately before publication.
+    permit.is_live(now).then_some(outcome)
 }
 
 #[cfg(test)]
@@ -179,7 +195,7 @@ mod tests {
         }
 
         impl ObservationSource for MissingSource {
-            fn read_engine_speed(&mut self) -> io::Result<Scalar> {
+            fn read_engine_speed(&mut self, _permit: &Permit) -> io::Result<Scalar> {
                 self.reads += 1;
                 Ok(Scalar::no_data())
             }
@@ -203,7 +219,7 @@ mod tests {
         struct FailedSource;
 
         impl ObservationSource for FailedSource {
-            fn read_engine_speed(&mut self) -> io::Result<Scalar> {
+            fn read_engine_speed(&mut self, _permit: &Permit) -> io::Result<Scalar> {
                 Err(io::Error::other("synthetic failure"))
             }
         }
@@ -219,5 +235,61 @@ mod tests {
         assert!(session.complete(ticket, outcome, now));
         assert_eq!(session.rpm_text(), "Source read failed");
         assert!(observe(&mut source, &permit, now).is_none());
+    }
+
+    #[test]
+    fn source_error_kinds_remain_distinct_and_do_not_retry() {
+        struct FailedSource(io::ErrorKind);
+
+        impl ObservationSource for FailedSource {
+            fn read_engine_speed(&mut self, _permit: &Permit) -> io::Result<Scalar> {
+                Err(self.0.into())
+            }
+        }
+
+        let now = Instant::now();
+        let mut session = PreviewSession::default();
+        assert!(session.start());
+        for (kind, expected) in [
+            (io::ErrorKind::TimedOut, Observation::SourceTimeout),
+            (io::ErrorKind::NotConnected, Observation::SourceDisconnected),
+            (
+                io::ErrorKind::ConnectionReset,
+                Observation::SourceDisconnected,
+            ),
+            (io::ErrorKind::Unsupported, Observation::Unsupported),
+            (io::ErrorKind::InvalidData, Observation::Invalid),
+            (io::ErrorKind::WouldBlock, Observation::SourceFailure),
+        ] {
+            let ticket = session.request(now).expect("ticket");
+            let permit = session.permit(ticket).expect("permit");
+            let mut source = FailedSource(kind);
+            let outcome = observe(&mut source, &permit, now).expect("outcome");
+            assert_eq!(outcome, expected);
+            assert!(session.complete(ticket, outcome, now));
+            assert!(observe(&mut source, &permit, now).is_none());
+        }
+    }
+
+    #[test]
+    fn cancellation_inside_source_suppresses_result() {
+        struct CancelledSource<'a>(&'a mut PreviewSession);
+
+        impl ObservationSource for CancelledSource<'_> {
+            fn read_engine_speed(&mut self, _permit: &Permit) -> io::Result<Scalar> {
+                self.0.stop();
+                Ok(Scalar::new(1726.0, Unit::RPM, None))
+            }
+        }
+
+        let now = Instant::now();
+        let mut session = PreviewSession::default();
+        assert!(session.start());
+        let ticket = session.request(now).expect("ticket");
+        let permit = session.permit(ticket).expect("permit");
+        let mut source = CancelledSource(&mut session);
+        assert!(observe(&mut source, &permit, now).is_none());
+        assert!(!session.is_active());
+        assert_eq!(session.rpm_text(), "Unavailable");
     }
 }
