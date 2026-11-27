@@ -486,9 +486,7 @@ fn dbc_accepts_balanced_non_comment_strings_with_escapes() {
 #[test]
 fn reusable_and_one_shot_dbc_decoders_share_signal_name_limits() {
     let name = "X".repeat(128);
-    let dbc = format!(
-        "BO_ 123 Example: 1 ECU\n SG_ {name} : 0|8@1+ (1,0) [0|255] \"\" ECU\n"
-    );
+    let dbc = format!("BO_ 123 Example: 1 ECU\n SG_ {name} : 0|8@1+ (1,0) [0|255] \"\" ECU\n");
     let message = parse_dbc_message(&dbc, 123).expect("valid maximum-length name");
     assert_eq!(message.decode(&name, &[42]).expect("reusable").raw, 42);
     assert_eq!(
