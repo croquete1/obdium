@@ -29,16 +29,13 @@ impl DemoWorker {
                     let Some(sample) = observe(&mut source, &permit, Instant::now) else {
                         continue;
                     };
-                    if !permit.is_live(Instant::now()) {
-                        continue;
-                    }
-                    // A revocation racing with send is still rejected by
-                    // the receiving session. Closing the receiver unblocks send.
                     let reply = Completion {
                         ticket: permit.ticket(),
                         sample,
                     };
-                    if replies.send(reply).is_err() {
+                    if publish(&replies, &permit, reply, Instant::now, thread::sleep)
+                        == Publication::Disconnected
+                    {
                         break;
                     }
                 }
@@ -58,6 +55,41 @@ impl DemoWorker {
 
     pub(crate) fn receive(&self) -> Result<Completion, TryRecvError> {
         self.completions.try_recv()
+    }
+}
+
+// Backpressure must not extend the observation deadline or block cancellation.
+const PUBLICATION_RETRY_INTERVAL: Duration = Duration::from_millis(10);
+
+#[derive(Debug, PartialEq, Eq)]
+enum Publication {
+    Sent,
+    ExpiredOrCancelled,
+    Disconnected,
+}
+
+fn publish(
+    replies: &SyncSender<Completion>,
+    permit: &Permit,
+    mut reply: Completion,
+    mut now: impl FnMut() -> Instant,
+    mut wait: impl FnMut(Duration),
+) -> Publication {
+    loop {
+        if !permit.is_live(now()) {
+            return Publication::ExpiredOrCancelled;
+        }
+        match replies.try_send(reply) {
+            Ok(()) => return Publication::Sent,
+            Err(TrySendError::Disconnected(_)) => return Publication::Disconnected,
+            Err(TrySendError::Full(pending)) => {
+                reply = pending;
+                let Some(remaining) = permit.remaining(now()) else {
+                    return Publication::ExpiredOrCancelled;
+                };
+                wait(remaining.min(PUBLICATION_RETRY_INTERVAL));
+            }
+        }
     }
 }
 
@@ -176,6 +208,139 @@ mod tests {
         worker.submit(permit).expect("second submit");
         drop(worker);
         thread.join().expect("shutdown");
+    }
+
+    #[test]
+    fn full_reply_queue_cannot_extend_request_deadline() {
+        let now = Instant::now();
+        let mut session = PreviewSession::default();
+        assert!(session.start());
+        let ticket = session.request(now).expect("ticket");
+        let permit = session.permit(ticket).expect("permit");
+        let (replies, receiver) = mpsc::sync_channel(1);
+        replies
+            .send(Completion {
+                ticket,
+                sample: Observation::NoData,
+            })
+            .expect("fill queue");
+        let clock = Cell::new(now + Duration::from_millis(1995));
+        let waits = Cell::new(0);
+        assert_eq!(
+            publish(
+                &replies,
+                &permit,
+                Completion {
+                    ticket,
+                    sample: Observation::Rpm(1726.0),
+                },
+                || clock.get(),
+                |delay| {
+                    assert_eq!(delay, Duration::from_millis(5));
+                    waits.set(waits.get() + 1);
+                    clock.set(clock.get() + delay);
+                },
+            ),
+            Publication::ExpiredOrCancelled
+        );
+        assert_eq!(waits.get(), 1);
+        assert_eq!(
+            receiver.try_recv().expect("queued reply").sample,
+            Observation::NoData
+        );
+        assert!(matches!(receiver.try_recv(), Err(TryRecvError::Empty)));
+    }
+
+    #[test]
+    fn publication_recovers_when_queue_drains_without_repeating_observation() {
+        let now = Instant::now();
+        let mut session = PreviewSession::default();
+        assert!(session.start());
+        let ticket = session.request(now).expect("ticket");
+        let permit = session.permit(ticket).expect("permit");
+        let (replies, receiver) = mpsc::sync_channel(1);
+        replies
+            .send(Completion {
+                ticket,
+                sample: Observation::NoData,
+            })
+            .expect("fill queue");
+        let waits = Cell::new(0);
+        assert_eq!(
+            publish(
+                &replies,
+                &permit,
+                Completion {
+                    ticket,
+                    sample: Observation::Rpm(1726.0),
+                },
+                || now,
+                |delay| {
+                    assert_eq!(delay, PUBLICATION_RETRY_INTERVAL);
+                    waits.set(waits.get() + 1);
+                    assert_eq!(
+                        receiver.try_recv().expect("old reply").sample,
+                        Observation::NoData
+                    );
+                },
+            ),
+            Publication::Sent
+        );
+        assert_eq!(waits.get(), 1);
+        let reply = receiver.try_recv().expect("new reply");
+        assert_eq!(reply.ticket, ticket);
+        assert_eq!(reply.sample, Observation::Rpm(1726.0));
+    }
+
+    #[test]
+    fn cancellation_and_receiver_loss_stop_publication() {
+        let now = Instant::now();
+        let mut session = PreviewSession::default();
+        assert!(session.start());
+        let ticket = session.request(now).expect("ticket");
+        let permit = session.permit(ticket).expect("permit");
+        let (replies, receiver) = mpsc::sync_channel(1);
+        replies
+            .send(Completion {
+                ticket,
+                sample: Observation::NoData,
+            })
+            .expect("fill queue");
+        assert_eq!(
+            publish(
+                &replies,
+                &permit,
+                Completion {
+                    ticket,
+                    sample: Observation::Rpm(1726.0),
+                },
+                || now,
+                |_| session.stop(),
+            ),
+            Publication::ExpiredOrCancelled
+        );
+        assert_eq!(
+            receiver.try_recv().expect("old reply").sample,
+            Observation::NoData
+        );
+        assert!(matches!(receiver.try_recv(), Err(TryRecvError::Empty)));
+        assert!(session.start());
+        let ticket = session.request(now).expect("new ticket");
+        let permit = session.permit(ticket).expect("new permit");
+        drop(receiver);
+        assert_eq!(
+            publish(
+                &replies,
+                &permit,
+                Completion {
+                    ticket,
+                    sample: Observation::Rpm(1726.0),
+                },
+                || now,
+                |_| panic!("closed receiver must not wait"),
+            ),
+            Publication::Disconnected
+        );
     }
 
     #[test]
