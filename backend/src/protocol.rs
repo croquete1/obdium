@@ -323,7 +323,21 @@ pub fn confirm_can_probe(
     report: ReportedProtocol,
     reply: &str,
 ) -> Result<ObdProtocol, ProtocolError> {
-    let width = can_probe_identifier_width(reply)?;
+    let probes = parse_can_probes(reply)?;
+    correlate_can_probes(selection, report, &probes)
+}
+
+// Internal callers must supply the result of parse_can_probes, not fabricated
+// source metadata. Keep the validated frames available across adapter reporting.
+pub(crate) fn correlate_can_probes(
+    selection: ProtocolSelection,
+    report: ReportedProtocol,
+    probes: &[CanProbe],
+) -> Result<ObdProtocol, ProtocolError> {
+    let width = probes
+        .first()
+        .ok_or(ProtocolError::Malformed)?
+        .identifier_width;
     let protocol = report.protocol.ok_or(ProtocolError::Malformed)?;
     if protocol.can_parameters().map(|(bits, _)| bits) != Some(width) {
         return Err(ProtocolError::Malformed);
@@ -373,8 +387,9 @@ pub fn confirm_automatic_probe(
 ) -> Result<ProtocolEvidence, ProtocolError> {
     let protocol = report.protocol.ok_or(ProtocolError::Malformed)?;
     if protocol.can_parameters().is_some() {
-        let protocol = confirm_can_probe(ProtocolSelection::Automatic, report, reply)?;
-        Ok(ProtocolEvidence::Can(protocol, parse_can_probes(reply)?))
+        let probes = parse_can_probes(reply)?;
+        let protocol = correlate_can_probes(ProtocolSelection::Automatic, report, &probes)?;
+        Ok(ProtocolEvidence::Can(protocol, probes))
     } else {
         confirm_legacy_probe(ProtocolSelection::Automatic, report, reply)
             .map(|(protocol, probes)| ProtocolEvidence::Legacy(protocol, probes))
