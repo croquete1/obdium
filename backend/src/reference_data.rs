@@ -32,13 +32,23 @@ pub enum ReferenceError {
 }
 
 #[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 struct Catalog<T> {
     schema_version: u32,
     status: String,
+    #[serde(rename = "license")]
+    _license: Option<String>,
+    #[serde(rename = "source_revision")]
+    _source_revision: Option<String>,
+    #[serde(rename = "source_file")]
+    _source_file: Option<String>,
+    #[serde(rename = "note")]
+    _note: Option<String>,
     entries: Vec<T>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct ObdReference {
     pub request_hex: String,
     pub name: String,
@@ -47,18 +57,21 @@ pub struct ObdReference {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct DtcReference {
     pub code: String,
     pub descriptions: Vec<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct NrcLabel {
     pub name: String,
     pub context: String,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct NrcReference {
     pub code_hex: String,
     pub labels: Vec<NrcLabel>,

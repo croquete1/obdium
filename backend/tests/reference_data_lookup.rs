@@ -520,3 +520,61 @@ fn reusable_and_one_shot_dbc_decoders_share_signal_name_limits() {
         Err(ReferenceError::Dbc(_))
     ));
 }
+
+#[test]
+fn reference_catalog_rejects_unknown_header_metadata() {
+    let obd = include_str!("../data/catalogs/obd2/read_catalog.json");
+    let dtc = include_str!("../data/catalogs/dtc/reference_catalog.json");
+    let nrc = include_str!("../data/catalogs/uds/negative_response_catalog.json");
+    assert!(ReferenceCatalogs::from_json(obd, dtc, nrc).is_ok());
+    for (index, original) in [obd, dtc, nrc].into_iter().enumerate() {
+        let changed = original.replacen('{', "{\"unexpected\":true,", 1);
+        assert_ne!(changed, original);
+        let mut catalogs = [obd, dtc, nrc];
+        catalogs[index] = &changed;
+        assert!(matches!(
+            ReferenceCatalogs::from_json(catalogs[0], catalogs[1], catalogs[2]),
+            Err(ReferenceError::Json(_))
+        ));
+    }
+}
+
+#[test]
+fn reference_catalog_rejects_unknown_entry_and_nested_label_fields() {
+    let obd = include_str!("../data/catalogs/obd2/read_catalog.json");
+    let dtc = include_str!("../data/catalogs/dtc/reference_catalog.json");
+    let nrc = include_str!("../data/catalogs/uds/negative_response_catalog.json");
+    for (index, field) in [
+        (0, "\"request_hex\":"),
+        (1, "\"code\":"),
+        (2, "\"code_hex\":"),
+        (2, "\"context\":"),
+    ] {
+        let original = [obd, dtc, nrc][index];
+        let changed = original.replacen(field, &format!("\"unexpected\":true,{field}"), 1);
+        assert_ne!(changed, original);
+        let mut catalogs = [obd, dtc, nrc];
+        catalogs[index] = &changed;
+        assert!(matches!(
+            ReferenceCatalogs::from_json(catalogs[0], catalogs[1], catalogs[2]),
+            Err(ReferenceError::Json(_))
+        ));
+    }
+}
+
+#[test]
+fn reference_catalog_rejects_wrong_metadata_type_and_duplicate_fields() {
+    let obd = include_str!("../data/catalogs/obd2/read_catalog.json");
+    let dtc = include_str!("../data/catalogs/dtc/reference_catalog.json");
+    let nrc = include_str!("../data/catalogs/uds/negative_response_catalog.json");
+    for changed in [
+        obd.replacen("\"license\": \"GPL-2.0-or-later\"", "\"license\": true", 1),
+        obd.replacen("\"request_hex\":", "\"request_hex\":\"0100\",\"request_hex\":", 1),
+    ] {
+        assert_ne!(changed, obd);
+        assert!(matches!(
+            ReferenceCatalogs::from_json(&changed, dtc, nrc),
+            Err(ReferenceError::Json(_))
+        ));
+    }
+}
