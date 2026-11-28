@@ -256,12 +256,77 @@ pub fn decode_signal(
     Ok(DecodedSignal { raw, scaled })
 }
 
+const PREVIEW_KEYS: [&str; 12] = [
+    "confirm", "cancel", "error", "refresh", "stop", "close", "file", "exit", "help", "about",
+    "no", "timeout",
+];
+
+// A normal BTreeMap deserializer silently replaces an earlier duplicate key.
+fn unique_messages<'de, D>(deserializer: D) -> Result<BTreeMap<String, String>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    struct UniqueMessages;
+
+    impl<'de> serde::de::Visitor<'de> for UniqueMessages {
+        type Value = BTreeMap<String, String>;
+
+        fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            formatter.write_str("a map of unique translation keys")
+        }
+
+        fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
+        where
+            A: serde::de::MapAccess<'de>,
+        {
+            let mut messages = BTreeMap::new();
+            while let Some((key, value)) = map.next_entry::<String, String>()? {
+                if !PREVIEW_KEYS.contains(&key.as_str()) {
+                    return Err(serde::de::Error::custom("unknown translation key"));
+                }
+                if messages.insert(key, value).is_some() {
+                    return Err(serde::de::Error::custom("duplicate translation key"));
+                }
+            }
+            Ok(messages)
+        }
+    }
+
+    deserializer.deserialize_map(UniqueMessages)
+}
+
 #[derive(Deserialize)]
 struct TranslationPreview {
     schema_version: u32,
     status: String,
     locale: String,
+    #[serde(deserialize_with = "unique_messages")]
     messages: BTreeMap<String, String>,
+}
+
+fn parse_preview(text: &str, expected: &str) -> Result<TranslationPreview, ReferenceError> {
+    if text.len() > MAX_CATALOG_BYTES {
+        return Err(ReferenceError::TooLarge);
+    }
+    let preview: TranslationPreview = serde_json::from_str(text)?;
+    if preview.schema_version != 1
+        || preview.status != "draft_reference"
+        || preview.locale != expected
+    {
+        return Err(ReferenceError::Header);
+    }
+    if preview.messages.len() != PREVIEW_KEYS.len() {
+        return Err(ReferenceError::Entry("missing translation key".into()));
+    }
+    if preview.messages.values().any(|message| {
+        message.trim().is_empty()
+            || message
+                .chars()
+                .any(|ch| ch.is_control() || matches!(ch, '<' | '>' | '{' | '}' | '%'))
+    }) {
+        return Err(ReferenceError::Entry("invalid preview text".into()));
+    }
+    Ok(preview)
 }
 
 #[derive(Debug, Serialize)]
@@ -297,28 +362,6 @@ pub fn translation_preview(
         "en" => Some(english),
         _ => None,
     };
-    let parse_preview =
-        |text: &str, expected: &str| -> Result<TranslationPreview, ReferenceError> {
-            if text.len() > MAX_CATALOG_BYTES {
-                return Err(ReferenceError::TooLarge);
-            }
-            let preview: TranslationPreview = serde_json::from_str(text)?;
-            if preview.schema_version != 1
-                || preview.status != "draft_reference"
-                || preview.locale != expected
-            {
-                return Err(ReferenceError::Header);
-            }
-            if preview.messages.values().any(|message| {
-                message.trim().is_empty()
-                    || message
-                        .chars()
-                        .any(|ch| ch.is_control() || matches!(ch, '<' | '>' | '{' | '}' | '%'))
-            }) {
-                return Err(ReferenceError::Entry("invalid preview text".into()));
-            }
-            Ok(preview)
-        };
     let fallback_catalog = parse_preview(english, "en")?;
     let Some(default_text) = fallback_catalog.messages.get(key) else {
         return Ok(None);
@@ -725,4 +768,55 @@ pub fn decode_dbc_signal(
 ) -> Result<DecodedSignal, ReferenceError> {
     validate_signal_name(signal_name)?;
     parse_dbc_message(dbc, message_id)?.decode(signal_name, payload)
+}
+
+#[cfg(test)]
+mod translation_schema_tests {
+    use super::*;
+
+    const ENGLISH: &str = include_str!("../data/catalogs/translations/en.json");
+
+    #[test]
+    fn preview_rejects_duplicate_message_keys_even_when_values_match() {
+        let duplicate = ENGLISH.replace(
+            "\"confirm\": \"Confirm\"",
+            "\"confirm\": \"Confirm\", \"confirm\": \"Confirm\"",
+        );
+        assert_ne!(duplicate, ENGLISH);
+        assert!(matches!(
+            parse_preview(&duplicate, "en"),
+            Err(ReferenceError::Json(_))
+        ));
+    }
+
+    #[test]
+    fn preview_requires_exact_message_keys() {
+        let missing = ENGLISH.replace("    \"confirm\": \"Confirm\",\n", "");
+        let unknown = ENGLISH.replace("\"confirm\"", "\"unexpected\"");
+        assert_ne!(missing, ENGLISH);
+        assert_ne!(unknown, ENGLISH);
+        assert!(matches!(
+            parse_preview(&missing, "en"),
+            Err(ReferenceError::Entry(_))
+        ));
+        assert!(matches!(
+            parse_preview(&unknown, "en"),
+            Err(ReferenceError::Json(_))
+        ));
+        assert!(parse_preview(ENGLISH, "en").is_ok());
+    }
+
+    #[test]
+    fn preview_rejects_invalid_text_and_mismatched_locale() {
+        let markup = ENGLISH.replace("\"Confirm\"", "\"<b>Confirm</b>\"");
+        assert_ne!(markup, ENGLISH);
+        assert!(matches!(
+            parse_preview(&markup, "en"),
+            Err(ReferenceError::Entry(_))
+        ));
+        assert!(matches!(
+            parse_preview(ENGLISH, "pt-PT"),
+            Err(ReferenceError::Header)
+        ));
+    }
 }
