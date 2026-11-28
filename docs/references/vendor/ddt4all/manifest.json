@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "repository": "cedricp/ddt4all",
+  "revision": "09a39795725b7e510041436cdde3b1d65609142c",
+  "status": "reference_only",
+  "license": "GPL-3.0-or-later",
+  "files": [
+    {
+      "path": "license.txt",
+      "git_blob_sha": "94a9ed024d3859793618152ea559a168bbcbb5e2"
+    },
+    {
+      "path": "tests/resources/chatgpt_generated/dummy_ecu_can.json",
+      "git_blob_sha": "fa587681188cb8a374c402cc72e38be8808c97b9"
+    },
+    {
+      "path": "tests/resources/chatgpt_generated/dummy_ecu_can.xml",
+      "git_blob_sha": "d266452565dfcf953c3b4d59d72fa1b89e5d3edd"
+    },
+    {
+      "path": "tests/resources/chatgpt_generated/dummy_ecu_can_ext.xml",
+      "git_blob_sha": "64385fa97488a5ef4adc5625d9ab9cabac8fa179"
+    },
+    {
+      "path": "tests/resources/chatgpt_generated/dummy_ecu_iso8.xml",
+      "git_blob_sha": "3ce8c25d73a29680e79aa3bdde5e340397c153ae"
+    },
+    {
+      "path": "tests/resources/chatgpt_generated/dummy_ecu_kwp.xml",
+      "git_blob_sha": "32496c60e733b1cb54ef65180af21c7a16910316"
+    },
+    {
+      "path": "locales/cs_CZ/LC_MESSAGES/ddt4all.po",
+      "git_blob_sha": "de6bd656e803dd4cfd3790621d1523ef9671cee4",
+      "bytes": 64163
+    },
+    {
+      "path": "locales/ddt4all.pot",
+      "git_blob_sha": "6e3da4ae9d76102f6b8d9a0b4451ed7853db3ef8",
+      "bytes": 38272
+    },
+    {
+      "path": "locales/de/LC_MESSAGES/ddt4all.po",
+      "git_blob_sha": "9ef9507c7e5c495679c36fdcca673c5b82a9087f",
+      "bytes": 64602
+    },
+    {
+      "path": "locales/es/LC_MESSAGES/ddt4all.po",
+      "git_blob_sha": "8f3435fc9cc7050f2e131e89ca2f9ef44868dad7",
+      "bytes": 64343
+    },
+    {
+      "path": "locales/fr/LC_MESSAGES/ddt4all.po",
+      "git_blob_sha": "a03c83c9556fbbc9cae2236d81284633b6946db9",
+      "bytes": 65923
+    },
+    {
+      "path": "locales/hu/LC_MESSAGES/ddt4all.po",
+      "git_blob_sha": "f87f177514df7432476f1fb3a8b87864abeaca4c",
+      "bytes": 64636
+    },
+    {
+      "path": "locales/it/LC_MESSAGES/ddt4all.po",
+      "git_blob_sha": "67afc329fb44e2ac0029db96843467e97c383db6",
+      "bytes": 63602
+    },
+    {
+      "path": "locales/nl/LC_MESSAGES/ddt4all.po",
+      "git_blob_sha": "50207cd2e06716d9964a24439cbd96f4cd65fef8",
+      "bytes": 62651
+    },
+    {
+      "path": "locales/pl/LC_MESSAGES/ddt4all.po",
+      "git_blob_sha": "1dd871856cf17d88abbde252975e6958b9325f09",
+      "bytes": 64569
+    },
+    {
+      "path": "locales/pt/LC_MESSAGES/ddt4all.po",
+      "git_blob_sha": "38750767aa74173db59baa71f0792dc2560ca3d6",
+      "bytes": 64463
+    },
+    {
+      "path": "locales/ro/LC_MESSAGES/ddt4all.po",
+      "git_blob_sha": "2ea91cc205ec1cd50a75bc20f727e50bd2769251",
+      "bytes": 63934
+    },
+    {
+      "path": "locales/ru/LC_MESSAGES/ddt4all.po",
+      "git_blob_sha": "4ff5af5b9cea73fc711bfa6d9234b72d13af627a",
+      "bytes": 79104
+    },
+    {
+      "path": "locales/sr/LC_MESSAGES/ddt4all.po",
+      "git_blob_sha": "c73e89dc8e7dbb116f8e94bec853e69b244bf394",
+      "bytes": 63046
+    },
+    {
+      "path": "locales/tr/LC_MESSAGES/ddt4all.po",
+      "git_blob_sha": "f3b56371faaf88fa41277217f33ee09a0da41ea4",
+      "bytes": 63819
+    },
+    {
+      "path": "locales/uk_UA/LC_MESSAGES/ddt4all.po",
+      "git_blob_sha": "ef3d039b55e39969734d90dfaae7b3c0887db1a4",
+      "bytes": 78268
+    },
+    {
+      "path": "locales/zh_CN/LC_MESSAGES/ddt4all.po",
+      "git_blob_sha": "df96d6d9b428bf2da9ac42590fa2e87df2c45b2c",
+      "bytes": 60937
+    }
+  ]
+}

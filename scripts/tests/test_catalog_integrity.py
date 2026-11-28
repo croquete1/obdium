@@ -6,7 +6,9 @@ import re
 import tempfile
 import unittest
 
-ROOT = Path(__file__).resolve().parents[2] / "backend/data/catalogs"
+REPO = Path(__file__).resolve().parents[2]
+ROOT = REPO / "backend/data/catalogs"
+VENDOR = REPO / "docs/references/vendor/ddt4all"
 ADMIN_FILES = {".gitattributes", "README.md", "manifest.json", "licenses/ATTRIBUTION.md"}
 MAX_BYTES = 2 * 1024 * 1024
 SHA = re.compile(r"[0-9a-f]{40}")
@@ -93,6 +95,99 @@ def verify_catalog(root):
     if not expected:
         raise ValueError("Empty catalog inventory")
     return len(expected)
+
+
+def verify_vendor(root, revision):
+    manifest = json.loads(checked_file(root, "manifest.json"))
+    if (manifest["schema_version"] != 1
+            or manifest["status"] != "reference_only"
+            or manifest["repository"] != "cedricp/ddt4all"
+            or manifest["revision"] != revision
+            or manifest["license"] != "GPL-3.0-or-later"):
+        raise ValueError("Unexpected vendor provenance")
+    require_sha(revision)
+    expected = {".gitattributes", "README.md", "manifest.json"}
+    hashes = {}
+    for entry in manifest["files"]:
+        name = entry["path"]
+        sha = entry["git_blob_sha"]
+        require_sha(sha)
+        if name in expected:
+            raise ValueError(f"Duplicate vendor entry: {name}")
+        data = checked_file(root, name)
+        if "bytes" in entry and entry["bytes"] != len(data):
+            raise ValueError(f"Vendor size mismatch: {name}")
+        if blob_sha(data) != sha:
+            raise ValueError(f"Vendor hash mismatch: {name}")
+        expected.add(name)
+        hashes[name] = sha
+    actual = set()
+    for path in root.rglob("*"):
+        if path.is_symlink():
+            raise ValueError("Unexpected vendor symbolic link")
+        if path.is_file():
+            actual.add(path.relative_to(root).as_posix())
+    if actual != expected:
+        raise ValueError("Vendor inventory differs from manifest")
+    return hashes
+
+
+def verify_translation_source(locale, document, hashes):
+    if document["locale"] != locale or document["status"] != "draft_reference":
+        raise ValueError("Unexpected translation identity or status")
+    if locale == "en":
+        if "source_blob_sha" in document:
+            raise ValueError("English preview must remain independently authored")
+        return
+    original = {"cs-CZ": "cs_CZ", "pt-PT": "pt", "uk-UA": "uk_UA",
+                "zh-CN": "zh_CN"}.get(locale, locale)
+    path = f"locales/{original}/LC_MESSAGES/ddt4all.po"
+    if path not in hashes or document.get("source_blob_sha") != hashes[path]:
+        raise ValueError(f"Translation source mismatch: {locale}")
+
+
+class VendorIntegrityTests(unittest.TestCase):
+    def test_vendor_snapshot_and_translation_lineage(self):
+        manifest = json.loads(checked_file(ROOT, "manifest.json"))
+        source = next(s for s in manifest["sources"] if s["id"] == "translation_preview")
+        hashes = verify_vendor(VENDOR, source["revision"])
+        self.assertEqual(len(hashes), 22)
+        self.assertEqual(len(source["files"]), 16)
+        for entry in source["files"]:
+            locale = PurePosixPath(entry["path"]).stem
+            document = json.loads(checked_file(ROOT, entry["path"]))
+            verify_translation_source(locale, document, hashes)
+
+    def test_translation_rejects_wrong_locale_source(self):
+        hashes = {"locales/pt/LC_MESSAGES/ddt4all.po": "a" * 40,
+                  "locales/fr/LC_MESSAGES/ddt4all.po": "b" * 40}
+        document = {"locale": "pt-PT", "status": "draft_reference",
+                    "source_blob_sha": "b" * 40}
+        with self.assertRaisesRegex(ValueError, "Translation source mismatch"):
+            verify_translation_source("pt-PT", document, hashes)
+
+    def test_english_rejects_imported_source(self):
+        document = {"locale": "en", "status": "draft_reference",
+                    "source_blob_sha": "a" * 40}
+        with self.assertRaisesRegex(ValueError, "independently authored"):
+            verify_translation_source("en", document, {})
+
+    def test_vendor_modified_file_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for name in (".gitattributes", "README.md"):
+                (root / name).write_text("fixture", encoding="utf-8")
+            (root / "license.txt").write_bytes(b"changed")
+            revision = "a" * 40
+            manifest = {
+                "schema_version": 1, "status": "reference_only",
+                "repository": "cedricp/ddt4all", "revision": revision,
+                "license": "GPL-3.0-or-later",
+                "files": [{"path": "license.txt", "git_blob_sha": blob_sha(b"original")}],
+            }
+            (root / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "Vendor hash mismatch"):
+                verify_vendor(root, revision)
 
 
 class CatalogIntegrityTests(unittest.TestCase):

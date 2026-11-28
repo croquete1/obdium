@@ -5,19 +5,19 @@ License: GPL-3.0-or-later; original license reproduced in license.txt. Copyright
 
 | Original path | Upstream Git blob SHA | Current tree |
 |---|---|---|
-| `license.txt` | `94a9ed024d3859793618152ea559a168bbcbb5e2`  Retained |
-| `src/ddt4all/core/ecu/data_item.py` | `212eca29abd661cbe081a34f81ae939783aad08e`  Removed; provenance only |
-| `src/ddt4all/core/ecu/ecu_ident.py` | `7c5c1555c13ad04c0953b6a8e370ee1c742c5695`  Removed; provenance only |
-| `src/ddt4all/core/ecu/ecu_database.py` | `1a3e4a7bca5886c206783ab7db8887a25af0012a`  Removed; provenance only |
-| `src/ddt4all/core/elm/device_manager.py` | `6cebb40a43b860309d93c13527bc7eba25e1ad28`  Removed; provenance only |
-| `src/ddt4all/core/doip/doip_message_type.py` | `c3ff60e77cf814e330ec60f467acaa1d397e1c5c`  Removed; provenance only |
-| `src/ddt4all/core/doip/doip_protocol_error.py` | `622f6d78a3cbba7355e48a5f8fb2ec5091972d2c`  Removed; provenance only |
-| `src/ddt4all/core/doip/doip_connection.py` | `b874e7391367302cffcda468bfaa5b1b8826c7fa`  Removed; provenance only |
-| `tests/resources/chatgpt_generated/dummy_ecu_can.json` | `fa587681188cb8a374c402cc72e38be8808c97b9`  Retained |
-| `tests/resources/chatgpt_generated/dummy_ecu_can.xml` | `d266452565dfcf953c3b4d59d72fa1b89e5d3edd`  Retained |
-| `tests/resources/chatgpt_generated/dummy_ecu_can_ext.xml` | `64385fa97488a5ef4adc5625d9ab9cabac8fa179`  Retained |
-| `tests/resources/chatgpt_generated/dummy_ecu_iso8.xml` | `3ce8c25d73a29680e79aa3bdde5e340397c153ae`  Retained |
-| `tests/resources/chatgpt_generated/dummy_ecu_kwp.xml` | `32496c60e733b1cb54ef65180af21c7a16910316`  Retained |
+| `license.txt` | `94a9ed024d3859793618152ea559a168bbcbb5e2` | Retained |
+| `src/ddt4all/core/ecu/data_item.py` | `212eca29abd661cbe081a34f81ae939783aad08e` | Removed; provenance only |
+| `src/ddt4all/core/ecu/ecu_ident.py` | `7c5c1555c13ad04c0953b6a8e370ee1c742c5695` | Removed; provenance only |
+| `src/ddt4all/core/ecu/ecu_database.py` | `1a3e4a7bca5886c206783ab7db8887a25af0012a` | Removed; provenance only |
+| `src/ddt4all/core/elm/device_manager.py` | `6cebb40a43b860309d93c13527bc7eba25e1ad28` | Removed; provenance only |
+| `src/ddt4all/core/doip/doip_message_type.py` | `c3ff60e77cf814e330ec60f467acaa1d397e1c5c` | Removed; provenance only |
+| `src/ddt4all/core/doip/doip_protocol_error.py` | `622f6d78a3cbba7355e48a5f8fb2ec5091972d2c` | Removed; provenance only |
+| `src/ddt4all/core/doip/doip_connection.py` | `b874e7391367302cffcda468bfaa5b1b8826c7fa` | Removed; provenance only |
+| `tests/resources/chatgpt_generated/dummy_ecu_can.json` | `fa587681188cb8a374c402cc72e38be8808c97b9` | Retained |
+| `tests/resources/chatgpt_generated/dummy_ecu_can.xml` | `d266452565dfcf953c3b4d59d72fa1b89e5d3edd` | Retained |
+| `tests/resources/chatgpt_generated/dummy_ecu_can_ext.xml` | `64385fa97488a5ef4adc5625d9ab9cabac8fa179` | Retained |
+| `tests/resources/chatgpt_generated/dummy_ecu_iso8.xml` | `3ce8c25d73a29680e79aa3bdde5e340397c153ae` | Retained |
+| `tests/resources/chatgpt_generated/dummy_ecu_kwp.xml` | `32496c60e733b1cb54ef65180af21c7a16910316` | Retained |
 
 ## Database scope
 
@@ -47,3 +47,7 @@ All 16 files verified byte-for-byte against the pinned upstream tree. Original t
 | `locales/tr/LC_MESSAGES/ddt4all.po` | `f3b56371faaf88fa41277217f33ee09a0da41ea4` | 63819 |
 | `locales/uk_UA/LC_MESSAGES/ddt4all.po` | `ef3d039b55e39969734d90dfaae7b3c0887db1a4` | 78268 |
 | `locales/zh_CN/LC_MESSAGES/ddt4all.po` | `df96d6d9b428bf2da9ac42590fa2e87df2c45b2c` | 60937 |
+
+## Automated snapshot and translation lineage checks
+
+[manifest.json](manifest.json) records the 22 retained data/license file identities from the pinned snapshot; removed source paths remain historical provenance only. The repository's existing House Rules standard-library test checks exact local bytes, inventory and the 15 derived translation source identities; the independently authored English preview has no upstream source hash. Byte-preserving attributes prevent platform line-ending changes. Baseline catalog verification at `d551dd9` passed all 19 House Rules tests (46157046992) and CI 46157046977. New checks pending CI; no local execution claimed. These checks verify recorded identities, not rights to redistribute, independent translation review or physical compatibility. No upstream code or Python runtime imported.
