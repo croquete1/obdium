@@ -155,24 +155,64 @@ test("malformed DTC snapshots are unavailable and never exported", () => {
   assert.equal(exports, 1);
 });
 
-test("VIN result ignores a different query and rejects empty or malformed replies", () => {
+test("VIN result accepts only the pending request, including same-VIN retries and errors", () => {
   const container = node();
   const button = { disabled: true };
   const input = { value: "SYNTHETIC-FIXTURE" };
+  const state = { pendingVinRequest: "new" };
   const handler = eventHandler("decode-vin-result", 'listen("display-notification"', {
-    exportButton: button,
+    exportButton: button, window: state,
     document: { getElementById: () => container, querySelector: () => input, createElement: node },
     addNotification() {},
   });
-  handler({ payload: { vin: input.value, make: "Fixture", model: "N/A", unused: 4, error_msg: "Decoded successfully." } });
+  handler({ payload: { request_id: "old", vin: input.value, make: "Old" } });
+  handler({ payload: { request_id: "old", vin: "", error_msg: "Old error" } });
+  assert.equal(state.pendingVinRequest, "new");
+  assert.equal(button.disabled, true);
+  handler({ payload: { request_id: "new", vin: input.value, make: "Fixture", model: "N/A", unused: 4, error_msg: "Decoded successfully." } });
   assert.equal(button.disabled, false);
   assert.equal(container.children.length, 2);
-  handler({ payload: { vin: "OTHER-FIXTURE", make: "Other" } });
+  assert.equal(state.pendingVinRequest, null);
+  handler({ payload: { request_id: "new", vin: "", error_msg: "Duplicate" } });
+  handler(undefined);
   assert.equal(container.children.length, 2);
   assert.equal(button.disabled, false);
-  handler({ payload: { vin: "", make: "", error_msg: "Unavailable" } });
+  state.pendingVinRequest = "next";
+  handler({ payload: { request_id: "next", vin: "", error_msg: "Unavailable" } });
   assert.equal(container.children.length, 0);
   assert.equal(button.disabled, true);
-  handler(undefined);
+  state.pendingVinRequest = "mismatch";
+  handler({ payload: { request_id: "mismatch", vin: "OTHER-FIXTURE", make: "Other" } });
+  assert.equal(container.children.length, 0);
+  assert.equal(button.disabled, true);
+});
+
+test("VIN input and new queries revoke outstanding request identity", async () => {
+  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const start = html.indexOf("function invalidateVinResult()");
+  const end = html.indexOf("/// Toggle different screens", start);
+  assert.ok(start >= 0 && end > start);
+  const state = {};
+  const button = { disabled: false };
+  const input = { value: "synthetic-fixture", addEventListener(name, callback) { this.input = callback; } };
+  const decode = { addEventListener(name, callback) { this.click = callback; } };
+  const container = node();
+  const requests = [];
+  let seed = 0;
+  runInNewContext(html.slice(start, end), {
+    window: state, vinExportBtn: button, vinInput: input, decodeVinBtn: decode,
+    document: { getElementById: () => container },
+    crypto: { getRandomValues(bytes) { bytes.fill(++seed); return bytes; } },
+    emit: async (name, payload) => requests.push({ name, payload }),
+  });
+  await decode.click();
+  const first = state.pendingVinRequest;
+  await decode.click();
+  assert.notEqual(state.pendingVinRequest, first);
+  assert.equal(requests.length, 2);
+  assert.equal(requests[1].payload.vin, "SYNTHETIC-FIXTURE");
+  assert.equal(requests[1].payload.request_id, state.pendingVinRequest);
+  input.input();
+  assert.equal(state.pendingVinRequest, null);
   assert.equal(button.disabled, true);
 });

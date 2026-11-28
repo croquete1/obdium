@@ -130,11 +130,27 @@ pub fn listen_decode_vin(window: &WebviewWindow) {
     let window_arc = Arc::new(window.clone());
     let window_clone = Arc::clone(&window_arc);
     window_clone.listen("decode-vin", move |event| {
-        let vin = match VIN::new(event.payload().replace("\"", "")) {
+        #[derive(serde::Deserialize)]
+        struct VinRequest {
+            request_id: String,
+            vin: String,
+        }
+
+        let Ok(request) = serde_json::from_str::<VinRequest>(event.payload()) else {
+            return;
+        };
+        if request.request_id.len() != 32
+            || !request.request_id.bytes().all(|byte| byte.is_ascii_hexdigit())
+        {
+            return;
+        }
+
+        let vin = match VIN::new(request.vin) {
             Ok(vin) => vin,
             Err(err) => {
                 // emit error
                 let v_info = VehicleInfoExtended {
+                    request_id: request.request_id,
                     error_msg: format!("{}", err),
                     ..Default::default()
                 };
@@ -153,6 +169,7 @@ pub fn listen_decode_vin(window: &WebviewWindow) {
         };
 
         let v_info = VehicleInfoExtended {
+            request_id: request.request_id,
             error_msg: error_message,
             vin: vin.get_vin().to_string(),
             make: vin.get_vehicle_make().unwrap_or("N/A".into()),

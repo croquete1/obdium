@@ -448,23 +448,24 @@ const exportButton = document.getElementById("vin-export");
 // show vehicle info if no error
 listen("decode-vin-result", (event) => {
   const data = event?.payload;
+  if (!window.pendingVinRequest || data?.request_id !== window.pendingVinRequest) return;
+  window.pendingVinRequest = null;
   const container = document.getElementById("vin-container");
   if (!container) return;
   const query = document.querySelector(".vin-input")?.value.trim().toUpperCase();
 
-  // Never let an older result for another VIN replace the current query.
-  if (typeof data?.vin === "string" && data.vin.trim() &&
-      data.vin.trim().toUpperCase() !== query) return;
-
   exportButton.disabled = true;
   container.replaceChildren();
+  // Even a correlated response must match the requested VIN if present.
+  if (typeof data?.vin === "string" && data.vin.trim() &&
+      data.vin.trim().toUpperCase() !== query) return;
   addNotification("VIN DECODING", typeof data?.error_msg === "string"
     ? data.error_msg : "No VIN details available.");
   if (typeof data?.vin !== "string" || !data.vin.trim()) return;
 
   // show only available string fields
   for (const [key, value] of Object.entries(data)) {
-    if (key === "error_msg" || typeof value !== "string" ||
+    if (key === "error_msg" || key === "request_id" || typeof value !== "string" ||
         !value.trim() || value === "N/A" || value === "-1") continue;
 
     const name = key.replaceAll("_", " ").toUpperCase();

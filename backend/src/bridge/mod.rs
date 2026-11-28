@@ -117,6 +117,7 @@ pub(crate) struct FrontendNotification {
 /// can't use the VIN struct and it's methods.
 #[derive(Serialize, Deserialize, Clone, Default)]
 struct VehicleInfoExtended {
+    request_id: String,
     error_msg: String,
     vin: String,
     make: String,
