@@ -125,11 +125,124 @@ pub fn validate_selection_ack(reply: &str) -> Result<(), ProtocolError> {
     }
 }
 
+fn parse_hex_byte(token: &str) -> Result<u8, ProtocolError> {
+    if token.len() != 2 || !token.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+        return Err(ProtocolError::Malformed);
+    }
+    u8::from_str_radix(token, 16).map_err(|_| ProtocolError::Malformed)
+}
+
+/// A bounded legacy response with the ECU's source address and PID 00 bitmap.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct LegacyProbe {
+    pub source: u8,
+    pub bitmap: [u8; 4],
+}
+
+fn j1850_crc(data: &[u8]) -> u8 {
+    let mut crc = 0xFFu8;
+    for &byte in data {
+        crc ^= byte;
+        for _ in 0..8 {
+            crc = if crc & 0x80 == 0 {
+                crc << 1
+            } else {
+                (crc << 1) ^ 0x1D
+            };
+        }
+    }
+    !crc
+}
+
+/// Validate a standard three-byte legacy header, exact PID 00 payload and checksum.
+/// Non-standard addressing, four-byte KWP headers and headers-off replies are
+/// intentionally unverified. The selected adapter protocol determines the checksum.
+pub fn parse_legacy_probe(protocol: ObdProtocol, line: &str) -> Result<LegacyProbe, ProtocolError> {
+    let mut bytes = [0u8; 10];
+    let mut count = 0;
+    for token in line.split_ascii_whitespace() {
+        if count == bytes.len() {
+            return Err(ProtocolError::Malformed);
+        }
+        bytes[count] = parse_hex_byte(token)?;
+        count += 1;
+    }
+    if count != bytes.len() || bytes[3..5] != [0x41, 0x00] {
+        return Err(ProtocolError::Malformed);
+    }
+    let checksum = match protocol {
+        ObdProtocol::J1850Pwm if bytes[..2] == [0x41, 0x6B] => j1850_crc(&bytes[..9]),
+        ObdProtocol::J1850Vpw if bytes[..2] == [0x48, 0x6B] => j1850_crc(&bytes[..9]),
+        ObdProtocol::Iso9141 if bytes[..2] == [0x48, 0x6B] => bytes[..9]
+            .iter()
+            .fold(0u8, |sum, byte| sum.wrapping_add(*byte)),
+        ObdProtocol::KwpSlow | ObdProtocol::KwpFast if bytes[..2] == [0x86, 0xF1] => bytes[..9]
+            .iter()
+            .fold(0u8, |sum, byte| sum.wrapping_add(*byte)),
+        _ => return Err(ProtocolError::Malformed),
+    };
+    if bytes[9] != checksum {
+        return Err(ProtocolError::Malformed);
+    }
+    Ok(LegacyProbe {
+        source: bytes[2],
+        bitmap: [bytes[5], bytes[6], bytes[7], bytes[8]],
+    })
+}
+
+/// Correlate legacy PID 00 evidence with the adapter report and requested mode.
+/// All non-status lines must validate; duplicate source addresses are ambiguous.
+/// Bus timing and the initialization method remain adapter-reported.
+pub fn confirm_legacy_probe(
+    selection: ProtocolSelection,
+    report: ReportedProtocol,
+    reply: &str,
+) -> Result<(ObdProtocol, Vec<LegacyProbe>), ProtocolError> {
+    let protocol = report.protocol.ok_or(ProtocolError::Malformed)?;
+    if protocol.can_parameters().is_some() {
+        return Err(ProtocolError::Malformed);
+    }
+    match selection {
+        ProtocolSelection::Manual(requested) if requested == protocol && !report.automatic => {}
+        ProtocolSelection::Automatic if report.automatic => {}
+        _ => return Err(ProtocolError::Unacknowledged),
+    }
+
+    let mut seen = [false; 256];
+    let mut probes = Vec::new();
+    for line in reply.split(['\r', '\n']).map(str::trim_ascii) {
+        if line.is_empty() || line == "SEARCHING..." {
+            continue;
+        }
+        let probe = parse_legacy_probe(protocol, line)?;
+        let source = usize::from(probe.source);
+        if seen[source] {
+            return Err(ProtocolError::Malformed);
+        }
+        seen[source] = true;
+        probes.push(probe);
+    }
+    if probes.is_empty() {
+        return Err(ProtocolError::Malformed);
+    }
+    Ok((protocol, probes))
+}
+
+/// Source identifier and supported-PID bitmap from one validated CAN frame.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct CanProbe {
+    pub identifier: u32,
+    pub identifier_width: u8,
+    pub bitmap: [u8; 4],
+}
+
 /// Conservative evidence for the standard Mode 01 PID 00 CAN reply.
 /// Requires ELM headers, spaces and the single-frame length byte.
 /// Other valid adapter layouts are deliberately unverified here.
-pub fn can_probe_identifier_width(reply: &str) -> Result<u8, ProtocolError> {
+pub fn parse_can_probes(reply: &str) -> Result<Vec<CanProbe>, ProtocolError> {
     let mut width = None;
+    let mut seen = [false; 256];
+    let mut probes = Vec::new();
     for line in reply.split(['\r', '\n']).map(str::trim_ascii) {
         if line.is_empty() || line == "SEARCHING..." {
             continue;
@@ -139,10 +252,20 @@ pub fn can_probe_identifier_width(reply: &str) -> Result<u8, ProtocolError> {
         if !identifier.bytes().all(|byte| byte.is_ascii_hexdigit()) {
             return Err(ProtocolError::Malformed);
         }
-        let id = u32::from_str_radix(identifier, 16).map_err(|_| ProtocolError::Malformed)?;
+        let mut id = u32::from_str_radix(identifier, 16).map_err(|_| ProtocolError::Malformed)?;
         let current_width = match identifier.len() {
             3 if (0x7E8..=0x7EF).contains(&id) => 11,
             8 if id & 0x1FFF_FF00 == 0x18DA_F100 && id <= 0x1FFF_FFFF => 29,
+            2 if id == 0x18 => {
+                for _ in 0..3 {
+                    let token = tokens.next().ok_or(ProtocolError::Malformed)?;
+                    id = (id << 8) | u32::from(parse_hex_byte(token)?);
+                }
+                if id & 0x1FFF_FF00 != 0x18DA_F100 {
+                    return Err(ProtocolError::Malformed);
+                }
+                29
+            }
             _ => return Err(ProtocolError::Malformed),
         };
         if width.is_some_and(|previous| previous != current_width) {
@@ -165,9 +288,32 @@ pub fn can_probe_identifier_width(reply: &str) -> Result<u8, ProtocolError> {
         if !(7..=8).contains(&count) || bytes[..3] != [0x06, 0x41, 0x00] {
             return Err(ProtocolError::Malformed);
         }
+        // For each accepted width the low byte uniquely identifies the source.
+        // Width mixing is rejected above; compact and split IDs share a slot.
+        let source = (id & 0xFF) as usize;
+        if seen[source] {
+            return Err(ProtocolError::Malformed);
+        }
+        seen[source] = true;
+        probes.push(CanProbe {
+            identifier: id,
+            identifier_width: current_width,
+            bitmap: [bytes[3], bytes[4], bytes[5], bytes[6]],
+        });
         width = Some(current_width);
     }
-    width.ok_or(ProtocolError::Malformed)
+    if probes.is_empty() {
+        return Err(ProtocolError::Malformed);
+    }
+    Ok(probes)
+}
+
+/// Keep the existing width-only API for callers that need no ECU metadata.
+pub fn can_probe_identifier_width(reply: &str) -> Result<u8, ProtocolError> {
+    parse_can_probes(reply)?
+        .first()
+        .map(|probe| probe.identifier_width)
+        .ok_or(ProtocolError::Malformed)
 }
 
 /// Correlate a positive CAN probe with the adapter's reported configuration.
@@ -177,7 +323,21 @@ pub fn confirm_can_probe(
     report: ReportedProtocol,
     reply: &str,
 ) -> Result<ObdProtocol, ProtocolError> {
-    let width = can_probe_identifier_width(reply)?;
+    let probes = parse_can_probes(reply)?;
+    correlate_can_probes(selection, report, &probes)
+}
+
+// Internal callers must supply the result of parse_can_probes, not fabricated
+// source metadata. Keep the validated frames available across adapter reporting.
+pub(crate) fn correlate_can_probes(
+    selection: ProtocolSelection,
+    report: ReportedProtocol,
+    probes: &[CanProbe],
+) -> Result<ObdProtocol, ProtocolError> {
+    let width = probes
+        .first()
+        .ok_or(ProtocolError::Malformed)?
+        .identifier_width;
     let protocol = report.protocol.ok_or(ProtocolError::Malformed)?;
     if protocol.can_parameters().map(|(bits, _)| bits) != Some(width) {
         return Err(ProtocolError::Malformed);
@@ -190,6 +350,50 @@ pub fn confirm_can_probe(
         return Err(ProtocolError::Unacknowledged);
     }
     Ok(protocol)
+}
+
+/// Evidence returned by an explicit automatic protocol probe.
+#[derive(Debug, PartialEq, Eq)]
+pub enum ProtocolEvidence {
+    Can(ObdProtocol, Vec<CanProbe>),
+    Legacy(ObdProtocol, Vec<LegacyProbe>),
+}
+
+/// Require a complete reply compatible with at least one supported layout
+/// before asking the adapter which protocol it selected. This is not detection:
+/// multiple protocols can share identical frame layouts.
+pub(crate) fn has_supported_probe_reply(reply: &str) -> bool {
+    can_probe_identifier_width(reply).is_ok()
+        || (1..=5).any(|id| {
+            ObdProtocol::try_from(id).is_ok_and(|protocol| {
+                confirm_legacy_probe(
+                    ProtocolSelection::Automatic,
+                    ReportedProtocol {
+                        automatic: true,
+                        protocol: Some(protocol),
+                    },
+                    reply,
+                )
+                .is_ok()
+            })
+        })
+}
+
+/// Confirm only the actual automatic adapter report against the ECU reply.
+/// Never infer a specific bus rate or initialization method from frame bytes.
+pub fn confirm_automatic_probe(
+    report: ReportedProtocol,
+    reply: &str,
+) -> Result<ProtocolEvidence, ProtocolError> {
+    let protocol = report.protocol.ok_or(ProtocolError::Malformed)?;
+    if protocol.can_parameters().is_some() {
+        let probes = parse_can_probes(reply)?;
+        let protocol = correlate_can_probes(ProtocolSelection::Automatic, report, &probes)?;
+        Ok(ProtocolEvidence::Can(protocol, probes))
+    } else {
+        confirm_legacy_probe(ProtocolSelection::Automatic, report, reply)
+            .map(|(protocol, probes)| ProtocolEvidence::Legacy(protocol, probes))
+    }
 }
 
 #[cfg(test)]
@@ -316,6 +520,47 @@ mod tests {
     }
 
     #[test]
+    fn can_probe_retains_source_identifiers_and_individual_bitmaps() {
+        let reply = "7E8 06 41 00 00 00 00 00\r7E9 06 41 00 FF 01 02 03";
+        assert_eq!(
+            parse_can_probes(reply).unwrap(),
+            vec![
+                CanProbe {
+                    identifier: 0x7E8,
+                    identifier_width: 11,
+                    bitmap: [0; 4],
+                },
+                CanProbe {
+                    identifier: 0x7E9,
+                    identifier_width: 11,
+                    bitmap: [255, 1, 2, 3],
+                },
+            ]
+        );
+        let reply = "18 DA F1 10 06 41 00 01 02 03 04";
+        assert_eq!(
+            parse_can_probes(reply).unwrap(),
+            vec![CanProbe {
+                identifier: 0x18DAF110,
+                identifier_width: 29,
+                bitmap: [1, 2, 3, 4],
+            }]
+        );
+    }
+
+    #[test]
+    fn can_probe_rejects_duplicate_sources_even_with_different_identifier_layouts() {
+        for reply in [
+            "7E8 06 41 00 00 00 00 00\r7E8 06 41 00 FF FF FF FF",
+            "18DAF110 06 41 00 00 00 00 00\r18 DA F1 10 06 41 00 00 00 00 00",
+        ] {
+            assert!(parse_can_probes(reply).is_err());
+            assert!(can_probe_identifier_width(reply).is_err());
+            assert!(!has_supported_probe_reply(reply));
+        }
+    }
+
+    #[test]
     fn can_protocol_confirmation_requires_matching_report_and_selection() {
         let reply = "7E8 06 41 00 00 00 00 00";
         for id in [6, 8] {
@@ -345,6 +590,132 @@ mod tests {
             reply
         )
         .is_err());
+    }
+
+    #[test]
+    fn split_extended_can_identifier_is_supported() {
+        let reply = "18 DA F1 10 06 41 00 FF FF FF FF";
+        assert_eq!(can_probe_identifier_width(reply), Ok(29));
+        assert_eq!(
+            confirm_can_probe(
+                ProtocolSelection::Automatic,
+                parse_reported_protocol("A9").unwrap(),
+                reply
+            ),
+            Ok(ObdProtocol::Can29At250)
+        );
+        for malformed in [
+            "18 DA F2 10 06 41 00 FF FF FF FF",
+            "18 DA F1 1 06 41 00 FF FF FF FF",
+            "18 DA F1 GG 06 41 00 FF FF FF FF",
+            "18 DA F1",
+        ] {
+            assert!(can_probe_identifier_width(malformed).is_err());
+        }
+    }
+
+    #[test]
+    fn j1850_crc_matches_standard_check_vector() {
+        assert_eq!(j1850_crc(b"123456789"), 0x4B);
+    }
+
+    #[test]
+    fn legacy_probes_accept_five_protocols_with_valid_checksums() {
+        for (protocol, line) in [
+            (ObdProtocol::J1850Pwm, "41 6B 10 41 00 00 00 00 00 9C"),
+            (ObdProtocol::J1850Vpw, "48 6B 10 41 00 00 00 00 00 F6"),
+            (ObdProtocol::Iso9141, "48 6B 10 41 00 00 00 00 00 04"),
+            (ObdProtocol::KwpSlow, "86 F1 11 41 00 FF FF FF FF C5"),
+            (ObdProtocol::KwpFast, "86 F1 11 41 00 FF FF FF FF C5"),
+        ] {
+            let probe = parse_legacy_probe(protocol, line).unwrap();
+            if matches!(protocol, ObdProtocol::KwpSlow | ObdProtocol::KwpFast) {
+                assert_eq!(probe.source, 0x11);
+                assert_eq!(probe.bitmap, [255; 4]);
+            } else {
+                assert_eq!(probe.source, 0x10);
+                assert_eq!(probe.bitmap, [0; 4]);
+            }
+        }
+    }
+
+    #[test]
+    fn legacy_probes_reject_corruption_and_other_services() {
+        for reply in [
+            "48 6B 10 41 00 00 00 00 00 05",
+            "48 6B 10 41 00 00 00 00 04",
+            "48 6B 10 41 00 00 00 00 00 04 00",
+            "48 6B 10 41 20 00 00 00 00 24",
+            "48 6B 10 41 00 GG 00 00 00 04",
+            "NO DATA",
+        ] {
+            assert!(parse_legacy_probe(ObdProtocol::Iso9141, reply).is_err());
+        }
+        assert!(
+            parse_legacy_probe(ObdProtocol::J1850Vpw, "48 6B 10 41 00 00 00 00 00 04").is_err()
+        );
+        assert!(parse_legacy_probe(ObdProtocol::KwpFast, "85 F1 11 41 00 FF FF FF FF C4").is_err());
+    }
+
+    #[test]
+    fn legacy_confirmation_correlates_selection_report_and_all_five_layouts() {
+        for (id, line) in [
+            (1, "41 6B 10 41 00 00 00 00 00 9C"),
+            (2, "48 6B 10 41 00 00 00 00 00 F6"),
+            (3, "48 6B 10 41 00 00 00 00 00 04"),
+            (4, "86 F1 11 41 00 FF FF FF FF C5"),
+            (5, "86 F1 11 41 00 FF FF FF FF C5"),
+        ] {
+            let protocol = ObdProtocol::try_from(id).unwrap();
+            let manual = parse_reported_protocol(&id.to_string()).unwrap();
+            let automatic = parse_reported_protocol(&format!("A{id}")).unwrap();
+            let expected = vec![parse_legacy_probe(protocol, line).unwrap()];
+            assert_eq!(
+                confirm_legacy_probe(ProtocolSelection::Manual(protocol), manual, line),
+                Ok((protocol, expected.clone()))
+            );
+            assert_eq!(
+                confirm_legacy_probe(ProtocolSelection::Automatic, automatic, line),
+                Ok((protocol, expected))
+            );
+            assert_eq!(
+                confirm_legacy_probe(ProtocolSelection::Automatic, manual, line),
+                Err(ProtocolError::Unacknowledged)
+            );
+            assert_eq!(
+                confirm_legacy_probe(ProtocolSelection::Manual(protocol), automatic, line),
+                Err(ProtocolError::Unacknowledged)
+            );
+        }
+    }
+
+    #[test]
+    fn legacy_confirmation_preserves_distinct_ecus_and_rejects_ambiguous_replies() {
+        let selection = ProtocolSelection::Manual(ObdProtocol::Iso9141);
+        let report = parse_reported_protocol("3").unwrap();
+        let valid = "48 6B 10 41 00 00 00 00 00 04\r48 6B 11 41 00 00 00 00 00 05";
+        let (_, probes) = confirm_legacy_probe(selection, report, valid).unwrap();
+        assert_eq!(
+            probes.iter().map(|probe| probe.source).collect::<Vec<_>>(),
+            vec![0x10, 0x11]
+        );
+        for reply in [
+            "",
+            "SEARCHING...",
+            "48 6B 10 41 00 00 00 00 00 04\r48 6B 10 41 00 00 00 00 00 04",
+            "48 6B 10 41 00 00 00 00 00 04\r48 6B 11 41 00 00 00 00 00 06",
+            "48 6B 10 41 00 00 00 00 00 04\rNO DATA",
+        ] {
+            assert!(confirm_legacy_probe(selection, report, reply).is_err());
+        }
+        for invalid_report in ["0", "6", "5"] {
+            assert!(confirm_legacy_probe(
+                selection,
+                parse_reported_protocol(invalid_report).unwrap(),
+                valid
+            )
+            .is_err());
+        }
     }
 
     #[test]

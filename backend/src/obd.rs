@@ -9,8 +9,9 @@ use thiserror::Error;
 
 use crate::cmd::{Command, CommandType};
 use crate::protocol::{
-    can_probe_identifier_width, confirm_can_probe, parse_reported_protocol, validate_selection_ack,
-    ObdProtocol, ProtocolSelection, ReportedProtocol,
+    confirm_automatic_probe, confirm_legacy_probe, correlate_can_probes, has_supported_probe_reply,
+    parse_can_probes, parse_reported_protocol, validate_selection_ack, CanProbe, LegacyProbe,
+    ObdProtocol, ProtocolEvidence, ProtocolSelection, ReportedProtocol,
 };
 use crate::response::Response;
 use crate::scalar::{Scalar, Unit, UnitPreferences};
@@ -972,6 +973,13 @@ impl OBD {
     /// The nominal bus speed is reported by the adapter, not measured independently.
     /// Legacy protocol layouts are not supported by this verification path.
     pub fn probe_can_protocol(&mut self) -> Result<ObdProtocol, Error> {
+        self.probe_can_protocol_evidence()
+            .map(|(protocol, _)| protocol)
+    }
+
+    /// Preserve every validated source identifier and its individual PID bitmap.
+    /// The compatibility method above intentionally returns only the protocol.
+    pub fn probe_can_protocol_evidence(&mut self) -> Result<(ObdProtocol, Vec<CanProbe>), Error> {
         if self.replay_requests {
             return Err(Error::InvalidResponse);
         }
@@ -983,9 +991,54 @@ impl OBD {
         }
         self.send_command(&mut Command::new_pid(b"0100"))?;
         let raw = self.read_until(b'>')?;
-        can_probe_identifier_width(&raw).map_err(|_| Error::InvalidResponse)?;
+        let probes = parse_can_probes(&raw).map_err(|_| Error::InvalidResponse)?;
         let report = self.get_reported_protocol()?;
-        confirm_can_probe(selection, report, &raw).map_err(|_| Error::InvalidResponse)
+        let protocol =
+            correlate_can_probes(selection, report, &probes).map_err(|_| Error::InvalidResponse)?;
+        Ok((protocol, probes))
+    }
+
+    /// Explicit read-only legacy probe. Only manually selected legacy protocols
+    /// are accepted here; automatic detection is not yet orchestrated.
+    /// Timing and initialization method are adapter-reported, not measured.
+    pub fn probe_legacy_protocol(&mut self) -> Result<(ObdProtocol, Vec<LegacyProbe>), Error> {
+        if self.replay_requests {
+            return Err(Error::InvalidResponse);
+        }
+        let selection = ProtocolSelection::try_from(self.protocol)
+            .map_err(|_| Error::InvalidProtocol(self.protocol))?;
+        let ProtocolSelection::Manual(protocol) = selection else {
+            return Err(Error::InvalidResponse);
+        };
+        if protocol.can_parameters().is_some() {
+            return Err(Error::InvalidResponse);
+        }
+
+        self.send_command(&mut Command::new_pid(b"0100"))?;
+        let raw = self.read_until(b'>')?;
+        // Validate all ECU frames before requesting adapter configuration.
+        let expected = ReportedProtocol {
+            automatic: false,
+            protocol: Some(protocol),
+        };
+        confirm_legacy_probe(selection, expected, &raw).map_err(|_| Error::InvalidResponse)?;
+        let report = self.get_reported_protocol()?;
+        confirm_legacy_probe(selection, report, &raw).map_err(|_| Error::InvalidResponse)
+    }
+
+    /// Explicit automatic read-only probe. No fallback commands or retries.
+    /// A returned protocol is correlated evidence, not measured bus timing.
+    pub fn probe_automatic_protocol(&mut self) -> Result<ProtocolEvidence, Error> {
+        if self.replay_requests || self.protocol != 0 {
+            return Err(Error::InvalidResponse);
+        }
+        self.send_command(&mut Command::new_pid(b"0100"))?;
+        let raw = self.read_until(b'>')?;
+        if !has_supported_probe_reply(&raw) {
+            return Err(Error::InvalidResponse);
+        }
+        let report = self.get_reported_protocol()?;
+        confirm_automatic_probe(report, &raw).map_err(|_| Error::InvalidResponse)
     }
 
     /// Requested configuration, not an independently verified ECU protocol.
@@ -1467,6 +1520,248 @@ mod serial_prompt_tests {
         ));
         assert_eq!(state.lock().unwrap().written, b"0100\rAT DPN\r");
         assert_eq!(obd.get_protocol_number(), 6);
+    }
+
+    #[test]
+    fn manual_can_probe_retains_each_ecu_bitmap_in_all_four_protocols() {
+        for id in 6..=9 {
+            let (reply, first, second) = if id == 6 || id == 8 {
+                (
+                    "7E8 06 41 00 00 00 00 00\r7E9 06 41 00 FF 01 02 03",
+                    0x7E8,
+                    0x7E9,
+                )
+            } else {
+                (
+                    "18DAF110 06 41 00 00 00 00 00\r18 DA F1 11 06 41 00 FF 01 02 03",
+                    0x18DAF110,
+                    0x18DAF111,
+                )
+            };
+            let (mut obd, state) = fixture_obd(FixtureState {
+                scripted_replies: VecDeque::from([
+                    format!("{reply}\r>").into_bytes(),
+                    format!("{id}\r>").into_bytes(),
+                ]),
+                ..Default::default()
+            });
+            obd.protocol = id;
+            let (protocol, probes) = obd.probe_can_protocol_evidence().unwrap();
+            let expected = ObdProtocol::try_from(id).unwrap();
+            let width = expected.can_parameters().unwrap().0;
+            assert_eq!(protocol, expected);
+            assert_eq!(
+                probes,
+                vec![
+                    CanProbe {
+                        identifier: first,
+                        identifier_width: width,
+                        bitmap: [0; 4],
+                    },
+                    CanProbe {
+                        identifier: second,
+                        identifier_width: width,
+                        bitmap: [255, 1, 2, 3],
+                    },
+                ]
+            );
+            assert_eq!(state.lock().unwrap().written, b"0100\rAT DPN\r");
+            assert_eq!(obd.get_protocol_number(), id);
+        }
+    }
+
+    #[test]
+    fn manual_can_probe_rejects_duplicate_sources_before_adapter_report() {
+        let (mut obd, state) = fixture_obd(FixtureState {
+            scripted_replies: VecDeque::from([
+                b"7E8 06 41 00 FF FF FF FF\r7E8 06 41 00 00 00 00 00\r>".to_vec(),
+            ]),
+            ..Default::default()
+        });
+        obd.protocol = 6;
+        assert!(matches!(
+            obd.probe_can_protocol_evidence(),
+            Err(Error::InvalidResponse)
+        ));
+        assert_eq!(state.lock().unwrap().written, b"0100\r");
+    }
+
+    #[test]
+    fn manual_legacy_probe_checks_all_five_protocols_through_serial_fixture() {
+        for (id, reply) in [
+            (1, "41 6B 10 41 00 00 00 00 00 9C"),
+            (2, "48 6B 10 41 00 00 00 00 00 F6"),
+            (3, "48 6B 10 41 00 00 00 00 00 04"),
+            (4, "86 F1 11 41 00 FF FF FF FF C5"),
+            (5, "86 F1 11 41 00 FF FF FF FF C5"),
+        ] {
+            let (mut obd, state) = fixture_obd(FixtureState {
+                scripted_replies: VecDeque::from([
+                    format!("{reply}\r>").into_bytes(),
+                    format!("{id}\r>").into_bytes(),
+                ]),
+                ..Default::default()
+            });
+            obd.protocol = id;
+            let (protocol, probes) = obd.probe_legacy_protocol().unwrap();
+            assert_eq!(protocol, ObdProtocol::try_from(id).unwrap());
+            assert_eq!(probes.len(), 1);
+            assert_eq!(state.lock().unwrap().written, b"0100\rAT DPN\r");
+            assert_eq!(obd.get_protocol_number(), id);
+        }
+    }
+
+    #[test]
+    fn invalid_legacy_frames_do_not_trigger_adapter_report() {
+        for reply in [
+            b"NO DATA\r>".as_slice(),
+            b"48 6B 10 41 00 00 00 00 00 05\r>",
+            b"48 6B 10 41 00 00 00 00 00 04\rNO DATA\r>",
+        ] {
+            let (mut obd, state) = fixture_obd(FixtureState {
+                scripted_replies: VecDeque::from([reply.to_vec()]),
+                ..Default::default()
+            });
+            obd.protocol = 3;
+            assert!(matches!(
+                obd.probe_legacy_protocol(),
+                Err(Error::InvalidResponse)
+            ));
+            assert_eq!(state.lock().unwrap().written, b"0100\r");
+        }
+    }
+
+    #[test]
+    fn legacy_probe_rejects_report_mismatch_and_preserves_requested_selection() {
+        for report in [b"2\r>".as_slice(), b"A3\r>", b"6\r>"] {
+            let (mut obd, state) = fixture_obd(FixtureState {
+                scripted_replies: VecDeque::from([
+                    b"48 6B 10 41 00 00 00 00 00 04\r>".to_vec(),
+                    report.to_vec(),
+                ]),
+                ..Default::default()
+            });
+            obd.protocol = 3;
+            assert!(matches!(
+                obd.probe_legacy_protocol(),
+                Err(Error::InvalidResponse)
+            ));
+            assert_eq!(state.lock().unwrap().written, b"0100\rAT DPN\r");
+            assert_eq!(obd.get_protocol_number(), 3);
+        }
+    }
+
+    #[test]
+    fn legacy_probe_does_not_dispatch_in_automatic_can_or_replay_mode() {
+        for id in [0, 6, 7, 8, 9] {
+            let (mut obd, state) = fixture_obd(FixtureState::default());
+            obd.protocol = id;
+            assert!(matches!(
+                obd.probe_legacy_protocol(),
+                Err(Error::InvalidResponse)
+            ));
+            assert!(state.lock().unwrap().written.is_empty());
+        }
+        let (mut obd, state) = fixture_obd(FixtureState::default());
+        obd.protocol = 3;
+        obd.replay_requests = true;
+        assert!(matches!(
+            obd.probe_legacy_protocol(),
+            Err(Error::InvalidResponse)
+        ));
+        assert!(state.lock().unwrap().written.is_empty());
+    }
+
+    #[test]
+    fn automatic_probe_correlates_all_nine_protocols_in_serial_fixture() {
+        for (id, reply) in [
+            (1, "41 6B 10 41 00 00 00 00 00 9C"),
+            (2, "48 6B 10 41 00 00 00 00 00 F6"),
+            (3, "48 6B 10 41 00 00 00 00 00 04"),
+            (4, "86 F1 11 41 00 FF FF FF FF C5"),
+            (5, "86 F1 11 41 00 FF FF FF FF C5"),
+            (6, "7E8 06 41 00 FF FF FF FF"),
+            (7, "18DAF110 06 41 00 FF FF FF FF"),
+            (8, "7E8 06 41 00 FF FF FF FF"),
+            (9, "18 DA F1 10 06 41 00 FF FF FF FF"),
+        ] {
+            let (mut obd, state) = fixture_obd(FixtureState {
+                scripted_replies: VecDeque::from([
+                    format!("{reply}\r>").into_bytes(),
+                    format!("A{id}\r>").into_bytes(),
+                ]),
+                ..Default::default()
+            });
+            let expected = ObdProtocol::try_from(id).unwrap();
+            match obd.probe_automatic_protocol().unwrap() {
+                ProtocolEvidence::Can(protocol, probes) => {
+                    assert_eq!(protocol, expected);
+                    assert!(id >= 6);
+                    assert_eq!(probes.len(), 1);
+                    assert_eq!(probes[0].bitmap, [255; 4]);
+                    assert_eq!(
+                        probes[0].identifier_width,
+                        expected.can_parameters().unwrap().0
+                    );
+                }
+                ProtocolEvidence::Legacy(protocol, probes) => {
+                    assert_eq!(protocol, expected);
+                    assert!(id <= 5);
+                    assert_eq!(probes.len(), 1);
+                }
+            }
+            assert_eq!(state.lock().unwrap().written, b"0100\rAT DPN\r");
+            assert_eq!(obd.get_protocol_number(), 0);
+        }
+    }
+
+    #[test]
+    fn automatic_probe_rejects_invalid_or_mixed_reply_before_adapter_report() {
+        for reply in [
+            b"NO DATA\r>".as_slice(),
+            b"48 6B 10 41 00 00 00 00 00 05\r>",
+            b"7E8 06 41 00 FF FF FF FF\r48 6B 10 41 00 00 00 00 00 04\r>",
+            b"7E8 06 41 00 FF FF FF FF\r7E8 06 41 00 00 00 00 00\r>",
+        ] {
+            let (mut obd, state) = fixture_obd(FixtureState {
+                scripted_replies: VecDeque::from([reply.to_vec()]),
+                ..Default::default()
+            });
+            assert!(matches!(
+                obd.probe_automatic_protocol(),
+                Err(Error::InvalidResponse)
+            ));
+            assert_eq!(state.lock().unwrap().written, b"0100\r");
+        }
+    }
+
+    #[test]
+    fn automatic_probe_rejects_inconsistent_or_manual_report() {
+        for report in [b"A0\r>".as_slice(), b"A2\r>", b"A6\r>", b"3\r>"] {
+            let (mut obd, state) = fixture_obd(FixtureState {
+                scripted_replies: VecDeque::from([
+                    b"48 6B 10 41 00 00 00 00 00 04\r>".to_vec(),
+                    report.to_vec(),
+                ]),
+                ..Default::default()
+            });
+            assert!(matches!(
+                obd.probe_automatic_protocol(),
+                Err(Error::InvalidResponse)
+            ));
+            assert_eq!(state.lock().unwrap().written, b"0100\rAT DPN\r");
+        }
+    }
+
+    #[test]
+    fn automatic_probe_does_not_dispatch_in_manual_or_replay_mode() {
+        let (mut obd, state) = fixture_obd(FixtureState::default());
+        obd.protocol = 3;
+        assert!(obd.probe_automatic_protocol().is_err());
+        obd.protocol = 0;
+        obd.replay_requests = true;
+        assert!(obd.probe_automatic_protocol().is_err());
+        assert!(state.lock().unwrap().written.is_empty());
     }
 
     #[test]
