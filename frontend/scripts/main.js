@@ -189,17 +189,21 @@ const vinExportButton = document.getElementById("vin-export");
 const vinDetails = document.getElementById("vin-container");
 
 vinExportButton.addEventListener("click", async () => {
-  let vinObj = {};
-  vinDetails.childNodes.forEach((card) => {
-    if (card.nodeType == 1) {
-      const key = card
-        .querySelector("h3")
-        .textContent.replaceAll(" ", "_")
-        .toLowerCase();
-      const value = card.querySelector(".value").textContent.trim();
-      vinObj[key] = value;
-    }
-  });
+  const rows = Array.from(vinDetails.childNodes).filter((card) => card.nodeType === 1);
+  if (vinExportButton.disabled || rows.length === 0) return;
+  const isCurrent = () => {
+    const current = Array.from(vinDetails.childNodes).filter((card) => card.nodeType === 1);
+    return !vinExportButton.disabled && current.length === rows.length &&
+      current.every((card, index) => card === rows[index]);
+  };
+  const vinObj = Object.create(null);
+  for (const card of rows) {
+    const key = card.querySelector("h3")?.textContent.replaceAll(" ", "_").toLowerCase();
+    const value = card.querySelector(".value")?.textContent.trim();
+    if (!key || !value) return;
+    vinObj[key] = value;
+  }
+  if (!vinObj.vin) return;
 
   try {
     await saveJsonExport({
@@ -207,6 +211,7 @@ vinExportButton.addEventListener("click", async () => {
       defaultPath: "vin_details.json",
       save,
       writeTextFile,
+      isCurrent,
     });
   } catch (error) {
     addNotification("EXPORT FAILED", "Could not save VIN details.");

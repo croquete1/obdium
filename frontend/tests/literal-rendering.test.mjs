@@ -154,3 +154,25 @@ test("malformed DTC snapshots are unavailable and never exported", () => {
   assert.equal(list.children.length, 0);
   assert.equal(exports, 1);
 });
+
+test("VIN result ignores a different query and rejects empty or malformed replies", () => {
+  const container = node();
+  const button = { disabled: true };
+  const input = { value: "SYNTHETIC-FIXTURE" };
+  const handler = eventHandler("decode-vin-result", 'listen("display-notification"', {
+    exportButton: button,
+    document: { getElementById: () => container, querySelector: () => input, createElement: node },
+    addNotification() {},
+  });
+  handler({ payload: { vin: input.value, make: "Fixture", model: "N/A", unused: 4, error_msg: "Decoded successfully." } });
+  assert.equal(button.disabled, false);
+  assert.equal(container.children.length, 2);
+  handler({ payload: { vin: "OTHER-FIXTURE", make: "Other" } });
+  assert.equal(container.children.length, 2);
+  assert.equal(button.disabled, false);
+  handler({ payload: { vin: "", make: "", error_msg: "Unavailable" } });
+  assert.equal(container.children.length, 0);
+  assert.equal(button.disabled, true);
+  handler(undefined);
+  assert.equal(button.disabled, true);
+});

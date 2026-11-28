@@ -1101,8 +1101,15 @@
     const vinLabel = document.getElementById("vin-full");
     const vehicleName = document.getElementById("vehicle-title");
 
+    function invalidateVinResult() {
+      vinExportBtn.disabled = true;
+      document.getElementById("vin-container").replaceChildren();
+    }
+
+    vinInput.addEventListener("input", invalidateVinResult);
     decodeVinBtn.addEventListener("click", async function (event) {
       const query = vinInput.value.trim();
+      invalidateVinResult();
       if (query !== "") {
         // request backend to decode vin
         await emit("decode-vin", query);

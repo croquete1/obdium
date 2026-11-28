@@ -447,19 +447,25 @@ const exportButton = document.getElementById("vin-export");
 
 // show vehicle info if no error
 listen("decode-vin-result", (event) => {
-  const data = event.payload;
-  addNotification("VIN DECODING", data.error_msg);
-
+  const data = event?.payload;
   const container = document.getElementById("vin-container");
-  if (!container) {
-    return;
-  }
+  if (!container) return;
+  const query = document.querySelector(".vin-input")?.value.trim().toUpperCase();
 
-  container.innerHTML = "";
+  // Never let an older result for another VIN replace the current query.
+  if (typeof data?.vin === "string" && data.vin.trim() &&
+      data.vin.trim().toUpperCase() !== query) return;
 
-  // show all fields
-  for (const [key, value] of Object.entries(event.payload)) {
-    if (key === "error_msg" || value == "N/A" || value == "-1") continue;
+  exportButton.disabled = true;
+  container.replaceChildren();
+  addNotification("VIN DECODING", typeof data?.error_msg === "string"
+    ? data.error_msg : "No VIN details available.");
+  if (typeof data?.vin !== "string" || !data.vin.trim()) return;
+
+  // show only available string fields
+  for (const [key, value] of Object.entries(data)) {
+    if (key === "error_msg" || typeof value !== "string" ||
+        !value.trim() || value === "N/A" || value === "-1") continue;
 
     const name = key.replaceAll("_", " ").toUpperCase();
 

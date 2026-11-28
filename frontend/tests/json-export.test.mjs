@@ -174,3 +174,45 @@ test("pending DTC picker cannot export replaced or disconnected rows", async () 
   assert.equal(writes.length, 1);
   assert.equal(writes[0][0], "/chosen/current.json");
 });
+
+test("VIN export stays offline and refuses invalidated rows after the picker", async () => {
+  const source = readFileSync(new URL("../scripts/main.js", import.meta.url), "utf8");
+  const start = source.indexOf('vinExportButton.addEventListener("click"');
+  const end = source.indexOf("const input =", start);
+  assert.ok(start >= 0 && end > start);
+  const row = () => ({ nodeType: 1, querySelector: (selector) => ({
+    textContent: selector === "h3" ? "VIN" : "SYNTHETIC-FIXTURE",
+  }) });
+  const list = { childNodes: [] };
+  const writes = [];
+  let handler;
+  let choosePath;
+  const button = { disabled: true, addEventListener(name, callback) { handler = callback; } };
+  runInNewContext(source.slice(start, end), {
+    vinExportButton: button, vinDetails: list, saveJsonExport,
+    save: () => new Promise((resolve) => { choosePath = resolve; }),
+    writeTextFile: async (...args) => writes.push(args),
+    addNotification() {},
+    console: { error: () => assert.fail("unexpected export failure") },
+  });
+  await handler();
+  assert.equal(writes.length, 0);
+  list.childNodes = [row()];
+  button.disabled = false;
+  let pending = handler();
+  list.childNodes = [row()];
+  choosePath("/chosen/replaced.json");
+  await pending;
+  assert.equal(writes.length, 0);
+  pending = handler();
+  button.disabled = true;
+  choosePath("/chosen/invalidated.json");
+  await pending;
+  assert.equal(writes.length, 0);
+  button.disabled = false;
+  pending = handler();
+  choosePath("/chosen/current.json");
+  await pending;
+  assert.equal(writes.length, 1);
+  assert.equal(JSON.parse(writes[0][1]).vin, "SYNTHETIC-FIXTURE");
+});
