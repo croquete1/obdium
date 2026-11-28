@@ -97,6 +97,24 @@ fn dispatch_sample(
     }
 }
 
+fn dispatch_feedback(dispatch: &Dispatch) -> Option<&'static str> {
+    match dispatch {
+        Dispatch::Submitted => Some("Sample requested"),
+        Dispatch::NotReady => None,
+        Dispatch::Busy => Some("Demo worker busy; request again"),
+        Dispatch::Disconnected => Some("Demo worker unavailable"),
+        Dispatch::RequestFailed => Some("Could not start sample request"),
+    }
+}
+
+fn stopped_demo_feedback(worker_available: bool) -> &'static str {
+    if worker_available {
+        "Demo stopped"
+    } else {
+        "Demo worker unavailable"
+    }
+}
+
 fn request_demo_sample(
     ui: &PreviewWindow,
     state: &mut PreviewSession,
@@ -105,19 +123,16 @@ fn request_demo_sample(
     let Some(worker) = worker_slot.as_ref() else {
         state.stop();
         ui.set_demo_available(false);
-        ui.set_core_status("Demo worker unavailable".into());
+        ui.set_demo_status("Demo worker unavailable".into());
         return;
     };
-    match dispatch_sample(state, Instant::now(), |permit| worker.submit(permit)) {
-        Dispatch::Submitted => ui.set_core_status("Core: initialized, disconnected".into()),
-        Dispatch::NotReady => {}
-        Dispatch::Busy => ui.set_core_status("Demo worker busy; request again".into()),
-        Dispatch::Disconnected => {
-            worker_slot.take();
-            ui.set_demo_available(false);
-            ui.set_core_status("Demo worker unavailable".into());
-        }
-        Dispatch::RequestFailed => ui.set_core_status("Could not start sample request".into()),
+    let dispatch = dispatch_sample(state, Instant::now(), |permit| worker.submit(permit));
+    if dispatch == Dispatch::Disconnected {
+        worker_slot.take();
+        ui.set_demo_available(false);
+    }
+    if let Some(feedback) = dispatch_feedback(&dispatch) {
+        ui.set_demo_status(feedback.into());
     }
 }
 
@@ -142,11 +157,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let mut worker_slot = callback_worker.borrow_mut();
             if state.is_active() {
                 state.stop();
+                ui.set_demo_status(stopped_demo_feedback(worker_slot.is_some()).into());
             } else if worker_slot.is_some() {
                 if state.start() {
                     request_demo_sample(&ui, &mut state, &mut worker_slot);
                 } else {
-                    ui.set_core_status("Could not start demo session".into());
+                    ui.set_demo_status("Could not start demo session".into());
                 }
             }
             render_session(&ui, &state);
@@ -183,12 +199,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 WorkerEvent::Disconnected => {
                     worker_slot.take();
                     ui.set_demo_available(false);
-                    ui.set_core_status("Demo worker unavailable".into());
+                    ui.set_demo_status("Demo worker unavailable".into());
                     changed = true;
                 }
             }
         }
         if changed {
+            if worker_slot.is_some() {
+                ui.set_demo_status("".into());
+            }
             render_session(&ui, &state);
         }
     });
@@ -209,6 +228,30 @@ mod core_boundary_tests {
     use super::*;
     use crate::session::Observation;
     use obdium::scalar::{Scalar, Unit};
+
+    #[test]
+    fn demo_feedback_does_not_claim_connection_or_sample_success() {
+        assert_eq!(
+            dispatch_feedback(&Dispatch::Submitted),
+            Some("Sample requested")
+        );
+        assert_eq!(dispatch_feedback(&Dispatch::NotReady), None);
+        assert_eq!(
+            dispatch_feedback(&Dispatch::Busy),
+            Some("Demo worker busy; request again")
+        );
+        assert_eq!(
+            dispatch_feedback(&Dispatch::Disconnected),
+            Some("Demo worker unavailable")
+        );
+        assert_eq!(
+            dispatch_feedback(&Dispatch::RequestFailed),
+            Some("Could not start sample request")
+        );
+        assert_eq!(stopped_demo_feedback(true), "Demo stopped");
+        let unavailable = stopped_demo_feedback(false);
+        assert_eq!(unavailable, "Demo worker unavailable");
+    }
 
     #[test]
     fn linked_core_constructor_stays_disconnected() {
