@@ -1,0 +1,74 @@
+name: Rust format preflight
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, edited]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rust-format-preflight-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  format:
+    name: Rust format / preflight
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install pinned formatter
+        run: rustup toolchain install 1.100.0 --profile minimal --component rustfmt
+      - name: Verify formatter failure and patch recovery on isolated fixture
+        shell: bash
+        run: |
+          fixture="$(mktemp -d "$RUNNER_TEMP/rustfmt-fixture.XXXXXX")"
+          trap 'rm -rf -- "$fixture"' EXIT
+          cd "$fixture"
+          git init -q
+          mkdir src
+          printf '%s\n' '[package]' 'name = "rustfmt-fixture"' 'version = "0.0.0"' 'edition = "2021"' > Cargo.toml
+          printf '%s\n' 'pub fn sample()->u32{42}' > src/lib.rs
+          git add Cargo.toml src/lib.rs
+          if cargo +1.100.0 fmt --all -- --check; then
+            echo 'Expected the intentionally malformed fixture to fail'
+            exit 1
+          fi
+          cargo +1.100.0 fmt --all
+          git diff --binary -- . > "$fixture/format.patch"
+          test -s "$fixture/format.patch"
+          git restore --worktree -- .
+          git diff --exit-code -- .
+          git apply --check "$fixture/format.patch"
+          git apply "$fixture/format.patch"
+          cargo +1.100.0 fmt --all -- --check
+      - name: Rustfmt
+        id: rustfmt
+        run: cargo +1.100.0 fmt --all -- --check
+      - name: Capture official formatting patch on failure
+        id: capture
+        if: ${{ failure() && steps.rustfmt.outcome == 'failure' }}
+        run: |
+          cargo +1.100.0 fmt --all
+          git diff --binary -- . > "$RUNNER_TEMP/rustfmt-preflight.patch"
+          git restore --worktree -- .
+          test -s "$RUNNER_TEMP/rustfmt-preflight.patch"
+          git -C "$GITHUB_WORKSPACE" apply --check "$RUNNER_TEMP/rustfmt-preflight.patch"
+      - name: Upload formatting patch
+        if: ${{ failure() && steps.rustfmt.outcome == 'failure' && steps.capture.outcome == 'success' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: rustfmt-preflight-patch
+          path: ${{ runner.temp }}/rustfmt-preflight.patch
+          if-no-files-found: error
+          retention-days: 7
