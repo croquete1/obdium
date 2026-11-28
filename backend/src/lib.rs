@@ -5,6 +5,7 @@ pub mod isotp;
 pub mod mid;
 pub mod obd;
 mod pid;
+pub mod protocol;
 mod replay;
 mod response;
 pub mod scalar;

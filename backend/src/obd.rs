@@ -1,14 +1,18 @@
-use serialport::ErrorKind::{Io, NoDevice};
 use serialport::SerialPort;
 use sqlite::State;
 use std::collections::HashMap;
 use std::io::{Read, Write};
 use std::str::{self, FromStr};
 use std::thread::sleep;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use thiserror::Error;
 
 use crate::cmd::{Command, CommandType};
+use crate::protocol::{
+    confirm_automatic_probe, confirm_legacy_probe, correlate_can_probes, has_supported_probe_reply,
+    parse_can_probes, parse_reported_protocol, validate_selection_ack, CanProbe, LegacyProbe,
+    ObdProtocol, ProtocolEvidence, ProtocolSelection, ReportedProtocol,
+};
 use crate::response::Response;
 use crate::scalar::{Scalar, Unit, UnitPreferences};
 use crate::vin::VIN;
@@ -61,6 +65,89 @@ pub enum Error {
         "Error occured during I/O operation via serial communication. Error details (if any): {0}"
     )]
     AdapterReadWriteError(String),
+    #[error("Adapter reply exceeded the total receive deadline")]
+    ReplyDeadlineExceeded,
+}
+
+// Limit a single adapter reply to avoid unbounded allocation if its prompt is lost.
+// Large/continuous diagnostic streams require a separate framing design.
+const MAX_ADAPTER_REPLY_BYTES: usize = 64 * 1024;
+const ADAPTER_IDLE_TIMEOUT: Duration = Duration::from_secs(1);
+const ADAPTER_REPLY_DEADLINE: Duration = Duration::from_secs(5);
+
+fn map_serial_error(error: serialport::Error) -> Error {
+    if error.kind() == serialport::ErrorKind::NoDevice {
+        Error::NoConnection
+    } else {
+        Error::AdapterReadWriteError(error.to_string())
+    }
+}
+
+/// Read a complete prompt-terminated reply without clearing or discarding input.
+/// A partial reply is never accepted on EOF, timeout or I/O failure.
+fn read_prompt_with_deadline(
+    until: u8,
+    mut elapsed: impl FnMut() -> Duration,
+    mut read: impl FnMut(&mut [u8], Duration) -> Result<usize, Error>,
+) -> Result<String, Error> {
+    let mut response = String::new();
+    let mut buffer = [0u8; 1];
+
+    loop {
+        let remaining = ADAPTER_REPLY_DEADLINE.saturating_sub(elapsed());
+        if remaining.is_zero() {
+            return Err(Error::ReplyDeadlineExceeded);
+        }
+        let result = read(&mut buffer, remaining.min(ADAPTER_IDLE_TIMEOUT));
+        if elapsed() >= ADAPTER_REPLY_DEADLINE {
+            return Err(Error::ReplyDeadlineExceeded);
+        }
+        match result {
+            Ok(1) => {
+                let byte = buffer[0];
+                if byte == until {
+                    return Ok(response);
+                }
+                if !byte.is_ascii() || response.len() >= MAX_ADAPTER_REPLY_BYTES {
+                    return Err(Error::InvalidResponse);
+                }
+                response.push(char::from(byte));
+            }
+            Ok(_) => return Err(Error::InvalidResponse),
+            Err(error) => return Err(error),
+        }
+    }
+}
+
+fn read_serial_prompt(port: &mut dyn SerialPort, until: u8) -> Result<String, Error> {
+    let start = Instant::now();
+    let mut timeout = port.timeout();
+    read_prompt_with_deadline(
+        until,
+        || start.elapsed(),
+        |buffer, remaining| {
+            // Avoid reconfiguring the port for every byte while the full idle budget remains.
+            if timeout != remaining {
+                port.set_timeout(remaining).map_err(map_serial_error)?;
+                timeout = remaining;
+            }
+            port.read(buffer)
+                .map_err(|error| Error::AdapterReadWriteError(error.to_string()))
+        },
+    )
+}
+
+#[cfg(test)]
+fn read_prompt<R: Read + ?Sized>(reader: &mut R, until: u8) -> Result<String, Error> {
+    read_prompt_with_deadline(
+        until,
+        || Duration::ZERO,
+        |buffer, _| {
+            reader
+                .read(buffer)
+                .map_err(|error| Error::AdapterReadWriteError(error.to_string()))
+        },
+    )
 }
 
 pub enum Service {
@@ -191,6 +278,14 @@ impl OBD {
     }
 
     pub fn connect(&mut self, port: &str, baud_rate: u32, protocol: u8) -> Result<(), Error> {
+        if self.connection.is_some() {
+            return Ok(());
+        }
+
+        self.protocol = 0;
+        self.elm_version = None;
+        self.freeze_frame_query = false;
+
         if port == "DEMO MODE" {
             // No connection required
             self.replay_requests = true;
@@ -202,45 +297,48 @@ impl OBD {
         self.replay_requests = false;
         self.record_requests = false;
 
-        if self.connection.is_some() {
-            return Ok(());
-        }
+        let selection =
+            ProtocolSelection::try_from(protocol).map_err(|_| Error::InvalidProtocol(protocol))?;
 
         self.connection = serialport::new(port, baud_rate)
             .timeout(Duration::from_secs(1))
             .open()
             .ok();
 
-        if self.is_connected() {
-            let initialized = self.init();
-            let mut command = match protocol {
-                0 => Command::new_at(b"ATSP0"),
-                1 => Command::new_at(b"ATSP1"),
-                2 => Command::new_at(b"ATSP2"),
-                3 => Command::new_at(b"ATSP3"),
-                4 => Command::new_at(b"ATSP4"),
-                5 => Command::new_at(b"ATSP5"),
-                6 => Command::new_at(b"ATSP6"),
-                7 => Command::new_at(b"ATSP7"),
-                8 => Command::new_at(b"ATSP8"),
-                9 => Command::new_at(b"ATSP9"),
-                _ => return Err(Error::InvalidProtocol(protocol)),
-            };
-
-            self.send_command(&mut command)?;
-            self.protocol = protocol;
-
-            initialized
-        } else {
-            Err(Error::ConnectionFailed)
+        if !self.is_connected() {
+            return Err(Error::ConnectionFailed);
         }
+
+        self.initialize_protocol(selection, protocol)
+    }
+
+    fn initialize_protocol(
+        &mut self,
+        selection: ProtocolSelection,
+        protocol: u8,
+    ) -> Result<(), Error> {
+        if let Err(error) = self.init().and_then(|()| self.select_protocol(selection)) {
+            self.disconnect();
+            return Err(error);
+        }
+
+        // This is the selected configuration, not the negotiated ECU protocol.
+        self.protocol = protocol;
+        Ok(())
+    }
+
+    fn select_protocol(&mut self, selection: ProtocolSelection) -> Result<(), Error> {
+        self.send_command(&mut Command::new_at(selection.command()))?;
+        let response = self.get_at_response()?;
+        validate_selection_ack(response.raw_response.as_deref().unwrap_or_default())
+            .map_err(|_| Error::InitFailedNoOKReceived)
     }
 
     pub fn disconnect(&mut self) {
-        if let Some(connection) = self.connection.take() {
-            drop(connection);
-            self.connection = None;
-        }
+        self.connection = None;
+        self.protocol = 0;
+        self.elm_version = None;
+        self.freeze_frame_query = false;
     }
 
     pub fn is_connected(&self) -> bool {
@@ -372,11 +470,14 @@ impl OBD {
                 self.save_request(&command, &response);
             }
 
+            let acknowledged =
+                validate_selection_ack(response.raw_response.as_deref().unwrap_or_default())
+                    .is_ok();
             match (command.get_at(), response.formatted_response.as_deref()) {
                 (b"ATZ", Some(data)) => {
                     self.elm_version = Some(data.to_owned());
                 }
-                (_, Some(data)) if data.contains("OK") => {}
+                (_, _) if acknowledged => {}
                 x => {
                     println!("{:?}", x);
                     return Err(Error::InitFailedNoOKReceived);
@@ -442,20 +543,22 @@ impl OBD {
             None => return Err(Error::NoConnection),
         };
 
-        let _ = stream.set_timeout(Duration::from_secs(1));
-        let _ = stream.clear(serialport::ClearBuffer::All);
-
         let mut cmd = req.as_bytes();
         if cmd.is_empty() {
             return Ok(());
         }
 
-        cmd.push(b'\r');
-        match stream.write_all(&cmd) {
-            Ok(()) => (),
+        stream
+            .set_timeout(ADAPTER_IDLE_TIMEOUT)
+            .map_err(map_serial_error)?;
+        stream
+            .clear(serialport::ClearBuffer::All)
+            .map_err(map_serial_error)?;
 
-            // Connection dropped
-            Err(_) => self.connection = None,
+        cmd.push(b'\r');
+        if let Err(error) = stream.write_all(&cmd) {
+            self.connection = None;
+            return Err(Error::AdapterReadWriteError(error.to_string()));
         }
 
         Ok(())
@@ -666,31 +769,17 @@ impl OBD {
             None => return Err(Error::NoConnection),
         };
 
-        port.clear(serialport::ClearBuffer::All)
-            .map_err(|error| match error.kind() {
-                NoDevice => Error::NoConnection,
-                Io(_) => Error::AdapterReadWriteError(error.description),
-                _ => Error::AdapterReadWriteError("unknown i/o error".to_string()),
-            })?;
-
-        let mut buffer = [0u8; 1];
-        let mut response = String::new();
-
-        loop {
-            match port.read(&mut buffer) {
-                Ok(1) => {
-                    let byte = buffer[0];
-                    if byte == until {
-                        break;
-                    }
-
-                    response.push(byte as char);
-                }
-                Ok(0) => std::thread::sleep(std::time::Duration::from_millis(10)),
-                Ok(_) => break,
-                Err(_) => break,
+        // The buffer is cleared before sending a command, never after it.
+        // A fast adapter may already have returned the entire reply.
+        let response = match read_serial_prompt(port.as_mut(), until) {
+            Ok(response) => response,
+            Err(error) => {
+                // Without a validated prompt boundary, the next reply cannot be
+                // attributed safely. Require an explicit reconnect; never retry.
+                self.connection = None;
+                return Err(error);
             }
-        }
+        };
 
         if response.contains("UNABLE TO CONNECT") {
             println!("unable to connect");
@@ -866,8 +955,99 @@ impl OBD {
         response.formatted_response.ok_or(Error::InvalidResponse)
     }
 
+    /// Read the adapter's protocol configuration; this does not verify ECU communication.
+    /// Demo recordings do not contain authoritative live adapter state.
+    pub fn get_reported_protocol(&mut self) -> Result<ReportedProtocol, Error> {
+        if self.replay_requests {
+            return Err(Error::InvalidResponse);
+        }
+        let mut request = Command::new_at(b"AT DPN");
+        self.send_command(&mut request)?;
+        let response = self.get_at_response()?;
+        parse_reported_protocol(response.raw_response.as_deref().unwrap_or_default())
+            .map_err(|_| Error::InvalidResponse)
+    }
+
+    /// Read-only CAN probe, using the standard supported-PID request.
+    /// A successful result correlates ECU response framing with the adapter report.
+    /// The nominal bus speed is reported by the adapter, not measured independently.
+    /// Legacy protocol layouts are not supported by this verification path.
+    pub fn probe_can_protocol(&mut self) -> Result<ObdProtocol, Error> {
+        self.probe_can_protocol_evidence()
+            .map(|(protocol, _)| protocol)
+    }
+
+    /// Preserve every validated source identifier and its individual PID bitmap.
+    /// The compatibility method above intentionally returns only the protocol.
+    pub fn probe_can_protocol_evidence(&mut self) -> Result<(ObdProtocol, Vec<CanProbe>), Error> {
+        if self.replay_requests {
+            return Err(Error::InvalidResponse);
+        }
+        let selection = ProtocolSelection::try_from(self.protocol)
+            .map_err(|_| Error::InvalidProtocol(self.protocol))?;
+        if matches!(selection, ProtocolSelection::Manual(protocol) if protocol.can_parameters().is_none())
+        {
+            return Err(Error::InvalidResponse);
+        }
+        self.send_command(&mut Command::new_pid(b"0100"))?;
+        let raw = self.read_until(b'>')?;
+        let probes = parse_can_probes(&raw).map_err(|_| Error::InvalidResponse)?;
+        let report = self.get_reported_protocol()?;
+        let protocol =
+            correlate_can_probes(selection, report, &probes).map_err(|_| Error::InvalidResponse)?;
+        Ok((protocol, probes))
+    }
+
+    /// Explicit read-only legacy probe. Only manually selected legacy protocols
+    /// are accepted here; automatic detection is not yet orchestrated.
+    /// Timing and initialization method are adapter-reported, not measured.
+    pub fn probe_legacy_protocol(&mut self) -> Result<(ObdProtocol, Vec<LegacyProbe>), Error> {
+        if self.replay_requests {
+            return Err(Error::InvalidResponse);
+        }
+        let selection = ProtocolSelection::try_from(self.protocol)
+            .map_err(|_| Error::InvalidProtocol(self.protocol))?;
+        let ProtocolSelection::Manual(protocol) = selection else {
+            return Err(Error::InvalidResponse);
+        };
+        if protocol.can_parameters().is_some() {
+            return Err(Error::InvalidResponse);
+        }
+
+        self.send_command(&mut Command::new_pid(b"0100"))?;
+        let raw = self.read_until(b'>')?;
+        // Validate all ECU frames before requesting adapter configuration.
+        let expected = ReportedProtocol {
+            automatic: false,
+            protocol: Some(protocol),
+        };
+        confirm_legacy_probe(selection, expected, &raw).map_err(|_| Error::InvalidResponse)?;
+        let report = self.get_reported_protocol()?;
+        confirm_legacy_probe(selection, report, &raw).map_err(|_| Error::InvalidResponse)
+    }
+
+    /// Explicit automatic read-only probe. No fallback commands or retries.
+    /// A returned protocol is correlated evidence, not measured bus timing.
+    pub fn probe_automatic_protocol(&mut self) -> Result<ProtocolEvidence, Error> {
+        if self.replay_requests || self.protocol != 0 {
+            return Err(Error::InvalidResponse);
+        }
+        self.send_command(&mut Command::new_pid(b"0100"))?;
+        let raw = self.read_until(b'>')?;
+        if !has_supported_probe_reply(&raw) {
+            return Err(Error::InvalidResponse);
+        }
+        let report = self.get_reported_protocol()?;
+        confirm_automatic_probe(report, &raw).map_err(|_| Error::InvalidResponse)
+    }
+
+    /// Requested configuration, not an independently verified ECU protocol.
     pub fn get_protocol_number(&self) -> u8 {
-        self.protocol
+        if self.is_connected() {
+            self.protocol
+        } else {
+            0
+        }
     }
 
     /// Test and run Mode 22 pids from
@@ -1007,5 +1187,836 @@ impl OBD {
                 Err(Box::new(err))
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod serial_prompt_tests {
+    use super::*;
+    use std::io::{self, Cursor};
+
+    use std::collections::VecDeque;
+    use std::sync::{Arc, Mutex};
+
+    #[derive(Default)]
+    struct FixtureState {
+        events: Vec<&'static str>,
+        pending: VecDeque<u8>,
+        written: Vec<u8>,
+        timeout: Duration,
+        fail_timeout: bool,
+        fail_clear: bool,
+        fail_write: bool,
+        eof_when_empty: bool,
+        scripted_replies: VecDeque<Vec<u8>>,
+    }
+
+    #[derive(Clone)]
+    struct FixturePort {
+        state: Arc<Mutex<FixtureState>>,
+    }
+
+    impl SerialPort for FixturePort {
+        fn name(&self) -> Option<String> {
+            Some("fixture".to_string())
+        }
+        fn baud_rate(&self) -> serialport::Result<u32> {
+            Ok(0)
+        }
+        fn data_bits(&self) -> serialport::Result<serialport::DataBits> {
+            Ok(serialport::DataBits::Eight)
+        }
+        fn flow_control(&self) -> serialport::Result<serialport::FlowControl> {
+            Ok(serialport::FlowControl::None)
+        }
+        fn parity(&self) -> serialport::Result<serialport::Parity> {
+            Ok(serialport::Parity::None)
+        }
+        fn stop_bits(&self) -> serialport::Result<serialport::StopBits> {
+            Ok(serialport::StopBits::One)
+        }
+        fn timeout(&self) -> Duration {
+            self.state.lock().unwrap().timeout
+        }
+        fn set_timeout(&mut self, timeout: Duration) -> serialport::Result<()> {
+            let mut state = self.state.lock().unwrap();
+            state.events.push("timeout");
+            if state.fail_timeout {
+                return Err(serialport::Error::new(
+                    serialport::ErrorKind::Unknown,
+                    "fixture setup failure",
+                ));
+            }
+            state.timeout = timeout;
+            Ok(())
+        }
+        fn write_request_to_send(&mut self, _level: bool) -> serialport::Result<()> {
+            Ok(())
+        }
+        fn write_data_terminal_ready(&mut self, _level: bool) -> serialport::Result<()> {
+            Ok(())
+        }
+        fn read_clear_to_send(&mut self) -> serialport::Result<bool> {
+            Ok(true)
+        }
+        fn read_data_set_ready(&mut self) -> serialport::Result<bool> {
+            Ok(true)
+        }
+        fn read_ring_indicator(&mut self) -> serialport::Result<bool> {
+            Ok(false)
+        }
+        fn read_carrier_detect(&mut self) -> serialport::Result<bool> {
+            Ok(false)
+        }
+        fn bytes_to_read(&self) -> serialport::Result<u32> {
+            Ok(0)
+        }
+        fn bytes_to_write(&self) -> serialport::Result<u32> {
+            Ok(0)
+        }
+        fn clear(&self, _buffer: serialport::ClearBuffer) -> serialport::Result<()> {
+            let mut state = self.state.lock().unwrap();
+            state.events.push("clear");
+            if state.fail_clear {
+                return Err(serialport::Error::new(
+                    serialport::ErrorKind::Unknown,
+                    "fixture clear failure",
+                ));
+            }
+            state.pending.clear();
+            Ok(())
+        }
+        fn try_clone(&self) -> serialport::Result<Box<dyn SerialPort>> {
+            Ok(Box::new(self.clone()))
+        }
+        fn set_baud_rate(&mut self, _baud_rate: u32) -> serialport::Result<()> {
+            Ok(())
+        }
+        fn set_data_bits(&mut self, _data_bits: serialport::DataBits) -> serialport::Result<()> {
+            Ok(())
+        }
+        fn set_flow_control(
+            &mut self,
+            _flow_control: serialport::FlowControl,
+        ) -> serialport::Result<()> {
+            Ok(())
+        }
+        fn set_parity(&mut self, _parity: serialport::Parity) -> serialport::Result<()> {
+            Ok(())
+        }
+        fn set_stop_bits(&mut self, _stop_bits: serialport::StopBits) -> serialport::Result<()> {
+            Ok(())
+        }
+        fn set_break(&self) -> serialport::Result<()> {
+            Ok(())
+        }
+        fn clear_break(&self) -> serialport::Result<()> {
+            Ok(())
+        }
+    }
+
+    impl Read for FixturePort {
+        fn read(&mut self, buffer: &mut [u8]) -> io::Result<usize> {
+            let mut state = self.state.lock().unwrap();
+            if buffer.is_empty() {
+                return Ok(0);
+            }
+            if let Some(byte) = state.pending.pop_front() {
+                buffer[0] = byte;
+                Ok(1)
+            } else if state.eof_when_empty {
+                Ok(0)
+            } else {
+                Err(io::Error::new(io::ErrorKind::TimedOut, "fixture timeout"))
+            }
+        }
+    }
+
+    impl Write for FixturePort {
+        fn write(&mut self, buffer: &[u8]) -> io::Result<usize> {
+            let mut state = self.state.lock().unwrap();
+            state.events.push("write");
+            if state.fail_write {
+                return Err(io::Error::new(io::ErrorKind::BrokenPipe, "fixture write"));
+            }
+            state.written.extend_from_slice(buffer);
+            // Simulate an adapter whose reply is already queued when write returns.
+            let reply = state
+                .scripted_replies
+                .pop_front()
+                .unwrap_or_else(|| b"ELM327 v1.5\r>".to_vec());
+            state.pending.extend(reply);
+            Ok(buffer.len())
+        }
+
+        fn flush(&mut self) -> io::Result<()> {
+            Ok(())
+        }
+    }
+
+    fn fixture_obd(state: FixtureState) -> (OBD, Arc<Mutex<FixtureState>>) {
+        let state = Arc::new(Mutex::new(state));
+        let mut obd = OBD::new();
+        obd.connection = Some(Box::new(FixturePort {
+            state: Arc::clone(&state),
+        }));
+        (obd, state)
+    }
+
+    fn initialization_replies(selection_reply: &[u8]) -> VecDeque<Vec<u8>> {
+        VecDeque::from([
+            b"ELM327 v1.5\r>".to_vec(),
+            b"OK\r>".to_vec(),
+            b"OK\r>".to_vec(),
+            b"OK\r>".to_vec(),
+            selection_reply.to_vec(),
+        ])
+    }
+
+    #[test]
+    fn every_protocol_selection_consumes_its_own_acknowledgement() {
+        for id in 0..=9 {
+            let (mut obd, state) = fixture_obd(FixtureState {
+                scripted_replies: initialization_replies(b"OK\r>"),
+                ..Default::default()
+            });
+            let selection = ProtocolSelection::try_from(id).unwrap();
+            obd.initialize_protocol(selection, id).unwrap();
+            assert_eq!(obd.get_protocol_number(), id);
+            assert!(obd.is_connected());
+            let state = state.lock().unwrap();
+            let mut expected = b"ATZ\rATE0\rATL0\rATH1\r".to_vec();
+            expected.extend_from_slice(selection.command());
+            expected.push(b'\r');
+            assert_eq!(state.written, expected);
+            assert!(state.pending.is_empty());
+        }
+    }
+
+    #[test]
+    fn rejected_protocol_configuration_disconnects() {
+        for reply in [b"?\r>".as_slice(), b"NOT OK\r>", b"OK\rERROR\r>"] {
+            let (mut obd, _) = fixture_obd(FixtureState {
+                scripted_replies: initialization_replies(reply),
+                ..Default::default()
+            });
+            assert!(matches!(
+                obd.initialize_protocol(ProtocolSelection::try_from(6).unwrap(), 6),
+                Err(Error::InitFailedNoOKReceived)
+            ));
+            assert!(!obd.is_connected());
+            assert_eq!(obd.get_protocol_number(), 0);
+        }
+    }
+
+    #[test]
+    fn failed_initialization_does_not_send_protocol_selection() {
+        let (mut obd, state) = fixture_obd(FixtureState {
+            scripted_replies: VecDeque::from([b"ELM327 v1.5\r>".to_vec(), b"?\r>".to_vec()]),
+            ..Default::default()
+        });
+        assert!(obd
+            .initialize_protocol(ProtocolSelection::try_from(6).unwrap(), 6)
+            .is_err());
+        assert!(!obd.is_connected());
+        assert_eq!(state.lock().unwrap().written, b"ATZ\rATE0\r");
+    }
+
+    #[test]
+    fn misleading_initialization_acknowledgements_stop_before_selection() {
+        for reply in [b"NOT OK\r>".as_slice(), b"OK\rERROR\r>"] {
+            let (mut obd, state) = fixture_obd(FixtureState {
+                scripted_replies: VecDeque::from([b"ELM327 v1.5\r>".to_vec(), reply.to_vec()]),
+                ..Default::default()
+            });
+            assert!(matches!(
+                obd.initialize_protocol(ProtocolSelection::try_from(6).unwrap(), 6),
+                Err(Error::InitFailedNoOKReceived)
+            ));
+            assert!(!obd.is_connected());
+            assert_eq!(state.lock().unwrap().written, b"ATZ\rATE0\r");
+        }
+    }
+
+    #[test]
+    fn disconnect_clears_previous_protocol_configuration() {
+        let (mut obd, _) = fixture_obd(FixtureState {
+            scripted_replies: initialization_replies(b"OK\r>"),
+            ..Default::default()
+        });
+        obd.initialize_protocol(ProtocolSelection::try_from(7).unwrap(), 7)
+            .unwrap();
+        obd.query_freeze_frame(true);
+        obd.disconnect();
+        assert_eq!(obd.get_protocol_number(), 0);
+        assert!(obd.elm_version.is_none());
+        assert!(!obd.freeze_frame_query);
+    }
+
+    #[test]
+    fn reported_protocol_is_read_without_changing_requested_selection() {
+        let (mut obd, state) = fixture_obd(FixtureState {
+            scripted_replies: VecDeque::from([b"A7\r>".to_vec()]),
+            ..Default::default()
+        });
+        let report = obd.get_reported_protocol().unwrap();
+        assert!(report.automatic);
+        assert_eq!(report.protocol.map(|protocol| protocol as u8), Some(7));
+        assert_eq!(obd.get_protocol_number(), 0);
+        assert_eq!(state.lock().unwrap().written, b"AT DPN\r");
+    }
+
+    #[test]
+    fn can_probe_requires_positive_ecu_response_before_reading_adapter_report() {
+        let (mut obd, state) = fixture_obd(FixtureState {
+            scripted_replies: VecDeque::from([
+                b"SEARCHING...\r18DAF110 06 41 00 00 00 00 00\r>".to_vec(),
+                b"A9\r>".to_vec(),
+            ]),
+            ..Default::default()
+        });
+        assert_eq!(obd.probe_can_protocol().unwrap(), ObdProtocol::Can29At250);
+        assert_eq!(state.lock().unwrap().written, b"0100\rAT DPN\r");
+        assert_eq!(obd.get_protocol_number(), 0);
+    }
+
+    #[test]
+    fn unsuccessful_can_probe_does_not_query_adapter_report() {
+        let (mut obd, state) = fixture_obd(FixtureState {
+            scripted_replies: VecDeque::from([b"NO DATA\r>".to_vec()]),
+            ..Default::default()
+        });
+        assert!(matches!(
+            obd.probe_can_protocol(),
+            Err(Error::InvalidResponse)
+        ));
+        assert_eq!(state.lock().unwrap().written, b"0100\r");
+    }
+
+    #[test]
+    fn manual_legacy_selection_does_not_start_can_probe() {
+        let (mut obd, state) = fixture_obd(FixtureState::default());
+        obd.protocol = 3;
+        assert!(matches!(
+            obd.probe_can_protocol(),
+            Err(Error::InvalidResponse)
+        ));
+        assert!(state.lock().unwrap().written.is_empty());
+    }
+
+    #[test]
+    fn can_probe_rejects_manual_protocol_mismatch() {
+        let (mut obd, state) = fixture_obd(FixtureState {
+            scripted_replies: VecDeque::from([
+                b"7E8 06 41 00 FF FF FF FF\r>".to_vec(),
+                b"8\r>".to_vec(),
+            ]),
+            ..Default::default()
+        });
+        obd.protocol = 6;
+        assert!(matches!(
+            obd.probe_can_protocol(),
+            Err(Error::InvalidResponse)
+        ));
+        assert_eq!(state.lock().unwrap().written, b"0100\rAT DPN\r");
+        assert_eq!(obd.get_protocol_number(), 6);
+    }
+
+    #[test]
+    fn manual_can_probe_retains_each_ecu_bitmap_in_all_four_protocols() {
+        for id in 6..=9 {
+            let (reply, first, second) = if id == 6 || id == 8 {
+                (
+                    "7E8 06 41 00 00 00 00 00\r7E9 06 41 00 FF 01 02 03",
+                    0x7E8,
+                    0x7E9,
+                )
+            } else {
+                (
+                    "18DAF110 06 41 00 00 00 00 00\r18 DA F1 11 06 41 00 FF 01 02 03",
+                    0x18DAF110,
+                    0x18DAF111,
+                )
+            };
+            let (mut obd, state) = fixture_obd(FixtureState {
+                scripted_replies: VecDeque::from([
+                    format!("{reply}\r>").into_bytes(),
+                    format!("{id}\r>").into_bytes(),
+                ]),
+                ..Default::default()
+            });
+            obd.protocol = id;
+            let (protocol, probes) = obd.probe_can_protocol_evidence().unwrap();
+            let expected = ObdProtocol::try_from(id).unwrap();
+            let width = expected.can_parameters().unwrap().0;
+            assert_eq!(protocol, expected);
+            assert_eq!(
+                probes,
+                vec![
+                    CanProbe {
+                        identifier: first,
+                        identifier_width: width,
+                        bitmap: [0; 4],
+                    },
+                    CanProbe {
+                        identifier: second,
+                        identifier_width: width,
+                        bitmap: [255, 1, 2, 3],
+                    },
+                ]
+            );
+            assert_eq!(state.lock().unwrap().written, b"0100\rAT DPN\r");
+            assert_eq!(obd.get_protocol_number(), id);
+        }
+    }
+
+    #[test]
+    fn manual_can_probe_rejects_duplicate_sources_before_adapter_report() {
+        let (mut obd, state) = fixture_obd(FixtureState {
+            scripted_replies: VecDeque::from([
+                b"7E8 06 41 00 FF FF FF FF\r7E8 06 41 00 00 00 00 00\r>".to_vec(),
+            ]),
+            ..Default::default()
+        });
+        obd.protocol = 6;
+        assert!(matches!(
+            obd.probe_can_protocol_evidence(),
+            Err(Error::InvalidResponse)
+        ));
+        assert_eq!(state.lock().unwrap().written, b"0100\r");
+    }
+
+    #[test]
+    fn manual_legacy_probe_checks_all_five_protocols_through_serial_fixture() {
+        for (id, reply) in [
+            (1, "41 6B 10 41 00 00 00 00 00 9C"),
+            (2, "48 6B 10 41 00 00 00 00 00 F6"),
+            (3, "48 6B 10 41 00 00 00 00 00 04"),
+            (4, "86 F1 11 41 00 FF FF FF FF C5"),
+            (5, "86 F1 11 41 00 FF FF FF FF C5"),
+        ] {
+            let (mut obd, state) = fixture_obd(FixtureState {
+                scripted_replies: VecDeque::from([
+                    format!("{reply}\r>").into_bytes(),
+                    format!("{id}\r>").into_bytes(),
+                ]),
+                ..Default::default()
+            });
+            obd.protocol = id;
+            let (protocol, probes) = obd.probe_legacy_protocol().unwrap();
+            assert_eq!(protocol, ObdProtocol::try_from(id).unwrap());
+            assert_eq!(probes.len(), 1);
+            assert_eq!(state.lock().unwrap().written, b"0100\rAT DPN\r");
+            assert_eq!(obd.get_protocol_number(), id);
+        }
+    }
+
+    #[test]
+    fn invalid_legacy_frames_do_not_trigger_adapter_report() {
+        for reply in [
+            b"NO DATA\r>".as_slice(),
+            b"48 6B 10 41 00 00 00 00 00 05\r>",
+            b"48 6B 10 41 00 00 00 00 00 04\rNO DATA\r>",
+        ] {
+            let (mut obd, state) = fixture_obd(FixtureState {
+                scripted_replies: VecDeque::from([reply.to_vec()]),
+                ..Default::default()
+            });
+            obd.protocol = 3;
+            assert!(matches!(
+                obd.probe_legacy_protocol(),
+                Err(Error::InvalidResponse)
+            ));
+            assert_eq!(state.lock().unwrap().written, b"0100\r");
+        }
+    }
+
+    #[test]
+    fn legacy_probe_rejects_report_mismatch_and_preserves_requested_selection() {
+        for report in [b"2\r>".as_slice(), b"A3\r>", b"6\r>"] {
+            let (mut obd, state) = fixture_obd(FixtureState {
+                scripted_replies: VecDeque::from([
+                    b"48 6B 10 41 00 00 00 00 00 04\r>".to_vec(),
+                    report.to_vec(),
+                ]),
+                ..Default::default()
+            });
+            obd.protocol = 3;
+            assert!(matches!(
+                obd.probe_legacy_protocol(),
+                Err(Error::InvalidResponse)
+            ));
+            assert_eq!(state.lock().unwrap().written, b"0100\rAT DPN\r");
+            assert_eq!(obd.get_protocol_number(), 3);
+        }
+    }
+
+    #[test]
+    fn legacy_probe_does_not_dispatch_in_automatic_can_or_replay_mode() {
+        for id in [0, 6, 7, 8, 9] {
+            let (mut obd, state) = fixture_obd(FixtureState::default());
+            obd.protocol = id;
+            assert!(matches!(
+                obd.probe_legacy_protocol(),
+                Err(Error::InvalidResponse)
+            ));
+            assert!(state.lock().unwrap().written.is_empty());
+        }
+        let (mut obd, state) = fixture_obd(FixtureState::default());
+        obd.protocol = 3;
+        obd.replay_requests = true;
+        assert!(matches!(
+            obd.probe_legacy_protocol(),
+            Err(Error::InvalidResponse)
+        ));
+        assert!(state.lock().unwrap().written.is_empty());
+    }
+
+    #[test]
+    fn automatic_probe_correlates_all_nine_protocols_in_serial_fixture() {
+        for (id, reply) in [
+            (1, "41 6B 10 41 00 00 00 00 00 9C"),
+            (2, "48 6B 10 41 00 00 00 00 00 F6"),
+            (3, "48 6B 10 41 00 00 00 00 00 04"),
+            (4, "86 F1 11 41 00 FF FF FF FF C5"),
+            (5, "86 F1 11 41 00 FF FF FF FF C5"),
+            (6, "7E8 06 41 00 FF FF FF FF"),
+            (7, "18DAF110 06 41 00 FF FF FF FF"),
+            (8, "7E8 06 41 00 FF FF FF FF"),
+            (9, "18 DA F1 10 06 41 00 FF FF FF FF"),
+        ] {
+            let (mut obd, state) = fixture_obd(FixtureState {
+                scripted_replies: VecDeque::from([
+                    format!("{reply}\r>").into_bytes(),
+                    format!("A{id}\r>").into_bytes(),
+                ]),
+                ..Default::default()
+            });
+            let expected = ObdProtocol::try_from(id).unwrap();
+            match obd.probe_automatic_protocol().unwrap() {
+                ProtocolEvidence::Can(protocol, probes) => {
+                    assert_eq!(protocol, expected);
+                    assert!(id >= 6);
+                    assert_eq!(probes.len(), 1);
+                    assert_eq!(probes[0].bitmap, [255; 4]);
+                    assert_eq!(
+                        probes[0].identifier_width,
+                        expected.can_parameters().unwrap().0
+                    );
+                }
+                ProtocolEvidence::Legacy(protocol, probes) => {
+                    assert_eq!(protocol, expected);
+                    assert!(id <= 5);
+                    assert_eq!(probes.len(), 1);
+                }
+            }
+            assert_eq!(state.lock().unwrap().written, b"0100\rAT DPN\r");
+            assert_eq!(obd.get_protocol_number(), 0);
+        }
+    }
+
+    #[test]
+    fn automatic_probe_rejects_invalid_or_mixed_reply_before_adapter_report() {
+        for reply in [
+            b"NO DATA\r>".as_slice(),
+            b"48 6B 10 41 00 00 00 00 00 05\r>",
+            b"7E8 06 41 00 FF FF FF FF\r48 6B 10 41 00 00 00 00 00 04\r>",
+            b"7E8 06 41 00 FF FF FF FF\r7E8 06 41 00 00 00 00 00\r>",
+        ] {
+            let (mut obd, state) = fixture_obd(FixtureState {
+                scripted_replies: VecDeque::from([reply.to_vec()]),
+                ..Default::default()
+            });
+            assert!(matches!(
+                obd.probe_automatic_protocol(),
+                Err(Error::InvalidResponse)
+            ));
+            assert_eq!(state.lock().unwrap().written, b"0100\r");
+        }
+    }
+
+    #[test]
+    fn automatic_probe_rejects_inconsistent_or_manual_report() {
+        for report in [b"A0\r>".as_slice(), b"A2\r>", b"A6\r>", b"3\r>"] {
+            let (mut obd, state) = fixture_obd(FixtureState {
+                scripted_replies: VecDeque::from([
+                    b"48 6B 10 41 00 00 00 00 00 04\r>".to_vec(),
+                    report.to_vec(),
+                ]),
+                ..Default::default()
+            });
+            assert!(matches!(
+                obd.probe_automatic_protocol(),
+                Err(Error::InvalidResponse)
+            ));
+            assert_eq!(state.lock().unwrap().written, b"0100\rAT DPN\r");
+        }
+    }
+
+    #[test]
+    fn automatic_probe_does_not_dispatch_in_manual_or_replay_mode() {
+        let (mut obd, state) = fixture_obd(FixtureState::default());
+        obd.protocol = 3;
+        assert!(obd.probe_automatic_protocol().is_err());
+        obd.protocol = 0;
+        obd.replay_requests = true;
+        assert!(obd.probe_automatic_protocol().is_err());
+        assert!(state.lock().unwrap().written.is_empty());
+    }
+
+    #[test]
+    fn transaction_keeps_reply_queued_during_write() {
+        let (mut obd, state) = fixture_obd(FixtureState {
+            pending: VecDeque::from(*b"X"),
+            ..Default::default()
+        });
+
+        obd.send_command(&mut Command::new_at(b"ATI"))
+            .expect("send succeeds");
+        let reply = obd.get_at_response().expect("receive succeeds");
+
+        assert_eq!(reply.raw_response().as_deref(), Some("ELM327 v1.5\r"));
+        let state = state.lock().unwrap();
+        assert_eq!(state.written, b"ATI\r");
+        assert_eq!(state.events, ["timeout", "clear", "write"]);
+        assert!(state.pending.is_empty());
+    }
+
+    #[test]
+    fn timeout_setup_failure_prevents_write() {
+        let (mut obd, state) = fixture_obd(FixtureState {
+            fail_timeout: true,
+            ..Default::default()
+        });
+
+        assert!(matches!(
+            obd.send_command(&mut Command::new_at(b"ATI")),
+            Err(Error::AdapterReadWriteError(_))
+        ));
+        let state = state.lock().unwrap();
+        assert_eq!(state.events, ["timeout"]);
+        assert!(state.written.is_empty());
+    }
+
+    #[test]
+    fn clear_failure_prevents_write() {
+        let (mut obd, state) = fixture_obd(FixtureState {
+            fail_clear: true,
+            ..Default::default()
+        });
+
+        assert!(matches!(
+            obd.send_command(&mut Command::new_at(b"ATI")),
+            Err(Error::AdapterReadWriteError(_))
+        ));
+        let state = state.lock().unwrap();
+        assert_eq!(state.events, ["timeout", "clear"]);
+        assert!(state.written.is_empty());
+    }
+
+    #[test]
+    fn failed_write_is_not_success_and_disconnects() {
+        let (mut obd, state) = fixture_obd(FixtureState {
+            fail_write: true,
+            ..Default::default()
+        });
+
+        assert!(matches!(
+            obd.send_command(&mut Command::new_at(b"ATI")),
+            Err(Error::AdapterReadWriteError(_))
+        ));
+        assert!(!obd.is_connected());
+        assert!(matches!(
+            obd.send_command(&mut Command::new_at(b"ATI")),
+            Err(Error::NoConnection)
+        ));
+        let state = state.lock().unwrap();
+        assert_eq!(state.events, ["timeout", "clear", "write"]);
+        assert!(state.written.is_empty());
+    }
+
+    #[test]
+    fn partial_reply_timeout_invalidates_connection_and_blocks_next_write() {
+        let (mut obd, state) = fixture_obd(FixtureState::default());
+        obd.send_command(&mut Command::new_at(b"ATI")).unwrap();
+        state.lock().unwrap().pending = VecDeque::from(*b"ELM");
+        assert!(matches!(
+            obd.get_at_response(),
+            Err(Error::AdapterReadWriteError(_))
+        ));
+        assert!(!obd.is_connected());
+
+        // Simulate the late remainder arriving after the failed transaction.
+        state.lock().unwrap().pending.extend(b"327\r>");
+        assert!(matches!(
+            obd.send_command(&mut Command::new_at(b"ATI")),
+            Err(Error::NoConnection)
+        ));
+        let state = state.lock().unwrap();
+        assert_eq!(state.written, b"ATI\r");
+        assert_eq!(state.events, ["timeout", "clear", "write"]);
+    }
+
+    #[test]
+    fn premature_eof_invalidates_connection() {
+        let (mut obd, state) = fixture_obd(FixtureState {
+            eof_when_empty: true,
+            ..Default::default()
+        });
+        obd.send_command(&mut Command::new_at(b"ATI")).unwrap();
+        state.lock().unwrap().pending = VecDeque::from(*b"ELM");
+        assert!(matches!(obd.get_at_response(), Err(Error::InvalidResponse)));
+        assert!(!obd.is_connected());
+    }
+
+    #[test]
+    fn malformed_byte_before_prompt_invalidates_connection() {
+        let (mut obd, state) = fixture_obd(FixtureState::default());
+        obd.send_command(&mut Command::new_at(b"ATI")).unwrap();
+        state.lock().unwrap().pending = VecDeque::from([b'E', 0xff, b'>']);
+        assert!(matches!(obd.get_at_response(), Err(Error::InvalidResponse)));
+        assert!(!obd.is_connected());
+        assert_eq!(state.lock().unwrap().written, b"ATI\r");
+    }
+
+    #[test]
+    fn complete_no_data_reply_keeps_transport_synchronized() {
+        let (mut obd, state) = fixture_obd(FixtureState::default());
+        obd.send_command(&mut Command::new_pid(b"010C")).unwrap();
+        state.lock().unwrap().pending = VecDeque::from(*b"NO DATA\r>");
+        assert!(matches!(obd.get_pid_response(), Err(Error::NoData)));
+        assert!(obd.is_connected());
+        obd.send_command(&mut Command::new_at(b"ATI")).unwrap();
+        assert!(obd.get_at_response().is_ok());
+        assert_eq!(state.lock().unwrap().written, b"010C\rATI\r");
+    }
+
+    #[test]
+    fn immediate_reply_is_preserved_until_prompt() {
+        let mut reader = Cursor::new(b"41 0C 1A F8\r>next");
+        let result = read_prompt(&mut reader, b'>').expect("complete reply");
+        assert_eq!(result, "41 0C 1A F8\r");
+        assert_eq!(reader.position(), b"41 0C 1A F8\r>".len() as u64);
+    }
+
+    #[test]
+    fn incomplete_reply_is_not_success() {
+        let mut reader = Cursor::new(b"41 0C");
+        assert!(matches!(
+            read_prompt(&mut reader, b'>'),
+            Err(Error::InvalidResponse)
+        ));
+    }
+
+    #[test]
+    fn io_error_after_partial_data_is_propagated() {
+        struct BrokenReader {
+            first: bool,
+        }
+        impl Read for BrokenReader {
+            fn read(&mut self, buffer: &mut [u8]) -> io::Result<usize> {
+                if self.first {
+                    self.first = false;
+                    buffer[0] = b'4';
+                    Ok(1)
+                } else {
+                    Err(io::Error::new(io::ErrorKind::TimedOut, "fixture timeout"))
+                }
+            }
+        }
+
+        let mut reader = BrokenReader { first: true };
+        assert!(matches!(
+            read_prompt(&mut reader, b'>'),
+            Err(Error::AdapterReadWriteError(_))
+        ));
+    }
+
+    #[test]
+    fn reply_size_limit_is_enforced() {
+        let mut bytes = vec![b'A'; MAX_ADAPTER_REPLY_BYTES];
+        bytes.push(b'>');
+        let mut reader = Cursor::new(bytes);
+        let reply = read_prompt(&mut reader, b'>').expect("maximum complete reply");
+        assert_eq!(reply.len(), MAX_ADAPTER_REPLY_BYTES);
+
+        let mut reader = Cursor::new(vec![b'A'; MAX_ADAPTER_REPLY_BYTES + 1]);
+        assert!(matches!(
+            read_prompt(&mut reader, b'>'),
+            Err(Error::InvalidResponse)
+        ));
+    }
+
+    #[test]
+    fn continuously_arriving_bytes_cannot_extend_total_deadline() {
+        use std::cell::Cell;
+        let elapsed = Cell::new(Duration::ZERO);
+        let reads = Cell::new(0);
+        let result = read_prompt_with_deadline(
+            b'>',
+            || elapsed.get(),
+            |buffer, timeout| {
+                assert!(timeout <= ADAPTER_IDLE_TIMEOUT);
+                elapsed.set(elapsed.get() + Duration::from_millis(500));
+                reads.set(reads.get() + 1);
+                buffer[0] = b'A';
+                Ok(1)
+            },
+        );
+        assert!(matches!(result, Err(Error::ReplyDeadlineExceeded)));
+        assert_eq!(reads.get(), 10);
+    }
+
+    #[test]
+    fn final_read_budget_is_clamped_and_late_prompt_is_rejected() {
+        use std::cell::Cell;
+        let elapsed = Cell::new(ADAPTER_REPLY_DEADLINE - Duration::from_millis(200));
+        let result = read_prompt_with_deadline(
+            b'>',
+            || elapsed.get(),
+            |buffer, timeout| {
+                assert_eq!(timeout, Duration::from_millis(200));
+                elapsed.set(ADAPTER_REPLY_DEADLINE);
+                buffer[0] = b'>';
+                Ok(1)
+            },
+        );
+        assert!(matches!(result, Err(Error::ReplyDeadlineExceeded)));
+    }
+
+    #[test]
+    fn prompt_before_deadline_is_accepted() {
+        use std::cell::Cell;
+        let elapsed = Cell::new(ADAPTER_REPLY_DEADLINE - Duration::from_millis(200));
+        let result = read_prompt_with_deadline(
+            b'>',
+            || elapsed.get(),
+            |buffer, timeout| {
+                assert_eq!(timeout, Duration::from_millis(200));
+                elapsed.set(ADAPTER_REPLY_DEADLINE - Duration::from_millis(1));
+                buffer[0] = b'>';
+                Ok(1)
+            },
+        );
+        assert_eq!(result.unwrap(), "");
+    }
+
+    #[test]
+    fn expired_budget_never_starts_another_read() {
+        let result = read_prompt_with_deadline(
+            b'>',
+            || ADAPTER_REPLY_DEADLINE,
+            |_, _| panic!("read must not begin after deadline"),
+        );
+        assert!(matches!(result, Err(Error::ReplyDeadlineExceeded)));
+    }
+
+    #[test]
+    fn non_ascii_reply_is_rejected() {
+        let mut reader = Cursor::new([b'4', 0xff, b'>']);
+        assert!(matches!(
+            read_prompt(&mut reader, b'>'),
+            Err(Error::InvalidResponse)
+        ));
     }
 }
