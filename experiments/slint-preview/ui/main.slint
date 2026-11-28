@@ -1,0 +1,65 @@
+import { Button, VerticalBox } from "std-widgets.slint";
+
+export component PreviewWindow inherits Window {
+    title: "OBDium | Slint preview";
+    preferred-width: 720px;
+    preferred-height: 520px;
+    min-width: 360px;
+    min-height: 460px;
+    in property <bool> demo-active: false;
+    in property <bool> demo-available: false;
+    in property <bool> sample-available: false;
+    in property <string> rpm-text: "Unavailable";
+    in property <string> core-status: "Core: not initialized";
+    in property <string> demo-status: "";
+    callback toggle-demo();
+    callback request-sample();
+
+    VerticalBox {
+        padding: 24px;
+        spacing: 16px;
+        Text {
+            text: "OBDium";
+            font-size: 28px;
+        }
+        Text {
+            text: "Native desktop migration preview";
+            font-size: 18px;
+            wrap: word-wrap;
+        }
+        Text {
+            text: root.demo-active ? "SYNTHETIC DEMO — no vehicle connected" : "DISCONNECTED — no vehicle connected";
+            wrap: word-wrap;
+        }
+        Text {
+            text: root.core-status;
+            wrap: word-wrap;
+        }
+        Text {
+            text: root.demo-status;
+            wrap: word-wrap;
+        }
+        Text {
+            text: "Engine speed";
+        }
+        Text {
+            text: root.rpm-text;
+            font-size: 24px;
+            wrap: word-wrap;
+        }
+        Button {
+            text: root.demo-active ? "End synthetic demo" : "Start synthetic demo";
+            enabled: root.demo-available;
+            clicked => { root.toggle-demo(); }
+        }
+        Button {
+            text: "Read synthetic sample again";
+            enabled: root.demo-available && root.sample-available;
+            clicked => { root.request-sample(); }
+        }
+        Text {
+            text: "Offline preview only. No adapter access, ECU commands or database writes.";
+            wrap: word-wrap;
+        }
+    }
+}
