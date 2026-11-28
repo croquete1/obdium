@@ -305,7 +305,7 @@ mod core_boundary_tests {
             },
             now
         ));
-        assert_eq!(state.rpm_text(), "Unavailable");
+        assert_eq!(state.rpm_text(), "Invalid request clock");
     }
 
     #[test]

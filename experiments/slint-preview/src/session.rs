@@ -104,13 +104,21 @@ enum SampleState {
 }
 
 #[derive(Debug, Default)]
+enum RequestFailure {
+    #[default]
+    None,
+    Timeout,
+    InvalidClock,
+}
+
+#[derive(Debug, Default)]
 pub(crate) struct PreviewSession {
     generation: u64,
     sequence: u64,
     active: bool,
     pending: Option<Permit>,
     sample: SampleState,
-    timed_out: bool,
+    request_failure: RequestFailure,
 }
 
 impl PreviewSession {
@@ -132,7 +140,7 @@ impl PreviewSession {
             self.cancel(pending.ticket);
         }
         self.sample = SampleState::Unavailable;
-        self.timed_out = false;
+        self.request_failure = RequestFailure::None;
     }
 
     pub(crate) fn is_active(&self) -> bool {
@@ -164,7 +172,7 @@ impl PreviewSession {
             sequence,
         };
         self.sample = SampleState::Unavailable;
-        self.timed_out = false;
+        self.request_failure = RequestFailure::None;
         self.pending = Some(Permit {
             ticket,
             started: now,
@@ -194,10 +202,6 @@ impl PreviewSession {
         if self.expire(now) {
             return false;
         }
-        if now < started {
-            self.cancel(ticket);
-            return false;
-        }
         self.invalidate_pending();
         // Use request start as a conservative age bound, not UI receipt time.
         self.sample = SampleState::Observed(sample, started);
@@ -207,14 +211,19 @@ impl PreviewSession {
     /// Expire pending requests and successful measurements independently.
     /// A request deadline is exclusive; a stale sample is not a timeout.
     pub(crate) fn expire(&mut self, now: Instant) -> bool {
-        if self
-            .pending
-            .as_ref()
-            .is_some_and(|pending| now >= pending.deadline)
-        {
+        let failure = self.pending.as_ref().and_then(|pending| {
+            if now < pending.started {
+                Some(RequestFailure::InvalidClock)
+            } else if now >= pending.deadline {
+                Some(RequestFailure::Timeout)
+            } else {
+                None
+            }
+        });
+        if let Some(failure) = failure {
             self.invalidate_pending();
             self.sample = SampleState::Unavailable;
-            self.timed_out = true;
+            self.request_failure = failure;
             return true;
         }
         let stale = match self.sample {
@@ -240,7 +249,7 @@ impl PreviewSession {
         }
         self.invalidate_pending();
         self.sample = SampleState::Unavailable;
-        self.timed_out = false;
+        self.request_failure = RequestFailure::None;
         true
     }
 
@@ -251,8 +260,10 @@ impl PreviewSession {
     }
 
     pub(crate) fn rpm_text(&self) -> String {
-        if self.timed_out {
-            return "Timed out".into();
+        match self.request_failure {
+            RequestFailure::Timeout => return "Timed out".into(),
+            RequestFailure::InvalidClock => return "Invalid request clock".into(),
+            RequestFailure::None => {}
         }
         if self.pending.is_some() {
             return "Waiting for sample".into();
@@ -360,7 +371,7 @@ mod tests {
             active: false,
             pending: None,
             sample: SampleState::Unavailable,
-            timed_out: false,
+            request_failure: RequestFailure::None,
         };
         assert!(!session.start());
         assert!(!session.is_active());
@@ -427,8 +438,32 @@ mod tests {
         let current = session.request(later).expect("current");
         assert!(!session.complete(old, rpm(100.0), later + REQUEST_TIMEOUT));
         assert!(!session.complete(current, rpm(200.0), now));
-        assert_eq!(session.rpm_text(), "Unavailable");
+        assert_eq!(session.rpm_text(), "Invalid request clock");
         assert!(session.request(later).is_some());
+    }
+
+    #[test]
+    fn timer_revokes_request_when_clock_precedes_start() {
+        let now = Instant::now();
+        let started = now + Duration::from_secs(1);
+        let mut session = PreviewSession::default();
+        assert!(session.start());
+        let old = session.request(started).expect("old ticket");
+        let permit = session.permit(old).expect("permit");
+        assert!(!session.expire(started));
+        assert!(session.expire(now));
+        assert!(!permit.is_live(started));
+        assert!(!session.expire(started));
+        assert_eq!(session.rpm_text(), "Invalid request clock");
+        assert!(session.can_request());
+        assert!(!session.complete(old, rpm(100.0), started));
+        let current = session.request(started).expect("new ticket");
+        assert_ne!(current, old);
+        assert_eq!(session.rpm_text(), "Waiting for sample");
+        assert!(session.complete(current, rpm(0.0), started));
+        assert_eq!(session.rpm_text(), "0 rpm (synthetic)");
+        session.stop();
+        assert_eq!(session.rpm_text(), "Unavailable");
     }
 
     #[test]
