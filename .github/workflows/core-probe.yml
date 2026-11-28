@@ -6,6 +6,8 @@ on:
       - 'experiments/core-probe/**'
       - 'backend/src/**'
       - '.github/workflows/core-probe.yml'
+      - 'scripts/check-native-deps.sh'
+      - 'scripts/tests/test-native-deps.sh'
   workflow_dispatch:
 
 permissions:
@@ -85,10 +87,8 @@ jobs:
         run: |
           cargo tree --locked --prefix none --edges normal,build --format '{p}' > "$RUNNER_TEMP/core-tree.txt"
           cat "$RUNNER_TEMP/core-tree.txt"
-          if grep -E '^(tauri([ -]|$)|wry([ -]|$)|webkit2gtk([ -]|$)|slint([ -]|$)|i-slint-)' "$RUNNER_TEMP/core-tree.txt"; then
-            echo 'GUI dependency in headless core'
-            exit 1
-          fi
+          bash ../../scripts/tests/test-native-deps.sh
+          bash ../../scripts/check-native-deps.sh core "$RUNNER_TEMP/core-tree.txt"
       - name: Clippy
         run: cargo clippy --locked --all-targets -- -D warnings
       - name: Tests

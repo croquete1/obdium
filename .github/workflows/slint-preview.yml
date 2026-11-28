@@ -7,6 +7,8 @@ on:
       - 'experiments/core-probe/**'
       - 'backend/src/**'
       - '.github/workflows/slint-preview.yml'
+      - 'scripts/check-native-deps.sh'
+      - 'scripts/tests/test-native-deps.sh'
   workflow_dispatch:
 
 permissions:
@@ -85,12 +87,8 @@ jobs:
         shell: bash
         run: |
           cargo tree --locked --prefix none --edges normal,build --format '{p}' > "$RUNNER_TEMP/slint-tree.txt"
-          if grep -E '^(tauri([ -]|$)|wry([ -]|$)|webkit2gtk([ -]|$))' "$RUNNER_TEMP/slint-tree.txt"; then
-            echo 'Legacy WebView dependency in native application'
-            exit 1
-          fi
-          grep -E '^obdium-core-probe v' "$RUNNER_TEMP/slint-tree.txt"
-          grep -E '^slint v' "$RUNNER_TEMP/slint-tree.txt"
+          bash ../../scripts/tests/test-native-deps.sh
+          bash ../../scripts/check-native-deps.sh native "$RUNNER_TEMP/slint-tree.txt"
       - name: Clippy
         run: cargo clippy --locked --all-targets -- -D warnings
       - name: Tests
