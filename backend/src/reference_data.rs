@@ -296,10 +296,14 @@ where
 }
 
 #[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 struct TranslationPreview {
     schema_version: u32,
     status: String,
     locale: String,
+    source_blob_sha: Option<String>,
+    #[serde(rename = "note")]
+    _note: Option<String>,
     #[serde(deserialize_with = "unique_messages")]
     messages: BTreeMap<String, String>,
 }
@@ -314,6 +318,21 @@ fn parse_preview(text: &str, expected: &str) -> Result<TranslationPreview, Refer
         || preview.locale != expected
     {
         return Err(ReferenceError::Header);
+    }
+    let valid_source = match (expected, preview.source_blob_sha.as_deref()) {
+        ("en", None) => true,
+        ("en", Some(_)) | (_, None) => false,
+        (_, Some(sha)) => {
+            sha.len() == 40
+                && sha
+                    .bytes()
+                    .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+        }
+    };
+    if !valid_source {
+        return Err(ReferenceError::Entry(
+            "invalid translation source identity".into(),
+        ));
     }
     if preview.messages.len() != PREVIEW_KEYS.len() {
         return Err(ReferenceError::Entry("missing translation key".into()));
@@ -362,26 +381,16 @@ pub fn translation_preview(
         "en" => Some(english),
         _ => None,
     };
-    let fallback_catalog = parse_preview(english, "en")?;
-    let Some(default_text) = fallback_catalog.messages.get(key) else {
-        return Ok(None);
+    let (source, expected, fallback) = match source {
+        Some(source) => (source, locale, false),
+        None => (english, "en", true),
     };
-    if let Some(source) = source {
-        let preview = parse_preview(source, locale)?;
-        if let Some(text) = preview.messages.get(key) {
-            return Ok(Some(PreviewMessage {
-                locale: preview.locale,
-                key: key.to_owned(),
-                text: text.clone(),
-                fallback: false,
-            }));
-        }
-    }
-    Ok(Some(PreviewMessage {
-        locale: "en".to_owned(),
+    let mut preview = parse_preview(source, expected)?;
+    Ok(preview.messages.remove(key).map(|text| PreviewMessage {
+        locale: preview.locale,
         key: key.to_owned(),
-        text: default_text.clone(),
-        fallback: true,
+        text,
+        fallback,
     }))
 }
 
@@ -818,5 +827,62 @@ mod translation_schema_tests {
             parse_preview(ENGLISH, "pt-PT"),
             Err(ReferenceError::Header)
         ));
+    }
+
+    #[test]
+    fn preview_rejects_invalid_source_identity_and_unknown_metadata() {
+        let portuguese = include_str!("../data/catalogs/translations/pt-PT.json");
+        let original_sha = "38750767aa74173db59baa71f0792dc2560ca3d6";
+        let malformed = portuguese.replace(original_sha, "invalid");
+        let missing = portuguese.replace(
+            "  \"source_blob_sha\": \"38750767aa74173db59baa71f0792dc2560ca3d6\",\n",
+            "",
+        );
+        let imported_english = ENGLISH.replace(
+            "\"locale\": \"en\",",
+            "\"locale\": \"en\", \"source_blob_sha\": \"38750767aa74173db59baa71f0792dc2560ca3d6\",",
+        );
+        for (document, locale) in [
+            (&malformed, "pt-PT"),
+            (&missing, "pt-PT"),
+            (&imported_english, "en"),
+        ] {
+            let original = if locale == "en" { ENGLISH } else { portuguese };
+            assert_ne!(document.as_str(), original);
+            assert!(matches!(
+                parse_preview(document, locale),
+                Err(ReferenceError::Entry(_))
+            ));
+        }
+        let unknown = ENGLISH.replace(
+            "\"locale\": \"en\",",
+            "\"locale\": \"en\", \"unexpected\": true,",
+        );
+        assert_ne!(unknown, ENGLISH);
+        assert!(matches!(
+            parse_preview(&unknown, "en"),
+            Err(ReferenceError::Json(_))
+        ));
+        assert!(parse_preview(portuguese, "pt-PT").is_ok());
+    }
+
+    #[test]
+    fn preview_lookup_preserves_unknown_key_and_locale_semantics() {
+        for locale in ["en", "pt-PT", "unknown"] {
+            assert!(translation_preview(locale, "missing")
+                .expect("valid catalog")
+                .is_none());
+        }
+        let fallback = translation_preview("unknown", "confirm")
+            .expect("valid fallback")
+            .expect("known key");
+        assert_eq!(fallback.locale, "en");
+        assert_eq!(fallback.text, "Confirm");
+        assert!(fallback.fallback);
+        let english = translation_preview("en", "confirm")
+            .expect("valid English")
+            .expect("known key");
+        assert_eq!(english.text, fallback.text);
+        assert!(!english.fallback);
     }
 }
