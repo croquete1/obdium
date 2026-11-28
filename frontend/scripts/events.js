@@ -448,14 +448,23 @@ const exportButton = document.getElementById("vin-export");
 // show vehicle info if no error
 listen("decode-vin-result", (event) => {
   const data = event?.payload;
-  if (!window.pendingVinRequest || data?.request_id !== window.pendingVinRequest) return;
+  const request = window.pendingVinRequest;
+  if (!request || data?.request_id !== request.id) return;
   window.pendingVinRequest = null;
+  clearTimeout(request.timer);
   const container = document.getElementById("vin-container");
-  if (!container) return;
+  const status = document.getElementById("vin-request-status");
+  if (!container || !status) return;
   const query = document.querySelector(".vin-input")?.value.trim().toUpperCase();
 
   exportButton.disabled = true;
   container.replaceChildren();
+  const now = performance.now();
+  if (!Number.isFinite(now) || now < request.started || now >= request.deadline) {
+    status.textContent = "VIN request timed out. Try again.";
+    return;
+  }
+  status.textContent = "No VIN details available.";
   // Even a correlated response must match the requested VIN if present.
   if (typeof data?.vin === "string" && data.vin.trim() &&
       data.vin.trim().toUpperCase() !== query) return;
@@ -492,6 +501,7 @@ listen("decode-vin-result", (event) => {
   }
 
   exportButton.disabled = false;
+  status.textContent = "VIN details available.";
 });
 
 listen("display-notification", (event) => {

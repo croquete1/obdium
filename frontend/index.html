@@ -746,6 +746,7 @@
           </button>
           <input class="vin-input" type="text" placeholder="Enter VIN" />
         </div>
+        <p class="connection-details" id="vin-request-status" role="status">Enter a VIN to begin.</p>
         <div class="grid" id="vin-container"></div>
       </div>
 
@@ -1101,10 +1102,15 @@
     const vinLabel = document.getElementById("vin-full");
     const vehicleName = document.getElementById("vehicle-title");
 
+    // Provisional UI response budget, not a backend database timeout.
+    const VIN_RESPONSE_TIMEOUT_MS = 10000;
+
     function invalidateVinResult() {
+      if (window.pendingVinRequest) clearTimeout(window.pendingVinRequest.timer);
       window.pendingVinRequest = null;
       vinExportBtn.disabled = true;
       document.getElementById("vin-container").replaceChildren();
+      document.getElementById("vin-request-status").textContent = "Enter a VIN to begin.";
     }
 
     vinInput.addEventListener("input", invalidateVinResult);
@@ -1114,11 +1120,22 @@
       if (query !== "") {
         const bytes = crypto.getRandomValues(new Uint8Array(16));
         const requestId = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
-        window.pendingVinRequest = requestId;
+        const started = performance.now();
+        const request = { id: requestId, started, deadline: started + VIN_RESPONSE_TIMEOUT_MS };
+        window.pendingVinRequest = request;
+        document.getElementById("vin-request-status").textContent = "Decoding VIN...";
+        request.timer = setTimeout(() => {
+          if (window.pendingVinRequest !== request) return;
+          invalidateVinResult();
+          document.getElementById("vin-request-status").textContent = "VIN request timed out. Try again.";
+        }, VIN_RESPONSE_TIMEOUT_MS);
         try {
           await emit("decode-vin", { request_id: requestId, vin: query.toUpperCase() });
         } catch (error) {
-          if (window.pendingVinRequest === requestId) invalidateVinResult();
+          if (window.pendingVinRequest === request) {
+            invalidateVinResult();
+            document.getElementById("vin-request-status").textContent = "VIN request failed. Try again.";
+          }
           console.error("VIN request failed", error);
         }
       }

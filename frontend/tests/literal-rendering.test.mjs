@@ -159,15 +159,20 @@ test("VIN result accepts only the pending request, including same-VIN retries an
   const container = node();
   const button = { disabled: true };
   const input = { value: "SYNTHETIC-FIXTURE" };
-  const state = { pendingVinRequest: "new" };
+  const ticket = (id) => ({ id, started: 100, deadline: 10100, timer: 1 });
+  const state = { pendingVinRequest: ticket("new") };
+  const status = node();
+  let now = 100;
   const handler = eventHandler("decode-vin-result", 'listen("display-notification"', {
     exportButton: button, window: state,
-    document: { getElementById: () => container, querySelector: () => input, createElement: node },
+    document: { getElementById: (id) => id === "vin-container" ? container : status,
+      querySelector: () => input, createElement: node },
+    clearTimeout() {}, performance: { now: () => now },
     addNotification() {},
   });
   handler({ payload: { request_id: "old", vin: input.value, make: "Old" } });
   handler({ payload: { request_id: "old", vin: "", error_msg: "Old error" } });
-  assert.equal(state.pendingVinRequest, "new");
+  assert.equal(state.pendingVinRequest.id, "new");
   assert.equal(button.disabled, true);
   handler({ payload: { request_id: "new", vin: input.value, make: "Fixture", model: "N/A", unused: 4, error_msg: "Decoded successfully." } });
   assert.equal(button.disabled, false);
@@ -177,19 +182,32 @@ test("VIN result accepts only the pending request, including same-VIN retries an
   handler(undefined);
   assert.equal(container.children.length, 2);
   assert.equal(button.disabled, false);
-  state.pendingVinRequest = "next";
+  state.pendingVinRequest = ticket("next");
   handler({ payload: { request_id: "next", vin: "", error_msg: "Unavailable" } });
   assert.equal(container.children.length, 0);
   assert.equal(button.disabled, true);
-  state.pendingVinRequest = "mismatch";
+  state.pendingVinRequest = ticket("mismatch");
   handler({ payload: { request_id: "mismatch", vin: "OTHER-FIXTURE", make: "Other" } });
   assert.equal(container.children.length, 0);
   assert.equal(button.disabled, true);
+  for (const invalidTime of [99, 10100, 10101, NaN]) {
+    state.pendingVinRequest = ticket("expired");
+    now = invalidTime;
+    handler({ payload: { request_id: "expired", vin: input.value } });
+    assert.equal(container.children.length, 0);
+    assert.equal(button.disabled, true);
+    assert.equal(state.pendingVinRequest, null);
+    assert.match(status.textContent, /timed out/);
+  }
+  now = 10099;
+  state.pendingVinRequest = ticket("last-valid");
+  handler({ payload: { request_id: "last-valid", vin: input.value } });
+  assert.equal(button.disabled, false);
 });
 
 test("VIN input and new queries revoke outstanding request identity", async () => {
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
-  const start = html.indexOf("function invalidateVinResult()");
+  const start = html.indexOf("const VIN_RESPONSE_TIMEOUT_MS");
   const end = html.indexOf("/// Toggle different screens", start);
   assert.ok(start >= 0 && end > start);
   const state = {};
@@ -198,11 +216,17 @@ test("VIN input and new queries revoke outstanding request identity", async () =
   const decode = { addEventListener(name, callback) { this.click = callback; } };
   const container = node();
   const requests = [];
+  const timers = [];
+  const cleared = [];
+  const status = node();
   let seed = 0;
   runInNewContext(html.slice(start, end), {
     window: state, vinExportBtn: button, vinInput: input, decodeVinBtn: decode,
-    document: { getElementById: () => container },
+    document: { getElementById: (id) => id === "vin-container" ? container : status },
     crypto: { getRandomValues(bytes) { bytes.fill(++seed); return bytes; } },
+    performance: { now: () => 100 },
+    setTimeout(callback, delay) { assert.equal(delay, 10000); timers.push(callback); return timers.length; },
+    clearTimeout(id) { cleared.push(id); },
     emit: async (name, payload) => requests.push({ name, payload }),
   });
   await decode.click();
@@ -211,8 +235,18 @@ test("VIN input and new queries revoke outstanding request identity", async () =
   assert.notEqual(state.pendingVinRequest, first);
   assert.equal(requests.length, 2);
   assert.equal(requests[1].payload.vin, "SYNTHETIC-FIXTURE");
-  assert.equal(requests[1].payload.request_id, state.pendingVinRequest);
+  assert.equal(requests[1].payload.request_id, state.pendingVinRequest.id);
+  assert.equal(state.pendingVinRequest.deadline, 10100);
+  timers[0]();
+  assert.equal(state.pendingVinRequest.id, requests[1].payload.request_id);
+  timers[1]();
+  assert.equal(state.pendingVinRequest, null);
+  assert.match(status.textContent, /timed out/);
+  await decode.click();
   input.input();
   assert.equal(state.pendingVinRequest, null);
+  timers[2]();
+  assert.equal(status.textContent, "Enter a VIN to begin.");
   assert.equal(button.disabled, true);
+  assert.deepEqual(cleared, [1, 2, 3]);
 });
