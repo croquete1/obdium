@@ -17,8 +17,14 @@ export async function exportDtcs(autoSave) {
     return;
   }
 
+  const rows = Array.from(dtcList.childNodes).filter((row) => row.nodeType === 1);
+  const isCurrent = () => {
+    const current = Array.from(dtcList.childNodes).filter((row) => row.nodeType === 1);
+    return window.connected && current.length === rows.length &&
+      current.every((row, index) => row === rows[index]);
+  };
   let totalJSON = [];
-  dtcList.childNodes.forEach((dtcRow) => {
+  rows.forEach((dtcRow) => {
     if (dtcRow.nodeType == 1) {
       const dtcJSON = {
         category: dtcRow.querySelector("#dtc-category").textContent.trim(),
@@ -46,6 +52,7 @@ export async function exportDtcs(autoSave) {
       writeTextFile,
       automatic: autoSave,
       appDataBaseDir: window.__TAURI__.path.BaseDirectory.AppData,
+      isCurrent,
     });
   } catch (error) {
     addNotification("EXPORT FAILED", "Could not save diagnostic trouble codes.");

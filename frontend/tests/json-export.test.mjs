@@ -118,14 +118,59 @@ test("connection boundaries invalidate the DTC display", () => {
     const anchor = "window.connected = " + connected + ";";
     const start = source.indexOf(anchor);
     assert.ok(start >= 0);
-    const block = source.slice(start, source.indexOf("replaceReadinessSnapshot([]);", start));
+    const end = source.indexOf("DIAGNOSTIC TROUBLE CODES (UNAVAILABLE)", start);
+    assert.ok(end > start);
+    const block = source.slice(start, source.indexOf(";", end) + 1);
     const list = { children: ["old code"], replaceChildren() { this.children = []; } };
     const header = { textContent: "old count" };
     runInNewContext(block, {
       window: {},
-      document: { getElementById: (id) => id === "dtc-list" ? list : header },
+      replaceReadinessSnapshot() {},
+      document: { getElementById: (id) => id === "dtc-list" ? list :
+        id === "readiness-tests-list" ? { replaceChildren() {} } : header },
     });
     assert.equal(list.children.length, 0);
     assert.equal(header.textContent, "DIAGNOSTIC TROUBLE CODES (UNAVAILABLE)");
   }
+});
+
+test("pending DTC picker cannot export replaced or disconnected rows", async () => {
+  const source = readFileSync(new URL("../scripts/features.js", import.meta.url), "utf8");
+  const start = source.indexOf("export async function exportDtcs(");
+  const end = source.indexOf("export async function connectElm(", start);
+  assert.ok(start >= 0 && end > start);
+  const row = () => ({
+    nodeType: 1,
+    querySelector: () => ({ textContent: "fixture" }),
+  });
+  const list = { childNodes: [row()] };
+  const writes = [];
+  let choosePath;
+  const context = {
+    dtcList: list,
+    window: { connected: true, __TAURI__: { path: { BaseDirectory: { AppData: 14 } } } },
+    addNotification() {},
+    save: () => new Promise((resolve) => { choosePath = resolve; }),
+    writeTextFile: async (...args) => writes.push(args),
+    saveJsonExport,
+    console: { error: () => assert.fail("unexpected export failure") },
+  };
+  runInNewContext(source.slice(start, end).replace("export async", "async") +
+    "\nthis.exportDtcs = exportDtcs;", context);
+  let pending = context.exportDtcs(false);
+  list.childNodes = [row()];
+  choosePath("/chosen/stale.json");
+  await pending;
+  assert.equal(writes.length, 0);
+  pending = context.exportDtcs(false);
+  context.window.connected = false;
+  choosePath("/chosen/disconnected.json");
+  await pending;
+  assert.equal(writes.length, 0);
+  context.window.connected = true;
+  pending = context.exportDtcs(false);
+  choosePath("/chosen/current.json");
+  await pending;
+  assert.equal(writes.length, 1);
+  assert.equal(writes[0][0], "/chosen/current.json");
 });

@@ -146,10 +146,10 @@ listen("connection-status", async (event) => {
       "CONNECTED THROUGH SERIAL PORT " + serialPort.toUpperCase();
     connectionIcon.src = "/assets/icons/connected.png";
     window.connected = true;
-    document.getElementById("dtc-list").replaceChildren();
-    document.getElementById("dtc-header").textContent = "DIAGNOSTIC TROUBLE CODES (UNAVAILABLE)";
     replaceReadinessSnapshot([]);
     document.getElementById("readiness-tests-list").replaceChildren();
+    document.getElementById("dtc-list").replaceChildren();
+    document.getElementById("dtc-header").textContent = "DIAGNOSTIC TROUBLE CODES (UNAVAILABLE)";
 
     // Features only accessible in real mode
     if (serialPort !== "DEMO MODE") {
@@ -206,10 +206,10 @@ listen("connection-status", async (event) => {
     status.textContent = "NO CONNECTION ESTABLISHED";
     connectionIcon.src = "/assets/icons/not-connected.png";
     window.connected = false;
-    document.getElementById("dtc-list").replaceChildren();
-    document.getElementById("dtc-header").textContent = "DIAGNOSTIC TROUBLE CODES (UNAVAILABLE)";
     replaceReadinessSnapshot([]);
     document.getElementById("readiness-tests-list").replaceChildren();
+    document.getElementById("dtc-list").replaceChildren();
+    document.getElementById("dtc-header").textContent = "DIAGNOSTIC TROUBLE CODES (UNAVAILABLE)";
     recordResponses.disabled = true;
     replayResponses.disabled = true;
     connectButton.disabled = false;
@@ -303,6 +303,7 @@ const dtcList = document.getElementById("dtc-list");
 const dtcHeader = document.getElementById("dtc-header");
 
 listen("update-dtcs", (event) => {
+  if (!window.connected) return;
   const dtcs = event?.payload;
   // Reject malformed snapshots before changing the list or exporting it.
   if (!Array.isArray(dtcs) || dtcs.some((code) =>

@@ -68,7 +68,7 @@ test("DTC fields are rendered literally", () => {
   const handler = eventHandler("update-dtcs", "const serialPortMenu", {
     dtcList: list, dtcHeader: node(),
     document: { createElement: node },
-    window: { autoSaveCodes: false },
+    window: { connected: true, autoSaveCodes: false },
   });
   handler({ payload: [{ category: literal, name: literal, location: literal, description: literal, permanant: true }] });
   const row = list.children[0];
@@ -121,10 +121,11 @@ test("malformed DTC snapshots are unavailable and never exported", () => {
   const list = node();
   const header = node();
   let exports = 0;
+  const connection = { connected: true, autoSaveCodes: true };
   const handler = eventHandler("update-dtcs", "const serialPortMenu", {
     dtcList: list, dtcHeader: header,
     document: { createElement: node },
-    window: { autoSaveCodes: true },
+    window: connection,
     exportDtcs() { exports++; },
   });
   const valid = { category: "P", name: "P0123", location: "Powertrain",
@@ -146,6 +147,10 @@ test("malformed DTC snapshots are unavailable and never exported", () => {
   assert.equal(exports, 1);
   handler({ payload: [] });
   assert.equal(header.textContent, "DIAGNOSTIC TROUBLE CODES (NONE RETURNED — UNVERIFIED)");
+  assert.equal(list.children.length, 0);
+  assert.equal(exports, 1);
+  connection.connected = false;
+  handler({ payload: [valid] });
   assert.equal(list.children.length, 0);
   assert.equal(exports, 1);
 });
