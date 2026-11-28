@@ -142,6 +142,8 @@ enum SmokePhase {
     FirstSample,
     RepeatSample,
     Stopped(Instant),
+    RestartSample,
+    AwaitStale,
 }
 
 fn smoke_idle(ui: &PreviewWindow) -> bool {
@@ -162,11 +164,17 @@ fn smoke_sample(ui: &PreviewWindow) -> bool {
         && ui.get_rpm_text().as_str() == "1726 rpm (synthetic)"
 }
 
+fn smoke_stale(ui: &PreviewWindow) -> bool {
+    ui.get_demo_active()
+        && ui.get_sample_available()
+        && ui.get_rpm_text().as_str() == "Stale sample — request again"
+}
+
 // Exercise the actual generated callbacks and worker using the real event loop.
 // This is synthetic-only and does not simulate physical keyboard/mouse input.
 fn start_window_smoke(ui: &PreviewWindow, timer: &Timer, passed: Rc<Cell<bool>>) {
     let weak = ui.as_weak();
-    let deadline = Instant::now() + Duration::from_secs(10);
+    let deadline = Instant::now() + Duration::from_secs(15);
     let phase = Cell::new(SmokePhase::Startup);
     timer.start(TimerMode::Repeated, Duration::from_millis(50), move || {
         let now = Instant::now();
@@ -217,10 +225,26 @@ fn start_window_smoke(ui: &PreviewWindow, timer: &Timer, passed: Rc<Cell<bool>>)
                         .checked_duration_since(stopped)
                         .is_some_and(|age| age >= Duration::from_millis(250))
                     {
-                        passed.set(true);
+                        ui.invoke_toggle_demo();
+                        if smoke_pending(&ui) {
+                            next = Some(SmokePhase::RestartSample);
+                        }
                     } else {
                         next = Some(SmokePhase::Stopped(stopped));
                     }
+                }
+                SmokePhase::RestartSample if ui.window().is_visible() && smoke_pending(&ui) => {
+                    next = Some(SmokePhase::RestartSample);
+                }
+                SmokePhase::RestartSample if ui.window().is_visible() && smoke_sample(&ui) => {
+                    next = Some(SmokePhase::AwaitStale);
+                }
+                SmokePhase::AwaitStale if ui.window().is_visible() && smoke_sample(&ui) => {
+                    next = Some(SmokePhase::AwaitStale);
+                }
+                SmokePhase::AwaitStale if ui.window().is_visible() && smoke_stale(&ui) => {
+                    ui.invoke_toggle_demo();
+                    passed.set(smoke_idle(&ui) && ui.get_demo_status().as_str() == "Demo stopped");
                 }
                 _ => {}
             }
@@ -336,7 +360,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         if !smoke_passed.get() {
             return Err(std::io::Error::other("Native window smoke check failed").into());
         }
-        println!("Native window smoke passed: startup, two samples, cancellation and shutdown");
+        println!(
+            "Native window smoke passed: startup, repeat, cancellation, restart, staleness and shutdown"
+        );
     }
     Ok(())
 }

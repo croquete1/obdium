@@ -99,7 +99,7 @@ jobs:
         if: runner.os == 'Linux'
         shell: bash
         run: |
-          xvfb-run -a timeout --kill-after=5s 20s env -u WAYLAND_DISPLAY -u WAYLAND_SOCKET ./target/release/obdium-slint-preview --smoke-test
+          xvfb-run -a timeout --kill-after=5s 25s env -u WAYLAND_DISPLAY -u WAYLAND_SOCKET ./target/release/obdium-slint-preview --smoke-test
       - name: Verify tracked sources and manifests unchanged
         working-directory: .
         run: git diff --exit-code -- experiments/slint-preview experiments/core-probe backend/src
