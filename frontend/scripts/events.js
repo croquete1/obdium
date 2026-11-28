@@ -146,6 +146,8 @@ listen("connection-status", async (event) => {
       "CONNECTED THROUGH SERIAL PORT " + serialPort.toUpperCase();
     connectionIcon.src = "/assets/icons/connected.png";
     window.connected = true;
+    document.getElementById("dtc-list").replaceChildren();
+    document.getElementById("dtc-header").textContent = "DIAGNOSTIC TROUBLE CODES (UNAVAILABLE)";
     replaceReadinessSnapshot([]);
     document.getElementById("readiness-tests-list").replaceChildren();
 
@@ -204,6 +206,8 @@ listen("connection-status", async (event) => {
     status.textContent = "NO CONNECTION ESTABLISHED";
     connectionIcon.src = "/assets/icons/not-connected.png";
     window.connected = false;
+    document.getElementById("dtc-list").replaceChildren();
+    document.getElementById("dtc-header").textContent = "DIAGNOSTIC TROUBLE CODES (UNAVAILABLE)";
     replaceReadinessSnapshot([]);
     document.getElementById("readiness-tests-list").replaceChildren();
     recordResponses.disabled = true;

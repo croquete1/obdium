@@ -12,6 +12,10 @@ const obdGrid = document.getElementById("dashboard-cards");
 const terminalOutput = document.getElementById("terminal-output");
 
 export async function exportDtcs(autoSave) {
+  if (!window.connected) {
+    if (!autoSave) addNotification("EXPORT UNAVAILABLE", "Connect and scan for diagnostic trouble codes first.");
+    return;
+  }
 
   let totalJSON = [];
   dtcList.childNodes.forEach((dtcRow) => {
@@ -28,6 +32,11 @@ export async function exportDtcs(autoSave) {
       totalJSON.push(dtcJSON);
     }
   });
+
+  if (totalJSON.length === 0) {
+    if (!autoSave) addNotification("EXPORT UNAVAILABLE", "No verified non-empty DTC list is available.");
+    return;
+  }
 
   try {
     await saveJsonExport({
