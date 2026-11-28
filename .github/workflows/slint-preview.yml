@@ -1,0 +1,105 @@
+name: Slint preview
+
+on:
+  pull_request:
+    paths:
+      - 'experiments/slint-preview/**'
+      - 'experiments/core-probe/**'
+      - 'backend/src/**'
+      - '.github/workflows/slint-preview.yml'
+      - 'scripts/check-native-deps.sh'
+      - 'scripts/tests/test-native-deps.sh'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  format:
+    name: Slint preview / format
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: experiments/slint-preview
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install pinned Rust toolchain
+        run: |
+          rustup toolchain install 1.100.0 --profile minimal --component rustfmt
+          rustup default 1.100.0
+      - name: Require committed lock
+        run: git ls-files --error-unmatch Cargo.lock
+      - name: Fast Rust formatting check
+        id: fmt
+        run: cargo fmt --all -- --check
+      - name: Capture formatting patch
+        id: capture
+        if: failure() && steps.fmt.outcome == 'failure'
+        working-directory: .
+        shell: bash
+        run: |
+          cargo fmt --manifest-path experiments/slint-preview/Cargo.toml --all
+          git diff --binary -- backend/src experiments/core-probe experiments/slint-preview > "$RUNNER_TEMP/slint-rustfmt.patch"
+          git restore --worktree -- backend/src experiments/core-probe experiments/slint-preview
+          test -s "$RUNNER_TEMP/slint-rustfmt.patch"
+          git apply --check "$RUNNER_TEMP/slint-rustfmt.patch"
+      - name: Upload formatting patch
+        if: failure() && steps.fmt.outcome == 'failure' && steps.capture.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: slint-rustfmt-patch
+          path: ${{ runner.temp }}/slint-rustfmt.patch
+          if-no-files-found: error
+          retention-days: 7
+  native:
+    name: Slint preview / ${{ matrix.os }}
+    needs: format
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-latest, macos-latest]
+    defaults:
+      run:
+        working-directory: experiments/slint-preview
+    env:
+      CARGO_TERM_COLOR: never
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install pinned Rust toolchain
+        run: |
+          rustup toolchain install 1.100.0 --profile minimal --component clippy
+          rustup default 1.100.0
+      - name: Verify locked resolution
+        run: cargo metadata --locked --format-version 1 --no-deps
+      - name: Install Linux native window prerequisites
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libx11-xcb-dev xinput libxcursor-dev libxkbcommon-dev libxkbcommon-x11-dev libx11-dev libwayland-dev libfontconfig1-dev libudev-dev pkg-config xvfb xauth
+      - name: Verify native dependency boundary
+        shell: bash
+        run: |
+          cargo tree --locked --prefix none --edges normal,build --format '{p}' > "$RUNNER_TEMP/slint-tree.txt"
+          bash ../../scripts/tests/test-native-deps.sh
+          bash ../../scripts/check-native-deps.sh native "$RUNNER_TEMP/slint-tree.txt"
+      - name: Clippy
+        run: cargo clippy --locked --all-targets -- -D warnings
+      - name: Tests
+        run: cargo test --locked
+      - name: Release build (no publishing)
+        run: cargo build --release --locked
+      - name: Smoke test actual native window (Linux X11)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          xvfb-run -a timeout --kill-after=5s 25s env -u WAYLAND_DISPLAY -u WAYLAND_SOCKET ./target/release/obdium-slint-preview --smoke-test
+      - name: Verify tracked sources and manifests unchanged
+        working-directory: .
+        run: git diff --exit-code -- experiments/slint-preview experiments/core-probe backend/src

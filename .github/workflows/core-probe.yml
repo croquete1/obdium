@@ -1,0 +1,100 @@
+name: Headless core probe
+
+on:
+  pull_request:
+    paths:
+      - 'experiments/core-probe/**'
+      - 'backend/src/**'
+      - '.github/workflows/core-probe.yml'
+      - 'scripts/check-native-deps.sh'
+      - 'scripts/tests/test-native-deps.sh'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  format:
+    name: Core probe / format
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: experiments/core-probe
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install pinned Rust toolchain
+        run: |
+          rustup toolchain install 1.100.0 --profile minimal --component rustfmt
+          rustup default 1.100.0
+      - name: Require committed lock
+        run: git ls-files --error-unmatch Cargo.lock
+      - name: Fast format check
+        id: fmt
+        run: cargo fmt --all -- --check
+      - name: Capture official format patch
+        id: capture
+        if: failure() && steps.fmt.outcome == 'failure'
+        working-directory: .
+        shell: bash
+        run: |
+          cargo fmt --manifest-path experiments/core-probe/Cargo.toml --all
+          git diff --binary -- backend/src experiments/core-probe > "$RUNNER_TEMP/core-rustfmt.patch"
+          git restore --worktree -- backend/src experiments/core-probe
+          test -s "$RUNNER_TEMP/core-rustfmt.patch"
+          git apply --check "$RUNNER_TEMP/core-rustfmt.patch"
+      - name: Upload official format patch
+        if: failure() && steps.fmt.outcome == 'failure' && steps.capture.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: core-rustfmt-patch
+          path: ${{ runner.temp }}/core-rustfmt.patch
+          if-no-files-found: error
+          retention-days: 7
+  core:
+    name: Core probe / ${{ matrix.os }}
+    needs: format
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-latest, macos-latest]
+    defaults:
+      run:
+        working-directory: experiments/core-probe
+    env:
+      CARGO_TERM_COLOR: never
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install pinned Rust toolchain
+        run: |
+          rustup toolchain install 1.100.0 --profile minimal --component clippy
+          rustup default 1.100.0
+      - name: Verify locked resolution
+        run: cargo metadata --locked --format-version 1 --no-deps
+      - name: Install serial prerequisites only
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libudev-dev pkg-config
+      - name: Verify headless dependency closure
+        shell: bash
+        run: |
+          cargo tree --locked --prefix none --edges normal,build --format '{p}' > "$RUNNER_TEMP/core-tree.txt"
+          cat "$RUNNER_TEMP/core-tree.txt"
+          bash ../../scripts/tests/test-native-deps.sh
+          bash ../../scripts/check-native-deps.sh core "$RUNNER_TEMP/core-tree.txt"
+      - name: Clippy
+        run: cargo clippy --locked --all-targets -- -D warnings
+      - name: Tests
+        run: cargo test --locked
+      - name: Release build (no publishing)
+        run: cargo build --release --locked
+      - name: Verify tracked manifests unchanged
+        working-directory: .
+        run: git diff --exit-code -- backend/src experiments/core-probe
