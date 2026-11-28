@@ -76,7 +76,7 @@ test("DTC fields are rendered literally", () => {
   for (const field of ["category", "name", "location"]) {
     assert.equal(row.querySelector("#dtc-" + field).textContent, literal);
   }
-  assert.equal(row.querySelector("#dtc-description").textContent, literal + " [PERMANANT CODE]");
+  assert.equal(row.querySelector("#dtc-description").textContent, literal + " [PERMANENT CODE]");
 });
 
 test("readiness name is rendered literally", () => {
@@ -115,4 +115,37 @@ test("HTML templates in the two production modules contain no interpolation", ()
     assert.ok(templates.length > 0);
     for (const match of templates) assert.ok(!match[1].includes("${"));
   }
+});
+
+test("malformed DTC snapshots are unavailable and never exported", () => {
+  const list = node();
+  const header = node();
+  let exports = 0;
+  const handler = eventHandler("update-dtcs", "const serialPortMenu", {
+    dtcList: list, dtcHeader: header,
+    document: { createElement: node },
+    window: { autoSaveCodes: true },
+    exportDtcs() { exports++; },
+  });
+  const valid = { category: "P", name: "P0123", location: "Powertrain",
+    description: "Synthetic fixture", permanant: false };
+  for (const event of [undefined, {}, { payload: null }, { payload: {} },
+    { payload: "NO DATA" }, { payload: [valid, null] },
+    { payload: [{ ...valid, permanant: "false" }] },
+    { payload: [{ ...valid, name: "" }] }]) {
+    list.appendChild(node());
+    handler(event);
+    assert.equal(header.textContent, "DIAGNOSTIC TROUBLE CODES (UNAVAILABLE)");
+    assert.equal(list.children.length, 0);
+    assert.equal(exports, 0);
+  }
+  handler({ payload: [valid] });
+  assert.equal(header.textContent, "DIAGNOSTIC TROUBLE CODES (1)");
+  assert.equal(list.children[0].querySelector("#dtc-description").textContent,
+    "Synthetic fixture [NON-PERMANENT CODE]");
+  assert.equal(exports, 1);
+  handler({ payload: [] });
+  assert.equal(header.textContent, "DIAGNOSTIC TROUBLE CODES (NONE RETURNED — UNVERIFIED)");
+  assert.equal(list.children.length, 0);
+  assert.equal(exports, 1);
 });

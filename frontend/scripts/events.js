@@ -299,21 +299,33 @@ const dtcList = document.getElementById("dtc-list");
 const dtcHeader = document.getElementById("dtc-header");
 
 listen("update-dtcs", (event) => {
-  const dtcs = event.payload;
-  if (!dtcs) {
-    dtcHeader.textContent = "DIAGNOSTIC TROUBLE CODES (0)";
+  const dtcs = event?.payload;
+  // Reject malformed snapshots before changing the list or exporting it.
+  if (!Array.isArray(dtcs) || dtcs.some((code) =>
+    !code || typeof code.name !== "string" || !code.name.trim() ||
+    typeof code.category !== "string" ||
+    typeof code.description !== "string" ||
+    typeof code.location !== "string" ||
+    typeof code.permanant !== "boolean"
+  )) {
+    dtcList.replaceChildren();
+    dtcHeader.textContent = "DIAGNOSTIC TROUBLE CODES (UNAVAILABLE)";
     return;
   }
 
+  dtcList.replaceChildren();
+  // The legacy backend also returns an empty list on acquisition failure.
+  // Until it sends typed scan outcomes, absence of codes is unverified.
+  if (dtcs.length === 0) {
+    dtcHeader.textContent = "DIAGNOSTIC TROUBLE CODES (NONE RETURNED — UNVERIFIED)";
+    return;
+  }
   dtcHeader.textContent = "DIAGNOSTIC TROUBLE CODES (" + dtcs.length + ")";
-
-  // clear dtc list
-  dtcList.innerHTML = ``;
 
   for (const troubleCode of dtcs) {
     const description = troubleCode.permanant
-      ? troubleCode.description + " [PERMANANT CODE]"
-      : troubleCode.description + " [PENDING CODE]";
+      ? troubleCode.description + " [PERMANENT CODE]"
+      : troubleCode.description + " [NON-PERMANENT CODE]";
 
     let dtcRow = document.createElement("div");
     dtcRow.className = "info-row";
