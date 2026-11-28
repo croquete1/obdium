@@ -82,7 +82,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libx11-xcb-dev xinput libxcursor-dev libxkbcommon-dev libxkbcommon-x11-dev libx11-dev libwayland-dev libfontconfig1-dev libudev-dev pkg-config
+          sudo apt-get install -y libx11-xcb-dev xinput libxcursor-dev libxkbcommon-dev libxkbcommon-x11-dev libx11-dev libwayland-dev libfontconfig1-dev libudev-dev pkg-config xvfb xauth
       - name: Verify native dependency boundary
         shell: bash
         run: |
@@ -95,6 +95,11 @@ jobs:
         run: cargo test --locked
       - name: Release build (no publishing)
         run: cargo build --release --locked
+      - name: Smoke test actual native window (Linux X11)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          xvfb-run -a timeout --kill-after=5s 20s env -u WAYLAND_DISPLAY -u WAYLAND_SOCKET ./target/release/obdium-slint-preview --smoke-test
       - name: Verify tracked sources and manifests unchanged
         working-directory: .
         run: git diff --exit-code -- experiments/slint-preview experiments/core-probe backend/src

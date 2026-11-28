@@ -4,7 +4,7 @@ mod worker;
 use obdium::OBD;
 use session::{Permit, PreviewSession};
 use slint::{ComponentHandle, Timer, TimerMode};
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 use std::sync::mpsc::{TryRecvError, TrySendError};
 use std::time::{Duration, Instant};
@@ -136,7 +136,36 @@ fn request_demo_sample(
     }
 }
 
+// This explicit offline smoke mode exercises the actual window and event loop.
+// An external CI timeout also bounds platform startup or shutdown failures.
+fn start_window_smoke(ui: &PreviewWindow, timer: &Timer, passed: Rc<Cell<bool>>) {
+    let weak = ui.as_weak();
+    let deadline = Instant::now() + Duration::from_secs(5);
+    timer.start(TimerMode::Repeated, Duration::from_millis(50), move || {
+        if let Some(ui) = weak.upgrade() {
+            if !ui.window().is_visible() && Instant::now() < deadline {
+                return;
+            }
+            passed.set(
+                ui.window().is_visible()
+                    && !ui.get_demo_active()
+                    && ui.get_demo_available()
+                    && !ui.get_sample_available()
+                    && ui.get_rpm_text().as_str() == "Unavailable"
+                    && ui.get_core_status().as_str() == "Core: initialized, disconnected",
+            );
+        }
+        if let Err(error) = slint::quit_event_loop() {
+            passed.set(false);
+            eprintln!("Window smoke shutdown failed: {error}");
+        }
+    });
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let smoke = std::env::args_os()
+        .nth(1)
+        .is_some_and(|arg| arg == "--smoke-test");
     let ui = PreviewWindow::new()?;
     let core = OBD::new();
     ui.set_core_status(core_status(&core).into());
@@ -212,7 +241,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
 
+    let smoke_timer = Timer::default();
+    let smoke_passed = Rc::new(Cell::new(false));
+    if smoke {
+        start_window_smoke(&ui, &smoke_timer, Rc::clone(&smoke_passed));
+    }
     let result = ui.run();
+    smoke_timer.stop();
     timer.stop();
     state.borrow_mut().stop();
     drop(worker.borrow_mut().take());
@@ -220,6 +255,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .join()
         .map_err(|_| std::io::Error::other("synthetic demo worker panicked"))?;
     result?;
+    if smoke {
+        if !smoke_passed.get() {
+            return Err(std::io::Error::other("Native window smoke check failed").into());
+        }
+        println!("Native window smoke check passed: disconnected and no sample");
+    }
     Ok(())
 }
 
