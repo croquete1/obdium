@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "status": "draft_reference",
+  "locale": "de",
+  "source_blob_sha": "9ef9507c7e5c495679c36fdcca673c5b82a9087f",
+  "messages": {
+    "confirm": "OK",
+    "cancel": "ABBRECHEN",
+    "error": "Fehler",
+    "refresh": "Aktualisieren",
+    "stop": "Stopp",
+    "close": "Schließen",
+    "file": "Datei",
+    "exit": "Beenden",
+    "help": "Hilfe",
+    "about": "Über",
+    "no": "Nein",
+    "timeout": "ZEITÜBERSCHREITUNG"
+  }
+}

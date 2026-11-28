@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "status": "draft_reference",
+  "locale": "cs-CZ",
+  "source_blob_sha": "de6bd656e803dd4cfd3790621d1523ef9671cee4",
+  "messages": {
+    "confirm": "OK",
+    "cancel": "ZRUŠIT",
+    "error": "Chyba",
+    "refresh": "Obnovit",
+    "stop": "Zastavit",
+    "close": "Zavřít",
+    "file": "Soubor",
+    "exit": "Konec",
+    "help": "Nápověda",
+    "about": "O aplikaci",
+    "no": "Ne",
+    "timeout": "ČASOVÝ LIMIT"
+  }
+}

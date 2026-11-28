@@ -1,0 +1,2521 @@
+# Serbian translations for ddt4all package
+# Copyright (C) 2024 THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the ddt4all package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: ddt4all\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-24 00:02+0100\n"
+"PO-Revision-Date: 2026-05-10 06:29+0200\n"
+"Last-Translator: Furtif <msntchat@hotmail.fr>\n"
+"Language-Team: Serbian\n"
+"Language: sr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"X-Generator: Poedit 3.9\n"
+
+#, python-format
+msgid "Failed to connect to DoIP entity: %s"
+msgstr "Nije uspelo povezivanje sa DoIP entitetom: %s"
+
+#, python-format
+msgid "DoIP routing activated for %(ip)s:%(port)s"
+msgstr "DoIP rutiranje aktivirano za %(ip)s:%(port)s"
+
+msgid "No vehicle-identification response was received"
+msgstr "Nije primljen odgovor identifikacije vozila"
+
+#, python-format
+msgid "Vehicle VIN=%(vin)s logical address=0x%(address)04X EID=%(eid)s"
+msgstr "Vozilo VIN=%(vin)s logička adresa=0x%(address)04X EID=%(eid)s"
+
+#, python-format
+msgid "DoIP connection failed: %s"
+msgstr "DoIP povezivanje nije uspelo: %s"
+
+msgid "Not connected to DoIP device"
+msgstr "Nije povezano sa DoIP uređajem"
+
+msgid "No DoIP ECU logical address is selected"
+msgstr "Nije izabrana logička adresa DoIP ECU-a"
+
+#, python-format
+msgid "Invalid hex request format: %s"
+msgstr "Neispravan format heksadecimalnog zahteva: %s"
+
+msgid "ELM AT commands are not supported over DoIP"
+msgstr "ELM AT komande nisu podržane preko DoIP-a"
+
+msgid "K-line initialization is not supported over DoIP"
+msgstr "K-line inicijalizacija nije podržana preko DoIP-a"
+
+msgid "K-line addressing is not supported over DoIP"
+msgstr "K-line adresiranje nije podržano preko DoIP-a"
+
+msgid "Warning, cannot get signed value for"
+msgstr "Upozorenje, ne može se dobiti vrednost sa znakom za"
+
+msgid "Division by zero, please check data item: "
+msgstr "Deljenje sa nulom, molimo proverite stavku podataka: "
+
+msgid "Adding group "
+msgstr "Dodavanje grupe "
+
+msgid "Unable to find eculist"
+msgstr "Ne može se naći eculist"
+
+msgid "Cannot find file "
+msgstr "Ne može se naći datoteka "
+
+msgid "Cannot load ECU file"
+msgstr "Ne može se učitati ECU datoteka"
+
+msgid "XML not found"
+msgstr "XML nije pronađen"
+
+msgid "Cannot retrieve functionnal address of ECU"
+msgstr "Ne može se dobiti funkcionalna adresa ECU"
+
+msgid "Generated stream "
+msgstr "Generisan tok "
+
+msgid "Send request stream "
+msgstr "Pošalji tok zahteva "
+
+msgid "Received stream "
+msgstr "Primljen tok "
+
+msgid "Request ECU Error"
+msgstr "Greška zahteva ECU"
+
+msgid "Decoded values"
+msgstr "Dekodirane vrednosti"
+
+msgid "Found: "
+msgstr "Pronađeno: "
+
+msgid "Identified ECU"
+msgstr "Identifikovan ECU"
+
+msgid "Found ECU"
+msgstr "Pronađeno ECU"
+
+msgid "(not perfect match)"
+msgstr "(nije savršeno podudaranje)"
+
+msgid "(no relevant ECU file found)"
+msgstr "(nije pronađena odgovarajuća ECU datoteka)"
+
+msgid "Warning, address"
+msgstr "Upozorenje, adresa"
+
+msgid "is not mapped"
+msgstr "nije mapiran"
+
+msgid "Scanning address: "
+msgstr "Skeniranje adrese: "
+
+#, python-format
+msgid "# check_ecu: empty response for addr %(addr)s protocol %(protocol)s"
+msgstr "# check_ecu: prazan odgovor za addr %(addr)s protokol %(protocol)s"
+
+#, python-format
+msgid ""
+"# check_ecu: invalid hex response for addr %(addr)s protocol %(protocol)s: "
+"%(err)s"
+msgstr ""
+"# check_ecu: nevažeći hex odgovor za addr %(addr)s protokol %(protocol)s: "
+"%(err)s"
+
+#, python-format
+msgid ""
+"# check_ecu: response too short (%(bytes)d bytes) for addr %(addr)s protocol "
+"%(protocol)s"
+msgstr ""
+"# check_ecu: odgovor prekratak (%(bytes)d bajtova) za addr %(addr)s protokol "
+"%(protocol)s"
+
+msgid "No DoIP addresses available for scanning"
+msgstr "Nema dostupnih DoIP adresa za skeniranje"
+
+#, python-format
+msgid "Initializing DoIP connection to %(ip)s:%(port)s"
+msgstr "Inicijalizacija DoIP veze ka %(ip)s:%(port)s"
+
+#, python-format
+msgid "DoIP connection established: %(ip)s:%(port)s"
+msgstr "DoIP veza uspostavljena: %(ip)s:%(port)s"
+
+#, python-format
+msgid "DoIP vehicle discovered: VIN=%(vin)s address=%(addr)04X"
+msgstr "DoIP vozilo otkriveno: VIN=%(vin)s adresa=%(addr)04X"
+
+#, python-format
+msgid "DoIP reconnection failed: %s"
+msgstr "DoIP ponovno povezivanje nije uspelo: %s"
+
+msgid "unmapped ECU"
+msgstr "ECU bez mapiranja"
+
+#, python-format
+msgid "Scanning DoIP address %(addr)s ECU: %(name)s"
+msgstr "Skeniranje DoIP adrese %(addr)s ECU: %(name)s"
+
+#, python-format
+msgid "Simulation mode: DoIP address %s was not queried"
+msgstr "Režim simulacije: DoIP adresa %s nije bila upitana"
+
+#, python-format
+msgid "Skipping invalid DoIP address %(addr)s: %(error)s"
+msgstr "Nevažeća DoIP adresa %(addr)s se preskače: %(error)s"
+
+#, python-format
+msgid "DoIP scan failed at %(addr)s: %(error)s"
+msgstr "DoIP skeniranje nije uspelo na %(addr)s: %(error)s"
+
+#, python-format
+msgid "Could not start DoIP UDS session at %(addr)s: %(error)s"
+msgstr "Nije moguće pokrenuti DoIP UDS sesiju na %(addr)s: %(error)s"
+
+#, python-format
+msgid "DoIP UDS identification failed at %(addr)s: %(error)s"
+msgstr "DoIP UDS identifikacija nije uspela na %(addr)s: %(error)s"
+
+#, python-format
+msgid "Could not close DoIP diagnostic session at %(addr)s: %(error)s"
+msgstr "Nije moguće zatvoriti DoIP dijagnostičku sesiju na %(addr)s: %(error)s"
+
+#, python-format
+msgid "Could not start DoIP legacy session at %(addr)s: %(error)s"
+msgstr "Nije moguće pokrenuti DoIP staru sesiju na %(addr)s: %(error)s"
+
+#, python-format
+msgid "DoIP legacy identification failed at %(addr)s: %(error)s"
+msgstr ""
+"DoIP identifikacija starog protokola nije uspela na %(addr)s: %(error)s"
+
+#, python-format
+msgid "Could not close DoIP legacy session at %(addr)s: %(error)s"
+msgstr "Nije moguće zatvoriti DoIP staru sesiju na %(addr)s: %(error)s"
+
+#, python-format
+msgid "Device detection error: %s"
+msgstr "Greška detekcije uređaja: %s"
+
+#, python-format
+msgid "Device initialization error: %s"
+msgstr "Greška inicijalizacije uređaja: %s"
+
+msgid "Found USB device:"
+msgstr "Pronađen USB uređaj:"
+
+msgid "USB device detection error:"
+msgstr "Greška detekcije USB uređaja:"
+
+msgid ""
+"Note: This error does not affect serial communication or bypass cable "
+"functionality."
+msgstr ""
+"Napomena: Ova greška ne utiče na serijsku komunikaciju ili funkcionalnost "
+"zaobilaznog kabla."
+
+msgid "Trying to open port "
+msgstr "Pokušaj otvaranja porta "
+
+msgid "Port initialization failed"
+msgstr "Inicijalizacija porta nije uspela"
+
+msgid "Port connection failed - port object is invalid"
+msgstr "Povezivanje na port nije uspelo - objekt porta je nevažeći"
+
+msgid "STN connection established"
+msgstr "STN veza uspostavljena"
+
+msgid "Version: "
+msgstr "Verzija: "
+
+#, python-format
+msgid "STPX/STN configuration warning: %s"
+msgstr "Upozorenje konfiguracije STPX/STN: %s"
+
+msgid "No ELM interface on port"
+msgstr "Nema ELM interfejsa na portu"
+
+msgid "OBDLink Connection OK, attempting full speed UART switch"
+msgstr "OBDLink veza OK, pokušaj prebacivanja na punu brzinu UART"
+
+msgid "Failed to switch OBDLink to "
+msgstr "Neuspelo prebacivanje OBDLink na "
+
+msgid "OBDLink Connection OK, using optimal settings"
+msgstr "OBDLink veza OK, korišćenje optimalnih postavki"
+
+msgid "Connection established successfully"
+msgstr "Veza uspešno uspostavljena"
+
+msgid "Configuring ELS27 V5 CAN pins (12-13)"
+msgstr "Konfigurisanje ELS27 V5 CAN pinova (12-13)"
+
+msgid "ELS27 V5 CAN configuration complete"
+msgstr "ELS27 V5 CAN konfiguracija završena"
+
+#, python-format
+msgid "ELS27 V5 configuration warning: %s"
+msgstr "Upozorenje konfiguracije ELS27 V5: %s"
+
+msgid "Port is None - cannot switch speed"
+msgstr "Port je None - ne može se promeniti brzina"
+
+#, python-format
+msgid "%s switched baudrate OK, changing UART speed now..."
+msgstr "%s je promenio baudrate uspešno, menjanje UART brzine sada..."
+
+#, python-format
+msgid "%s baudrate switched OK, changing UART speed now..."
+msgstr "%s baudrate prebačen OK, menjam UART brzinu sada..."
+
+#, python-format
+msgid "Not supported baudrate %s"
+msgstr "Nepodržan baudrate %s"
+
+msgid "ELM reset..."
+msgstr "ELM resetovanje..."
+
+msgid "Unknown address: "
+msgstr "Nepoznata adresa: "
+
+msgid ""
+"send_can: received first frame only — AT CAF0 may have been reset by AT SP, "
+"or FC failed"
+msgstr ""
+"send_can: primljen samo prvi okvir — AT CAF0 je mogao biti resetovan "
+"naredbom AT SP ili FC nije uspeo"
+
+#, python-format
+msgid "send_can: unexpected response byte %s — check AT CAF0 is active"
+msgstr ""
+"send_can: neočekivani bajt odgovora %s — proverite da li je AT CAF0 aktivan"
+
+msgid "Using saved device settings"
+msgstr "Korišćenje sačuvanih postavki uređaja"
+
+msgid "Using optimal device settings"
+msgstr "Korišćenje optimalnih postavki uređaja"
+
+msgid "Connecting to device at port: "
+msgstr "Povezivanje sa uređajem na portu: "
+
+msgid "Using baudrate: "
+msgstr "Korišćenje baudrate: "
+
+msgid "Testing for ELS27 device..."
+msgstr "Testiranje za ELS27 uređaj..."
+
+msgid "ELS27 device detected: "
+msgstr "ELS27 uređaj detektovan: "
+
+msgid "Using detected baud rate: "
+msgstr "Korišćenje detektovanog baud rate: "
+
+msgid "Warning: No ELS27 response detected"
+msgstr "Upozorenje: Nema detektovanog odgovora ELS27"
+
+msgid "Will attempt connection anyway..."
+msgstr "Biće pokušaj povezivanja u svakom slučaju..."
+
+msgid "Connection failed: "
+msgstr "Povezivanje nije uspelo: "
+
+msgid "Testing basic connectivity..."
+msgstr "Testiranje osnovne povezivosti..."
+
+msgid "Warning: Device may not be ELM327 compatible"
+msgstr "Upozorenje: Uređaj možda nije kompatibilan sa ELM327"
+
+msgid "ELM327 device detected successfully"
+msgstr "ELM327 uređaj uspešno detektovan"
+
+msgid "Device version: "
+msgstr "Verzija uređaja: "
+
+msgid "Connection error: "
+msgstr "Greška povezivanja: "
+
+msgid "FAIL"
+msgstr "NEUSPEH"
+
+msgid "OK/TIMEOUT"
+msgstr "POTVRDI/ISTEK VREMENA"
+
+msgid "OK"
+msgstr "Potvrdi"
+
+msgid "Incompatible adapter on ARM core"
+msgstr "Nekompatibilan adapter na ARM jezgri"
+
+msgid "Result: "
+msgstr "Rezultat: "
+
+msgid " succeeded from "
+msgstr " uspešnih od "
+
+msgid "ELM Max version:"
+msgstr "Maksimalna verzija ELM:"
+
+msgid "Using saved settings for"
+msgstr "Korišćenje sačuvanih postavki za"
+
+msgid "Using optimal settings for"
+msgstr "Korišćenje optimalnih postavki za"
+
+msgid "Using settings for"
+msgstr "Korišćenje postavki za"
+
+msgid "ELM327 doesn't support DoIP, falling back to serial mode"
+msgstr "ELM327 ne podržava DoIP, povratak na serijski režim"
+
+msgid "Serial port opened"
+msgstr "Serijski port otvoren"
+
+#, python-format
+msgid "Serial connection error: %s"
+msgstr "Greška serijske veze: %s"
+
+msgid "ELM not connected or wrong COM port"
+msgstr "ELM nije povezan ili je pogrešan COM port"
+
+#, python-format
+msgid "Unexpected error: %s"
+msgstr "Neočekivana greška: %s"
+
+#, python-format
+msgid "Bluetooth connection attempted: %s"
+msgstr "Pokušaj Bluetooth veze: %s"
+
+#, python-format
+msgid "Serial connection established: %(port)s @ %(baud)s baud"
+msgstr "Serijska veza uspostavljena: %(port)s @ %(baud)s baud"
+
+#, python-format
+msgid "Bluetooth connection failed: %s"
+msgstr "Bluetooth veza nije uspela: %s"
+
+#, python-format
+msgid "DoIP connection failed: %(ip)s:%(port)s"
+msgstr "DoIP povezivanje nije uspelo: %(ip)s:%(port)s"
+
+#, python-format
+msgid "DoIP initialization failed: %s"
+msgstr "DoIP inicijalizacija nije uspela: %s"
+
+#, python-format
+msgid "Port closed: %s"
+msgstr "Port zatvoren: %s"
+
+#, python-format
+msgid "Error closing port: %s"
+msgstr "Greška pri zatvaranju porta: %s"
+
+#, python-format
+msgid "Connecting to WiFi adapter at %(ip)s:%(port)s"
+msgstr "Povezivanje sa WiFi adapterom na %(ip)s:%(port)s"
+
+#, python-format
+msgid "WiFi connection established: %(ip)s:%(port)s"
+msgstr "WiFi veza uspostavljena: %(ip)s:%(port)s"
+
+#, python-format
+msgid "WiFi connection timeout to %(ip)s:%(port)s"
+msgstr "Timeout WiFi veze ka %(ip)s:%(port)s"
+
+#, python-format
+msgid "WiFi connection error: %s"
+msgstr "Greška WiFi veze: %s"
+
+#, python-format
+msgid "Unexpected WiFi error: %s"
+msgstr "Neočekivana WiFi greška: %s"
+
+#, python-format
+msgid "WiFi recv: %s"
+msgstr "WiFi prijem: %s"
+
+#, python-format
+msgid "WiFi socket timed out %s times in a row; reconnect scheduled"
+msgstr "WiFi utičnica je istekla %s puta zaredom; zakazano ponovno povezivanje"
+
+#, python-format
+msgid "Serial error in read_byte: %s"
+msgstr "Serijska greška u read_byte: %s"
+
+msgid "Connection to ELM was lost"
+msgstr "Izgubljena veza sa ELM jedinicom"
+
+#, python-format
+msgid "*       Error: %s"
+msgstr "*       Greška: %s"
+
+#, python-format
+msgid "Cannot decode bytes %s"
+msgstr "Ne mogu se dekodirati bajtovi %s"
+
+#, python-format
+msgid "Error in read(): %s"
+msgstr "Greška u read(): %s"
+
+msgid "WiFi connection - baudrate change not applicable"
+msgstr "WiFi veza - promena baudrate nije primenjiva"
+
+msgid "Attempting WiFi reconnection..."
+msgstr "Pokušaj WiFi ponovnog povezivanja..."
+
+msgid "Port handler is None, cannot write"
+msgstr "Handler porta je None, ne može se pisati"
+
+#, python-format
+msgid "Serial write error: %s"
+msgstr "Serijska greška pisanja: %s"
+
+#, python-format
+msgid "*       Write error: %s"
+msgstr "*       Greška pisanja: %s"
+
+msgid "TIMEOUT"
+msgstr "ISTEK VREMENA"
+
+msgid "Checking port speed:"
+msgstr "Provera brzine porta:"
+
+msgid "WiFi connection - skipping baudrate check"
+msgstr "WiFi veza - preskakanje provere baudrate"
+
+msgid "Bluetooth connection - skipping baudrate check"
+msgstr "Bluetooth veza - preskakanje provere baudrate"
+
+msgid "Start COM speed: "
+msgstr "Početna COM brzina: "
+
+msgid "ELM not responding"
+msgstr "ELM se ne odaziva"
+
+msgid "Cannot zip database, no 'ecus' directory"
+msgstr "Ne može se zipovati baza podataka, nema 'ecus' direktorijuma"
+
+msgid "Starting conversion"
+msgstr "Pokretanje konverzije"
+
+msgid "Starting processing "
+msgstr "Pokretanje procesiranja "
+
+msgid " to "
+msgstr " na "
+
+msgid "Skipping current file (cannot parse it)"
+msgstr "Preskakanje trenutne datoteke (ne može se parsirati)"
+
+msgid "Writing database"
+msgstr "Pisanje baze podataka"
+
+msgid "Writing archive"
+msgstr "Pisanje arhive"
+
+msgid "Opening ECU Database..."
+msgstr "Otvaranje ECU baze podataka..."
+
+msgid "DataItem not found"
+msgstr "DataItem nije pronađen"
+
+msgid "parts as: "
+msgstr "delovi kao: "
+
+msgid " please review dumpVehicles def."
+msgstr " molimo pregledajte dumpVehicles def."
+
+msgid "ELS27 V5 CAN pin configuration complete"
+msgstr "ELS27 V5 CAN konfiguracija pinova završena"
+
+msgid "Found USB adapter:"
+msgstr "Pronađen USB adapter:"
+
+msgid "USB not available"
+msgstr "USB nije dostupan"
+
+msgid "USB Device"
+msgstr "USB uređaj"
+
+msgid "Warning: Could not read string descriptor:"
+msgstr "Upozorenje: Ne može se pročitati string deskriptor:"
+
+msgid "USB OBD Device"
+msgstr "USB OBD uređaj"
+
+msgid "Warning: Vendor request failed:"
+msgstr "Upozorenje: Zahtev prodavca nije uspeo:"
+
+msgid "Warning: PyQtWebEngine not available. Some features may be limited."
+msgstr ""
+"Upozorenje: PyQtWebEngine nije dostupan. Neke funkcije mogu biti ograničene."
+
+msgid "resources/projects.json not found or invalid."
+msgstr "resources/projects.json nije pronađen ili je nevažeći."
+
+#, python-format
+msgid "Warning: Could not write version.h: %s"
+msgstr "Upozorenje: Ne može se napisati version.h: %s"
+
+msgid "Using custom DDT database"
+msgstr "Korišćenje prilagođene DDT baze podataka"
+
+msgid "No COM port selected"
+msgstr "Nije izabran COM port"
+
+#, python-format
+msgid "Initializing ELM with speed %i..."
+msgstr "Inicijalizacija ELM sa brzinom %i..."
+
+msgid "DoIP connection failed: "
+msgstr "DoIP povezivanje nije uspelo: "
+
+msgid "No ELM327 or OBDLINK-SX detected on COM port "
+msgstr "Nema ELM327 ili OBDLINK-SX uređaja na COM portu "
+
+msgid "AB90 AIRBAG Reset"
+msgstr "Resetovanje AB90 vazdušnog jastuka"
+
+msgid "Airbag Tools"
+msgstr "Alatke za Airbag"
+
+msgid ""
+"AB90 (Clio III)/2<br>AIRBAG VIRGINIZER<br><font color='red'>THIS PLUGIN WILL "
+"UNLOCK AIRBAG CRASH DATA<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</"
+"font>"
+msgstr ""
+"AB90 (Clio III)/2<br>AIRBAG VIRGINIZER<br><font color='red'>OVAJ PLUGIN ĆE "
+"OTKLJUČATI PODATKE O UDARU AIRBAGA<br>IDITE AKO NEMATE POJMA ŠTA OVO ZNAČI</"
+"font>"
+
+msgid "Check ACU Virgin"
+msgstr "Provera ACU Virgin"
+
+msgid "Waiting"
+msgstr "Čekanje"
+
+msgid "Virginize ACU"
+msgstr "Očisti ACU (novo stanje)"
+
+msgid "Cannot connect to ECU"
+msgstr "Ne može se povezati sa ECU"
+
+msgid "<font color='orange'>UNEXPECTED RESPONSE</font>"
+msgstr "<font color='orange'>NEOČEKIVAN ODGOVOR</font>"
+
+msgid "<font color='red'>CRASH DETECTED</font>"
+msgstr "<font color='red'>UDES DETEKTOVAN</font>"
+
+msgid "<font color='green'>NO CRASH DETECTED</font>"
+msgstr "<font color='green'>NEMA UDESA</font>"
+
+#, python-format
+msgid "SDS stream: %s"
+msgstr "SDS tok: %s"
+
+msgid "<font color='green'>CLEAR EXECUTED</font>"
+msgstr "<font color='green'>CLEAR IZVRŠEN</font>"
+
+msgid "<font color='red'>CLEAR FAILED</font>"
+msgstr "<font color='red'>CLEAR NIJE USPEO</font>"
+
+msgid "Megane/Scenic II card programming"
+msgstr "Programiranje kartice Megane/Scenic II"
+
+msgid "Keys"
+msgstr "Ključevi"
+
+msgid "ENTER AFTER SALE MODE"
+msgstr "UNESITE NAKON PRODAJNOG REŽIMA"
+
+msgid ""
+"<font color='red'>MEGANE II CARD PROGRAMMING<br>EXPERIMENTAL : NOT TESTED "
+"YET</font>"
+msgstr ""
+"<font color='red'>PROGRAMIRANJE KARTICE MEGANE II<br>EKSPERIMENTALNO : JOŠ "
+"NIJE TESTIRANO</font>"
+
+msgid "LEARN"
+msgstr "UČENJE"
+
+msgid "VALIDATE"
+msgstr "PROVERI"
+
+msgid "CANCEL"
+msgstr "OTKAŽI"
+
+msgid "Algo 2"
+msgstr "Algoritam 2"
+
+msgid "ISK"
+msgstr "ISK kod"
+
+msgid "PIN"
+msgstr "PIN kod"
+
+msgid "Num key learnt"
+msgstr "Broj naučenih ključeva"
+
+msgid "CARD IDE"
+msgstr "Identifikator kartice (IDE)"
+
+msgid "Cannot get ISK, check connections and UCH compatibility"
+msgstr "Ne može se dobiti ISK, proverite veze i kompatibilnost UCH"
+
+msgid "<font color='red'>PIN CODE NOT RECOGNIZED</font>"
+msgstr "<font color='red'>PIN KOD NIJE PREPOZNAT</font>"
+
+msgid "<font color='green'>PIN CODE OK / KEY LEARNING</font>"
+msgstr "<font color='green'>PIN KOD OK / UČENJE KLJUČA</font>"
+
+msgid "<font color='green'>PIN CODE OK / UCH LEARNING</font>"
+msgstr "<font color='green'>PIN KOD OK / UČENJE UCH</font>"
+
+msgid "Modus/Clio III EPS Reset"
+msgstr "Resetovanje EPS-a Modus/Clio III"
+
+msgid "EPS Tools"
+msgstr "Alatke za EPS"
+
+msgid ""
+"Modus/Clio III EPS VIRGINIZER<br><font color='red'>THIS PLUGIN WILL RESET "
+"EPS IMMO DATA<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</font>"
+msgstr ""
+"Modus/Clio III EPS VIRGINIZER<br><font color='red'>OVAJ PLUGIN ĆE RESETOVATI "
+"EPS IMMO PODATKE<br>IDITE AKO NEMATE POJMA ŠTA OVO ZNAČI</font>"
+
+msgid "BLANK STATUS & VIN READ"
+msgstr "PRAZAN STATUS I ČITANJE VIN"
+
+msgid "Virginize EPS"
+msgstr "Očisti EPS (novo stanje)"
+
+msgid "VIN - READ"
+msgstr "VIN - ČITANJE"
+
+msgid "VIN - WRITE"
+msgstr "VIN - PISANJE"
+
+msgid "Write VIN"
+msgstr "Piši VIN"
+
+msgid "<font color='red'>VIN - INVALID</font>"
+msgstr "<font color='red'>VIN - NEVAŽEĆI</font>"
+
+msgid "<font color='red'>VIN - BAD LENGTH</font>"
+msgstr "<font color='red'>VIN - LOŠA DUŽINA</font>"
+
+msgid "<font color='orange'>VIN WRITE FAILED</font>"
+msgstr "<font color='orange'>PISANJE VIN NIJE USPELO</font>"
+
+msgid "<font color='green'>VIN WRITE OK</font>"
+msgstr "<font color='green'>PISANJE VIN OK</font>"
+
+msgid "<font color='green'>EPS virgin</font>"
+msgstr "<font color='green'>Čist EPS (nov)</font>"
+
+msgid "<font color='red'>EPS coded</font>"
+msgstr "<font color='red'>EPS kodiran</font>"
+
+#, python-format
+msgid "SdSC0 stream: %s"
+msgstr "SdSC0 tok: %s"
+
+msgid "Clio IV EPS Reset"
+msgstr "Resetovanje EPS-a Clio IV"
+
+msgid ""
+"Clio IV EPS VIRGINIZER<br><font color='red'>THIS PLUGIN WILL RESET EPS IMMO "
+"DATA<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</font>"
+msgstr ""
+"Clio IV EPS VIRGINIZER<br><font color='red'>OVAJ PLUGIN ĆE RESETOVATI EPS "
+"IMMO PODATKE<br>IDITE AKO NEMATE POJMA ŠTA OVO ZNAČI</font>"
+
+msgid "Check EPS Virgin"
+msgstr "Provera EPS Virgin"
+
+msgid "<font color='green'>EPS not operational</font>"
+msgstr "<font color='green'>EPS nije operativan</font>"
+
+msgid "<font color='red'>UNEXPECTED RESPONSE</font>"
+msgstr "<font color='red'>NEOČEKIVAN ODGOVOR</font>"
+
+#, python-format
+msgid "SdSFA stream: %s"
+msgstr "SdSFA tok: %s"
+
+msgid "DDT2000 command macros (.cmd)"
+msgstr "Komandni makroi DDT2000 (.cmd)"
+
+msgid "Macros"
+msgstr "Komandni makroi"
+
+msgid ""
+"ERROR: command should have 5 parameters: \n"
+"    <command> <lid> <rsp_len> <offset> <hex mask> <hex value>\n"
+"        <lid> - ECUs local identifier. Length should be 2 simbols for KWP or "
+"4 for CAN\n"
+"        <rsp_len> - lengt of command response including positive response "
+"bytes, equals MinBytes from ddt db\n"
+"        <offset> - offeset in bytes to first changed byte (starts from 1 not "
+"0) \n"
+"        <hex mask> - bit mask for changed bits, 1 - changable, 0 - "
+"untachable\n"
+"        <hex value> - bit value\n"
+"    <hex mask> and <hex value> should have equal length\n"
+msgstr ""
+"GREŠKA: komanda mora imati 5 parametara: \n"
+"    <komanda> <lid> <rsp_len> <pomeraj> <hex maska> <hex vrednost>\n"
+"        <lid> - lokalni identifikator ECU-a. Dužina treba da bude 2 simbola "
+"za KWP ili 4 za CAN\n"
+"        <rsp_len> - dužina odgovora komande uključujući bajtove pozitivnog "
+"odgovora, jednaka MinBytes iz ddt baze\n"
+"        <pomeraj> - pomeraj u bajtovima do prvog promenjenog bajta (počinje "
+"od 1, ne od 0) \n"
+"        <hex maska> - bit maska za promenjene bitove, 1 - promenljivo, 0 - "
+"nedodirljivo\n"
+"        <hex vrednost> - vrednost bita\n"
+"    <hex maska> i <hex vrednost> moraju imati jednaku dužinu\n"
+
+msgid ""
+"ERROR: command should have 6 parameters: \n"
+"    <command> <lid> <rsp_len> <offset> <hex mask> <hex value> <label>\n"
+"        <lid> - ECUs local identifier. Length should be 2 simbols for KWP or "
+"4 for CAN\n"
+"        <rsp_len> - lengt of command response including positive response "
+"bytes, equals MinBytes from ddt db\n"
+"        <offset> - offeset in bytes to first changed byte (starts from 1 not "
+"0) \n"
+"        <hex mask> - bit mask for changed bits, 1 - changable, 0 - "
+"untachable\n"
+"        <hex value> - bit value\n"
+"        <label> - label to go\n"
+"    <hex mask> and <hex value> should have equal length\n"
+msgstr ""
+"GREŠKA: komanda mora imati 6 parametara: \n"
+"    <komanda> <lid> <rsp_len> <pomeraj> <hex maska> <hex vrednost> <oznaka>\n"
+"        <lid> - lokalni identifikator ECU-a. Dužina treba da bude 2 simbola "
+"za KWP ili 4 za CAN\n"
+"        <rsp_len> - dužina odgovora komande uključujući bajtove pozitivnog "
+"odgovora, jednaka MinBytes iz ddt baze\n"
+"        <pomeraj> - pomeraj u bajtovima do prvog promenjenog bajta (počinje "
+"od 1, ne od 0) \n"
+"        <hex maska> - bit maska za promenjene bitove, 1 - promenljivo, 0 - "
+"nedodirljivo\n"
+"        <hex vrednost> - vrednost bita\n"
+"        <oznaka> - oznaka odredišta\n"
+"    <hex maska> i <hex vrednost> moraju imati jednaku dužinu\n"
+
+msgid ""
+"ERROR: command should have 4 or 7 parameters: \n"
+"    <command> <lid> <rsp_len> <offset> <hex mask> <hex value> <label>\n"
+"        <lid> - ECUs local identifier. Length should be 2 simbols for KWP or "
+"4 for CAN\n"
+"        <rsp_len> - lengt of command response including positive response "
+"bytes, equals MinBytes from ddt db\n"
+"        <offset> - offeset in bytes to first changed byte (starts from 1 not "
+"0) \n"
+"        <hex mask> - bit mask for changed bits, 1 - changable, 0 - "
+"untachable\n"
+"        <val step> - value step\n"
+"        <val offset> - value offset\n"
+"        <val divider> - value divider\n"
+"\n"
+msgstr ""
+"GREŠKA: komanda mora imati 4 ili 7 parametara: \n"
+"    <komanda> <lid> <rsp_len> <pomeraj> <hex maska> <hex vrednost> <oznaka>\n"
+"        <lid> - lokalni identifikator ECU-a. Dužina treba da bude 2 simbola "
+"za KWP ili 4 za CAN\n"
+"        <rsp_len> - dužina odgovora komande uključujući bajtove pozitivnog "
+"odgovora, jednaka MinBytes iz ddt baze\n"
+"        <pomeraj> - pomeraj u bajtovima do prvog promenjenog bajta (počinje "
+"od 1, ne od 0) \n"
+"        <hex maska> - bit maska za promenjene bitove, 1 - promenljivo, 0 - "
+"nedodirljivo\n"
+"        <korak vrednosti> - korak vrednosti\n"
+"        <pomeraj vrednosti> - pomeraj vrednosti\n"
+"        <delilac vrednosti> - delilac vrednosti\n"
+"\n"
+
+msgid "No ELM connection (plugin need_hw=True ?)"
+msgstr "Nema ELM veze (da li dodatak zahteva need_hw=True ?)"
+
+#, python-format
+msgid "guard: %(limit)d steps exceeded (infinite loop?)"
+msgstr "zaštita: prekoračeno %(limit)d koraka (beskonačna petlja?)"
+
+msgid "# abort requested"
+msgstr "# zatražen prekid"
+
+#, python-format
+msgid "openning file: %(file)s"
+msgstr "otvaranje datoteke: %(file)s"
+
+#, python-format
+msgid "%(file)s:%(line)d: empty macro name"
+msgstr "%(file)s:%(line)d: prazan naziv makroa"
+
+#, python-format
+msgid "%(file)s:%(line)d: unexpected end of macro"
+msgstr "%(file)s:%(line)d: neočekivani završetak makroa"
+
+#, python-format
+msgid "%(file)s: includes are nested too deeply (%(limit)d levels)"
+msgstr "%(file)s: uključivanja su previše duboko ugnježdena (%(limit)d nivoa)"
+
+#, python-format
+msgid "Cannot read %(file)s: %(error)s"
+msgstr "Nije moguće pročitati %(file)s: %(error)s"
+
+#, python-format
+msgid "%(file)s: included file not found: %(target)s"
+msgstr "%(file)s: uključena datoteka nije pronađena: %(target)s"
+
+#, python-format
+msgid "include loop: %(target)s"
+msgstr "petlja uključivanja: %(target)s"
+
+#, python-format
+msgid "# include %(file)s"
+msgstr "# uključivanje %(file)s"
+
+#, python-format
+msgid "  %(name)s = %(value)s"
+msgstr "  %(name)s = %(value)s"
+
+#, python-format
+msgid "  %(macro)s"
+msgstr "  %(macro)s"
+
+msgid "[h]elp                 - this help"
+msgstr "[h]elp                 - ova pomoć"
+
+msgid "[q]uit, [e]xit, end    - exit from terminal"
+msgstr "[q]uit, [e]xit, end    - izlaz iz terminala"
+
+msgid "wait|sleep x           - wait x seconds"
+msgstr "wait|sleep x           - sačekajte x sekundi"
+
+msgid "include <file>         - play another .cmd here"
+msgstr "include <datoteka>         - izvrši drugu .cmd datoteku ovde"
+
+msgid "Variables:"
+msgstr "Promenljive:"
+
+msgid "Macros:"
+msgstr "Komandni makroi:"
+
+#, python-format
+msgid "Error: unknown macro name: %(macro)s"
+msgstr "Greška: nepoznat naziv makroa: %(macro)s"
+
+#, python-format
+msgid "Error: recursion prohibited: %(macro)s"
+msgstr "Greška: rekurzija je zabranjena: %(macro)s"
+
+#, python-format
+msgid "### %(file)s : %(count)d lines"
+msgstr "### %(file)s : %(count)d linija"
+
+msgid "# end of command file"
+msgstr "# kraj komandne datoteke"
+
+#, python-format
+msgid "> %(line)s"
+msgstr "> %(line)s"
+
+#, python-format
+msgid "Error: unknown label '%(label)s'"
+msgstr "Greška: nepoznata oznaka '%(label)s'"
+
+msgid "###### Variables #####"
+msgstr "###### Promenljive #####"
+
+#, python-format
+msgid "# %(name)20s = %(value)s"
+msgstr "# %(name)20s = %(value)s"
+
+#, python-format
+msgid "Error: unknown variable %(name)s"
+msgstr "Greška: nepoznata promenljiva %(name)s"
+
+msgid "Error: too many variables in one line"
+msgstr "Greška: previše promenljivih u jednoj liniji"
+
+msgid "#(subst)"
+msgstr "#(subst)"
+
+#, python-format
+msgid "# delay: %(seconds)s"
+msgstr "# odlaganje: %(seconds)s"
+
+#, python-format
+msgid "Unrecognized init command: %(name)s"
+msgstr "Neprepoznata komanda za inicijalizaciju: %(name)s"
+
+msgid "ERROR: Unknown function"
+msgstr "GREŠKA: Nepoznata funkcija"
+
+msgid "read  value: "
+msgstr "očitana vrednost: "
+
+msgid "ERROR: Length is unexpected"
+msgstr "GREŠKA: Neočekivana dužina"
+
+msgid "ERROR: Wrong simbol in response"
+msgstr "GREŠKA: Pogrešan simbol u odgovoru"
+
+msgid "ERROR: Not positive response"
+msgstr "GREŠKA: Odgovor nije pozitivan"
+
+msgid "Match. Exit"
+msgstr "Poklapanje pronađeno. Izlaz"
+
+msgid "Not match. Continue"
+msgstr "Nema poklapanja. Nastavi"
+
+msgid "Not match. Exit"
+msgstr "Nema poklapanja. Izlaz"
+
+msgid "Match. Continue"
+msgstr "Poklapanje pronađeno. Nastavi"
+
+msgid "Match. goto: "
+msgstr "Poklapanje pronađeno. Idi na: "
+
+msgid "Not match. goto: "
+msgstr "Nema poklapanja. Idi na: "
+
+#, python-format
+msgid ""
+"# LID(%(lid)s) $rawValue = %(raw)s  $scaledValue = %(scaled)s  $hexValue = "
+"%(hex)s"
+msgstr ""
+"# LID(%(lid)s) $rawValue = %(raw)s  $scaledValue = %(scaled)s  $hexValue = "
+"%(hex)s"
+
+#, python-format
+msgid "ERROR: unexpected positive response: %(rsp)s"
+msgstr "GREŠKA: neočekivan pozitivan odgovor: %(rsp)s"
+
+msgid "write value: "
+msgstr "upisana vrednost: "
+
+msgid "ELM connected"
+msgstr "ELM povezan"
+
+msgid "ELM not connected"
+msgstr "ELM nije povezan"
+
+msgid "installed copy (cmd_macros_lib/macros)"
+msgstr "instalirana kopija (cmd_macros_lib/macros)"
+
+msgid "manually chosen folder"
+msgstr "ručno izabrana fascikla"
+
+#, python-format
+msgid "ddt4all tables (%(count)d addresses)"
+msgstr "ddt4all tabele (%(count)d adresa)"
+
+#, python-format
+msgid "pyren3 fallback (%(count)d addresses)"
+msgstr "pyren3 rezervno rešenje (%(count)d adresa)"
+
+msgid "no table"
+msgstr "nema tabele"
+
+msgid "pyren3 fallback: disabled"
+msgstr "pyren3 rezervno rešenje: onemogućeno"
+
+msgid "pyren3 fallback: no entry"
+msgstr "pyren3 rezervno rešenje: nema unosa"
+
+#, python-format
+msgid ""
+"pyren3 fallback: %(count)d addresses as a fallback, used only for the "
+"addresses missing from the ddt4all tables"
+msgstr ""
+"pyren3 rezervno rešenje: %(count)d adresa kao rezerva, koristi se samo za "
+"adrese koje nedostaju u ddt4all tabelama"
+
+#, python-format
+msgid "pyren3 fallback: %(count)d addresses (source in use)"
+msgstr "pyren3 rezervno rešenje: %(count)d adresa (izvor u upotrebi)"
+
+msgid "Done"
+msgstr "Završeno"
+
+#, python-format
+msgid "ERROR: %(error)s"
+msgstr "GREŠKA: %(error)s"
+
+msgid "Error"
+msgstr "Greška"
+
+msgid "DDT2000 command macros"
+msgstr "Komandni makroi DDT2000"
+
+msgid "Macro folder (.cmd and *.txt)"
+msgstr "Fascikla makroa (.cmd i *.txt)"
+
+msgid "Browse"
+msgstr "Pregledaj"
+
+msgid "Refresh"
+msgstr "Osvezi"
+
+msgid "Macro folder:"
+msgstr "Fascikla makroa:"
+
+msgid "Log ELM traffic to file"
+msgstr "Zabeleži ELM saobraćaj u datoteku"
+
+msgid "Log file name:"
+msgstr "Naziv datoteke dnevnika:"
+
+msgid ".cmd files (by ECU)"
+msgstr ".cmd datoteke (po ECU)"
+
+msgid "Named macros (by *.txt)"
+msgstr "Imenovani makroi (po *.txt)"
+
+msgid "Macros by ECU (.cmd)"
+msgstr "Makroi po ECU (.cmd)"
+
+msgid "Named macros (*.txt)"
+msgstr "Imenovani makroi (*.txt)"
+
+msgid "Send key"
+msgstr "Pošalji taster"
+
+msgid "Key for 'if_key':"
+msgstr "Taster za 'if_key':"
+
+msgid "Execute .cmd"
+msgstr "Izvrši .cmd"
+
+msgid "Execute macro"
+msgstr "Izvrši makro"
+
+msgid "Stop"
+msgstr "Zaustavi"
+
+msgid "Close"
+msgstr "Zatvori"
+
+msgid "Log"
+msgstr "Dnevnik"
+
+msgid "Macro folder"
+msgstr "Fascikla makroa"
+
+#, python-format
+msgid "Parsing error %(file)s: %(error)s"
+msgstr "Greška parsiranja u %(file)s: %(error)s"
+
+#, python-format
+msgid "%(macro)s (defined in %(file)s)"
+msgstr "%(macro)s (definisano u %(file)s)"
+
+#, python-format
+msgid "Host: %(host)s"
+msgstr "Domaćin: %(host)s"
+
+#, python-format
+msgid "Addresses: %(legacy)s"
+msgstr "Adrese: %(legacy)s"
+
+msgid ""
+"Format: DDT2000 command macros (pyren3); the bundled macros target Renault "
+"ECUs, address resolution follows the vehicle loaded in ddt4all."
+msgstr ""
+"Format: komandni makroi DDT2000 (pyren3); priloženi makroi ciljaju Renault "
+"ECU-e, razrešavanje adresa prati vozilo učitano u ddt4all."
+
+#, python-format
+msgid "Folder: %(folder)s"
+msgstr "Fascikla: %(folder)s"
+
+msgid "(none)"
+msgstr "(nijedno)"
+
+#, python-format
+msgid "Source: %(source)s"
+msgstr "Izvor: %(source)s"
+
+#, python-format
+msgid ""
+"%(groups)d ECU group(s), %(files)d .cmd file(s), %(named)d named macro(s) in "
+"%(txt)d .txt file(s)"
+msgstr ""
+"%(groups)d grupa ECU-a, %(files)d .cmd datoteka, %(named)d imenovanih makroa "
+"u %(txt)d .txt datoteka"
+
+#, python-format
+msgid "Journal files: %(elm)s and %(ecu)s"
+msgstr "Datoteke dnevnika: %(elm)s i %(ecu)s"
+
+msgid "No ELM connection: the journal is not written."
+msgstr "Nema ELM veze: dnevnik se ne upisuje."
+
+#, python-format
+msgid "Cannot write the journal (%(error)s)"
+msgstr "Nije moguće upisati dnevnik (%(error)s)"
+
+#, python-format
+msgid "Journal: %(elm)s"
+msgstr "Dnevnik: %(elm)s"
+
+#, python-format
+msgid "Journal: %(ecu)s"
+msgstr "Dnevnik: %(ecu)s"
+
+msgid "ddt4all not found (console mode only)"
+msgstr "ddt4all nije pronađen (samo režim konzole)"
+
+#, python-format
+msgid "ddt4all %(flavor)s | %(elm)s | addressing: %(addressing)s"
+msgstr "ddt4all %(flavor)s | %(elm)s | adresiranje: %(addressing)s"
+
+#, python-format
+msgid "%(elm)s | %(files)d .cmd (%(groups)d ECU) | %(named)d named macro(s)"
+msgstr ""
+"%(elm)s | %(files)d .cmd (%(groups)d ECU) | %(named)d imenovanih makroa"
+
+#, python-format
+msgid ""
+"%(host)s\n"
+"Addresses: %(legacy)s\n"
+"%(detail)s\n"
+"Folder: %(folder)s\n"
+"Source: %(source)s\n"
+"%(journal)s"
+msgstr ""
+"%(host)s\n"
+"Adrese: %(legacy)s\n"
+"%(detail)s\n"
+"Fascikla: %(folder)s\n"
+"Izvor: %(source)s\n"
+"%(journal)s"
+
+msgid "Journal: disabled"
+msgstr "Dnevnik: onemogućen"
+
+msgid "A macro is already running."
+msgstr "Makro se već izvršava."
+
+msgid "ddt4all is not available: this plugin must be started from ddt4all."
+msgstr "ddt4all nije dostupan: ovaj priključak se mora pokrenuti iz ddt4all."
+
+msgid "No ELM connection: connect ddt4all to the ELM before running a macro."
+msgstr "Nema ELM veze: povežite ddt4all sa ELM-om pre pokretanja makroa."
+
+#, python-format
+msgid "--- START %(kind)s: %(macro)s ---"
+msgstr "--- POČETAK %(kind)s: %(macro)s ---"
+
+msgid "Select a .cmd file (double-click to run)."
+msgstr "Izaberite .cmd datoteku (dvoklik za pokretanje)."
+
+msgid "Select a named macro (double-click to run)."
+msgstr "Izaberite imenovani makro (dvoklik za pokretanje)."
+
+#, python-format
+msgid "# key '%(key)s' sent"
+msgstr "# taster '%(key)s' poslat"
+
+msgid "# stop requested..."
+msgstr "# zatraženo zaustavljanje..."
+
+#, python-format
+msgid "--- END: %(status)s ---"
+msgstr "--- KRAJ: %(status)s ---"
+
+#, python-format
+msgid ""
+"WARNING: address %(addr)s resolves to %(tx)s/%(rx)s (ddt4all) but pyren3 "
+"uses %(pltx)s/%(plrx)s"
+msgstr ""
+"UPOZORENJE: adresa %(addr)s se razrešava na %(tx)s/%(rx)s (ddt4all) ali "
+"pyren3 koristi %(pltx)s/%(plrx)s"
+
+msgid "Laguna II UCH Reset"
+msgstr "Resetovanje UCH-a Laguna II"
+
+msgid "UCH Tools"
+msgstr "UCH alati"
+
+msgid ""
+"LAGUNA II UCH VIRGINIZER<br><font color='red'>THIS PLUGIN WILL ERASE YOUR "
+"UCH<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</font>"
+msgstr ""
+"LAGUNA II UCH VIRGINIZER<br><font color='red'>OVAJ PLUGIN ĆE OBRIŠATI VAŠ "
+"UCH<br>IDITE AKO NEMATE POJMA ŠTA OVO ZNAČI</font>"
+
+msgid "Check UCH Virgin"
+msgstr "Provera UCH Virgin"
+
+msgid "Virginize UCH"
+msgstr "Očisti UCH (novo stanje)"
+
+msgid "<font color='green'>UCH virgin</font>"
+msgstr "<font color='green'>Čist UCH (nov)</font>"
+
+msgid "<font color='red'>UCH coded</font>"
+msgstr "<font color='red'>UCH kodiran</font>"
+
+msgid "Laguna III UCH Reset"
+msgstr "Resetovanje UCH-a Laguna III"
+
+msgid ""
+"LAGUNA III UCH VIRGINIZER<br><font color='red'>THIS PLUGIN WILL ERASE YOUR "
+"UCH<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</font>"
+msgstr ""
+"LAGUNA III UCH VIRGINIZER<br><font color='red'>OVAJ PLUGIN ĆE OBRIŠATI VAŠ "
+"UCH<br>IDITE AKO NEMATE POJMA ŠTA OVO ZNAČI</font>"
+
+msgid "Megane/Scenic II UCH Reset"
+msgstr "Resetovanje UCH-a Megane/Scenic II"
+
+msgid ""
+"MEGANE II UCH VIRGINIZER<br><font color='red'>THIS PLUGIN WILL ERASE YOUR "
+"UCH<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</font>"
+msgstr ""
+"MEGANE II UCH VIRGINIZER<br><font color='red'>OVAJ PLUGIN ĆE OBRIŠATI VAŠ "
+"UCH<br>IDITE AKO NEMATE POJMA ŠTA OVO ZNAČI</font>"
+
+msgid "Megane3 AIRBAG Reset"
+msgstr "Resetovanje vazdušnog jastuka Megane3"
+
+msgid ""
+"Megane III<br>AIRBAG VIRGINIZER<br><font color='red'>THIS PLUGIN WILL UNLOCK "
+"AIRBAG CRASH DATA<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</font>"
+msgstr ""
+"Megane III<br>AIRBAG VIRGINIZER<br><font color='red'>OVAJ PLUGIN ĆE "
+"OTKLJUČATI PODATKE O UDARU AIRBAGA<br>IDITE AKO NEMATE POJMA ŠTA OVO ZNAČI</"
+"font>"
+
+#, python-format
+msgid "SDS FA stream: %s"
+msgstr "SDS FA tok: %s"
+
+msgid "ZOE/FLENCE/Megane III/Scenic III EPS Reset"
+msgstr "Resetovanje EPS-a ZOE/FLENCE/Megane III/Scenic III"
+
+msgid ""
+"ZOE/FLENCE/Megane III/Scenic III EPS VIRGINIZER<br><font color='red'>THIS "
+"PLUGIN WILL RESET EPS IMMO DATA<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT "
+"MEANS</font>"
+msgstr ""
+"ZOE/FLENCE/Megane III/Scenic III EPS VIRGINIZER<br><font color='red'>OVAJ "
+"PLUGIN ĆE RESETOVATI EPS IMMO PODATKE<br>IDITE AKO NEMATE POJMA ŠTA OVO "
+"ZNAČI</font>"
+
+msgid "Megane/Scenic III UCH Reset"
+msgstr "Resetovanje UCH-a Megane/Scenic III"
+
+msgid ""
+"MEGANE III UCH VIRGINIZER<br><font color='red'>THIS PLUGIN WILL ERASE YOUR "
+"UCH<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</font>"
+msgstr ""
+"MEGANE III UCH VIRGINIZER<br><font color='red'>OVAJ PLUGIN ĆE OBRIŠATI VAŠ "
+"UCH<br>IDITE AKO NEMATE POJMA ŠTA OVO ZNAČI</font>"
+
+msgid "RSAT4 AIRBAG Reset"
+msgstr "Resetovanje vazdušnog jastuka RSAT4"
+
+msgid ""
+"TWINGO III/ZOE/DOKKER/DUSTER ph2/TRAFIC III/CAPTUR/LODGY ph1/2<br>AIRBAG "
+"VIRGINIZER<br><font color='red'>THIS PLUGIN WILL UNLOCK AIRBAG CRASH "
+"DATA<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</font>"
+msgstr ""
+"TWINGO III/ZOE/DOKKER/DUSTER ph2/TRAFIC III/CAPTUR/LODGY ph1/2<br>AIRBAG "
+"VIRGINIZER<br><font color='red'>OVAJ PLUGIN ĆE OTKLJUČATI PODATKE O UDARU "
+"AIRBAGA<br>IDITE AKO NEMATE POJMA ŠTA OVO ZNAČI</font>"
+
+#, python-format
+msgid "SdSEX stream: %s"
+msgstr "SdSEX tok: %s"
+
+msgid "CRC calculator"
+msgstr "CRC kalkulator"
+
+msgid "VIN"
+msgstr "VIN broj"
+
+msgid "CRC Calculator"
+msgstr "CRC kalkulator"
+
+msgid "CRC CALCULATOR"
+msgstr "CRC KALKULATOR"
+
+msgid "Zoe water pump Reset"
+msgstr "Reset vodene pumpe Zoe"
+
+msgid "EVC Tools"
+msgstr "Alatke za EVC"
+
+msgid "Water pump counters"
+msgstr "Brojači vodene pumpe"
+
+msgid "Name"
+msgstr "Naziv"
+
+msgid "Values"
+msgstr "Vrednosti"
+
+msgid "Action"
+msgstr "Radnja"
+
+msgid "Low Speed"
+msgstr "Niska brzina"
+
+msgid "Middle Speed"
+msgstr "Srednja brzina"
+
+msgid "High Speed"
+msgstr "Visoka brzina"
+
+msgid "V_Timer_DrivWEP_ON"
+msgstr "V_Timer_DrivWEP_ON"
+
+msgid "Reset"
+msgstr "Resetuj"
+
+msgid ""
+"Zoe water pump counters<br><font color='red'>THIS PLUGIN WILL ERASE WATER "
+"PUMP COUNTERS<br>GO AWAY IF YOU HAVE NO IDEA OF WHAT IT MEANS</font>"
+msgstr ""
+"Brojači pumpe Zoe<br><font color='red'>OVAJ PLUGIN ĆE OBRIŠATI BROJAČE PUMPE "
+"VODE<br>IDITE AKO NEMATE POJMA ŠTA OVO ZNAČI</font>"
+
+msgid "Check values"
+msgstr "Proveri vrednosti"
+
+msgid "Waiting action"
+msgstr "Čekanje akcije"
+
+msgid "Reset all counters"
+msgstr "Resetuj sve brojače"
+
+msgid ""
+"<h1>TIPS</h1><ul><li>Insert key CARD</li><li>Put D position</li><li>Press/"
+"Stay START until <b>Remove card</b> message</li><li>Put P position</"
+"li><li>Keep key card inserted</li></ul>"
+msgstr ""
+"<h1>SAVETI</h1><ul><li>Ubacite karticu ključ</li><li>Postavite u D poziciji</"
+"li><li>Pritisnite/Držite START dok se ne pojavi poruka <b>Uklonite karticu</"
+"b></li><li>Postavite u P poziciji</li><li>Držite ključ karticu ubačenom</"
+"li></ul>"
+
+msgid "<font color='green'>Values read</font>"
+msgstr "<font color='green'>Vrednosti pročitane</font>"
+
+msgid "Reading Low speed"
+msgstr "Čitanje niske brzine"
+
+msgid "Reading Middle speed"
+msgstr "Čitanje srednje brzine"
+
+msgid "Reading High speed"
+msgstr "Čitanje visoke brzine"
+
+msgid "<font color='green'>CLEAR V_Timer_DrivWEP_ON EXECUTED</font>"
+msgstr "<font color='green'>CLEAR V_Timer_DrivWEP_ON IZVRŠEN</font>"
+
+msgid "<font color='red'>CLEAR V_Timer_DrivWEP_ON FAILED</font>"
+msgstr "<font color='red'>CLEAR V_Timer_DrivWEP_ON NIJE USPEO</font>"
+
+msgid "<font color='green'>CLEAR Low EXECUTED</font>"
+msgstr "<font color='green'>CLEAR Low IZVRŠEN</font>"
+
+msgid "<font color='red'>CLEAR Low FAILED</font>"
+msgstr "<font color='red'>CLEAR NISKO NIJE USPEO</font>"
+
+msgid "<font color='green'>CLEAR Medium EXECUTED</font>"
+msgstr "<font color='green'>CLEAR Medium IZVRŠEN</font>"
+
+msgid "<font color='red'>CLEAR Medium FAILED</font>"
+msgstr "<font color='red'>CLEAR SREDNJE NIJE USPEO</font>"
+
+msgid "<font color='green'>CLEAR HIGH EXECUTED</font>"
+msgstr "<font color='green'>CLEAR HIGH IZVRŠEN</font>"
+
+msgid "<font color='red'>CLEAR HIGH FAILED</font>"
+msgstr "<font color='red'>CLEAR VISOKO NIJE USPEO</font>"
+
+msgid "Add"
+msgstr "Dodaj"
+
+msgid "Del"
+msgstr "Brisanje"
+
+msgid "Move up"
+msgstr "Pomeri gore"
+
+msgid "Check"
+msgstr "Proveri"
+
+#, python-format
+msgid "Request %s not found"
+msgstr "Zahtev %s nije pronadjen"
+
+#, python-format
+msgid ""
+"<font color=green>Request</font><font color=blue>'%s'</font> has no missing "
+"input values"
+msgstr ""
+"<font color=green>Zahtev</font><font color=blue>'%s'</font> nema nedostajuće "
+"ulazne vrednosti"
+
+#, python-format
+msgid ""
+"<font color=red>Request</font><font color=blue>'%s'</font> has missing inputs"
+msgstr ""
+"<font color=red>Zahtev</font><font color=blue>'%s'</font> ima nedostajuće "
+"ulaze"
+
+#, python-format
+msgid "<font color=orange> - '%s'</font>"
+msgstr "<font color=orange> - '%s'</font>"
+
+msgid "Delay;Request"
+msgstr "Kasnjenje;Zahtev"
+
+msgid "Screen initialization"
+msgstr "Inicijalizacija prikaza"
+
+msgid "Requests to send before screen drawing"
+msgstr "Zahtevi za slanje pre iscrtavanja prikaza"
+
+msgid "Button name;Unique name"
+msgstr "Ime dugmeta;Jedinstveno ime"
+
+msgid "New"
+msgstr "Nov"
+
+msgid "Duplicate selected"
+msgstr "Dupliraj izabrano"
+
+msgid "Remove selected"
+msgstr "Ukloni izabrano"
+
+msgid "Reload"
+msgstr "Ponovo ucitaj"
+
+msgid "Validate changes"
+msgstr "Proveri promene"
+
+msgid "Description"
+msgstr "Opis"
+
+msgid "Data type"
+msgstr "Vrsta podataka"
+
+msgid "Numeric"
+msgstr "Numerički"
+
+msgid "Numeric items"
+msgstr "Brojcane stavke"
+
+msgid "Hex"
+msgstr "Heksadecimalno"
+
+#, python-format
+msgid "Data is used by request %s"
+msgstr "Podaci se koriste u zahtevu %s"
+
+msgid "New data"
+msgstr "Novi podaci"
+
+msgid "Replace me with request description"
+msgstr "Zameni me sa opisom zahteva"
+
+msgid "Data name;Description"
+msgstr "Naziv podataka;Opis"
+
+msgid "Goto data"
+msgstr "Idi na podatke"
+
+msgid "Remove"
+msgstr "Ukloni"
+
+msgid "Add to screen"
+msgstr "Dodaj na prikaz"
+
+msgid "ECU Function address"
+msgstr "Adresa funkcije ECU"
+
+msgid "ECU Protocol"
+msgstr "Protokol ECU-a"
+
+msgid "Tool > Ecu ID (Hex)"
+msgstr "Alat > ECU ID (Hex)"
+
+msgid "Ecu > Tool ID (Hex)"
+msgstr "ECU > ID Alata (Hex)"
+
+msgid "Coding"
+msgstr "Kodiranje"
+
+msgid "ECU Auto identification"
+msgstr "Automatska identifikacija ECU"
+
+msgid "Add new"
+msgstr "Dodaj novo"
+
+msgid "Delete selected"
+msgstr "Obriši izabrano"
+
+msgid "Number of bits"
+msgstr "Broj bitova"
+
+msgid "Signed"
+msgstr "Sa znakom"
+
+msgid "Add item"
+msgstr "Dodaj stavku"
+
+msgid "Del item"
+msgstr "Obriši stavku"
+
+msgid "New item"
+msgstr "Nova stavka"
+
+msgid "Value;Text"
+msgstr "Vrednost;Tekst"
+
+msgid "Number of bit"
+msgstr "Broj bitova"
+
+msgid "Unit"
+msgstr "Jedinica"
+
+msgid "Format"
+msgstr "Format"
+
+msgid "Value = (AX+B) / C"
+msgstr "Vrednost = (AX+B) / C"
+
+msgid "Number of bytes"
+msgstr "Broj bajtova"
+
+msgid "Send request bytes (HEX)"
+msgstr "Posalji zahtev u bajtima (HEX)"
+
+msgid "Receive bytes (HEX)"
+msgstr "Primljeni bajtovi (HEX)"
+
+msgid "Data length"
+msgstr "Duzina podataka"
+
+msgid "Shift byte count"
+msgstr "Broj bajtova pomeraja"
+
+msgid "Data name;Start byte;Bit offset;Bit count;Endianess"
+msgstr "Naziv podataka;Početni bajt;Bit pomeraj;Broj bitova;Redosled bajtova"
+
+msgid "Little"
+msgstr "Little-endian"
+
+msgid "Big"
+msgstr "Big-endian"
+
+msgid "Inherits globals"
+msgstr "Nasleđuje globalne promenljive"
+
+msgid "No SDS"
+msgstr "Bez SDS"
+
+msgid "Plant"
+msgstr "Fabrika"
+
+msgid "After Sale"
+msgstr "Posle prodaje"
+
+msgid "Engineering"
+msgstr "Inženjering"
+
+msgid "Supplier"
+msgstr "Proizvodjac"
+
+msgid "Reload requests"
+msgstr "Zahtev za ponovno ucitavanje"
+
+msgid "Add request"
+msgstr "Dodaj zahtev"
+
+msgid "Send bytes"
+msgstr "Posalji bajtove"
+
+msgid "Receive bytes"
+msgstr "Primi bajtove"
+
+msgid "Request name;Bytes;Manual"
+msgstr "Naziv zahteva;Bajtovi;Ručno"
+
+msgid "No request named"
+msgstr "Nema naziva zahteva"
+
+msgid "Found similar"
+msgstr "Pronađeno slično"
+
+msgid "Cannot find data "
+msgstr "Ne mogu pronaći podatke "
+
+msgid " vs "
+msgstr " protiv "
+
+msgid "Cannot draw input "
+msgstr "Nije moguće prikazati ulaz "
+
+msgid "No Value"
+msgstr "Nema vrednosti"
+
+msgid ""
+"<center>This Software is free, but I need money to buy cables/ECUs and make "
+"this application more reliable</center>"
+msgstr ""
+"<center>Ovaj softver je besplatan, ali trebam mi novac za kupovinu kablova/"
+"ECU-ova i da učinim ovu aplikaciju pouzdanijom</center>"
+
+msgid "Yes I contribute"
+msgstr "Da, doprineću"
+
+msgid "No, I don't"
+msgstr "Ne, neću"
+
+msgid "Thank you for you contribution, if nothing happens, please go to"
+msgstr "Hvala na vašem doprinosu, ako se ništa ne dogodi, molimo idite na"
+
+msgid "ECU Finder"
+msgstr "ECU pronalazač"
+
+msgid "Address :"
+msgstr "Adresa:"
+
+msgid "ID frame :"
+msgstr "Okvir ID-a:"
+
+msgid "Search vehicle"
+msgstr "Pretraga vozila"
+
+msgid "No vehicles available"
+msgstr "Nema dostupnih vozila"
+
+#, python-format
+msgid "%d loaded ECUs in database."
+msgstr "%d učitanih ECU jedinica u bazi podataka."
+
+msgid "No ECU database is installed"
+msgstr "Nije instalirana baza podataka ECU-a"
+
+msgid "Restart DDT4ALL after installing or updating the database."
+msgstr ""
+"Ponovo pokrenite DDT4ALL nakon instaliranja ili ažuriranja baze podataka."
+
+msgid ""
+"Download the ECU database separately and copy the file (`ecu.zip` or the "
+"original DDT2000 XML database (`DDT2000DATA`)) to:\n"
+msgstr ""
+"Preuzmite bazu podataka ECU odvojeno i kopirajte fajl (`ecu.zip` ili "
+"originalnu bazu podataka XML DDT2000 (`DDT2000DATA`)) u:\n"
+
+msgid "DDT4All Documentation"
+msgstr "DDT4All Dokumentacija"
+
+msgid "WebEngine not available."
+msgstr "WebEngine nije dostupan."
+
+msgid ""
+"For full documentation with web browsing capability, install PyQtWebEngine:"
+msgstr ""
+"Za potpunu dokumentaciju sa mogućnošću web pretraživanja, instalirajte "
+"PyQtWebEngine:"
+
+msgid "Visit the online documentation at:"
+msgstr "Posetite online dokumentaciju na:"
+
+msgid "This basic view will still show ECU documentation when available."
+msgstr ""
+"Ovaj osnovni prikaz će i dalje prikazivati ECU dokumentaciju kada je "
+"dostupna."
+
+msgid "Refresh rate (ms):"
+msgstr "Vreme osvezavanja (ms):"
+
+msgid "Can timeout (ms) [0:AUTO] :"
+msgstr "CAN timeout (ms) [0:AUTO] :"
+
+msgid "Documentation"
+msgstr "Dokumentacija"
+
+msgid "Screen"
+msgstr "Prikaz"
+
+msgid "CAN Sniffer"
+msgstr "CAN analizator"
+
+msgid "Requests"
+msgstr "Zahtevi"
+
+msgid "Data"
+msgstr "Podaci"
+
+msgid "Buttons"
+msgstr "Dugmad"
+
+msgid "Ecu parameters"
+msgstr "ECU parametri"
+
+msgid "Screen Window"
+msgstr "Prozor ekrana"
+
+msgid "Screens"
+msgstr "Prikazi"
+
+msgid "Logs Window"
+msgstr "Prozor za dnevnike"
+
+msgid "Ecu Window"
+msgstr "ECU prozor"
+
+msgid "Ecu List Window"
+msgstr "Prozor sa listom ECU"
+
+msgid "ToolBar"
+msgstr "Traka sa alatkama"
+
+msgid "Read DTC"
+msgstr "Citaj DTC"
+
+msgid "Full log"
+msgstr "Pun izvestaj"
+
+msgid "Expert mode (enable writing)"
+msgstr "Ekspertski mod (omogućeno upisivanje)"
+
+msgid "Auto refresh"
+msgstr "Automatsko osvežavanje"
+
+msgid "Refresh (one shot)"
+msgstr "Osvezavanje (jednom)"
+
+msgid "Manual command"
+msgstr "Ručna komanda"
+
+msgid "Manual request"
+msgstr "Ručni zahtev"
+
+msgid "Software flow control"
+msgstr "Softverska kontrola toka"
+
+msgid "Zoom In"
+msgstr "Uvećaj"
+
+msgid "Zoom Out"
+msgstr "Umanji"
+
+msgid "UI Edit"
+msgstr "UI uređivanje"
+
+msgid "File"
+msgstr "Datoteka"
+
+msgid "Open XML"
+msgstr "Otvori XML"
+
+msgid "Save current ECU"
+msgstr "Sacuvaj trenutni ECU"
+
+msgid "Save last record"
+msgstr "Sačuvaj poslednji zapis"
+
+msgid "Save ECU list"
+msgstr "Sacuvaj listu ECU"
+
+msgid "Exit"
+msgstr "Izlaz"
+
+msgid "Tools"
+msgstr "Alati"
+
+msgid "Identify ECU"
+msgstr "Identifikuj ECU"
+
+msgid "Create New ECU"
+msgstr "Kreiraj novi ECU"
+
+msgid "Zip database"
+msgstr "Kompresuj bazu podataka"
+
+msgid "Clear DDT4ALL History"
+msgstr "Obriši istoriju DDT4ALL"
+
+msgid "Reset DDT4ALL Settings"
+msgstr "Resetuj podešavanja DDT4ALL"
+
+msgid "View"
+msgstr "Prikaz"
+
+msgid "CarList Order"
+msgstr "Redosled liste automobila"
+
+msgid "By Project Code"
+msgstr "Po kodu projekta"
+
+msgid "By Car Name"
+msgstr "Po imenu automobila"
+
+msgid "Theme"
+msgstr "Tema"
+
+msgid "Dark Theme"
+msgstr "Tamna tema"
+
+msgid "Light Theme"
+msgstr "Svetla tema"
+
+msgid "Panels"
+msgstr "Paneli"
+
+msgid "New Category"
+msgstr "Nova kategorija"
+
+msgid "New Screen"
+msgstr "Novi prikaz"
+
+msgid "Rename"
+msgstr "Promeni naziv"
+
+msgid "Plugins"
+msgstr "Priključci (dodaci)"
+
+msgid "Cannot load plugin "
+msgstr "Nije moguće učitati plugin "
+
+msgid "Help"
+msgstr "Pomoć"
+
+msgid "Web Wiki"
+msgstr "Veb Viki"
+
+msgid "About Developers"
+msgstr "O programerima"
+
+msgid "Get Git update"
+msgstr "Nabavi Git ažuriranje"
+
+msgid "About"
+msgstr "O programu"
+
+msgid "About DDT4ALL"
+msgstr "O DDT4ALL-u"
+
+msgid " version:"
+msgstr " verzija:"
+
+msgid "Created by:"
+msgstr "Kreirao:"
+
+msgid "History cleared"
+msgstr "Istorija obrisana"
+
+msgid "Last selected vehicle and ECU history has been cleared."
+msgstr "Istorija poslednjeg izabranog vozila i ECU je obrisana."
+
+msgid "Configuration Reset"
+msgstr "Konfiguracija obrisana"
+
+msgid "The configuration has been reset."
+msgstr "Konfiguracija je obrisana."
+
+msgid "Options"
+msgstr "Opcije"
+
+#, python-format
+msgid "Error updating menu bar: %s"
+msgstr "Greška ažuriranja meni trake: %s"
+
+msgid "CAN Line 1 Auto"
+msgstr "CAN linija 1 Auto"
+
+msgid "CAN Line 1@500K"
+msgstr "CAN linija 1@500K"
+
+msgid "CAN Line 1@250K"
+msgstr "CAN linija 1@250K"
+
+msgid "CAN Line 2@500K"
+msgstr "CAN linija 2@500K"
+
+msgid "CAN Line 2@250K"
+msgstr "CAN linija 2@250K"
+
+msgid "CAN Line 2@125K"
+msgstr "CAN linija 2@125K"
+
+msgid "KWP2000"
+msgstr "Protokol KWP2000"
+
+msgid "ISO8"
+msgstr "Protokol ISO8"
+
+msgid "Save database (keep '.zip' extension)"
+msgstr "Sačuvaj bazu podataka (zadrži '.zip' ekstenziju)"
+
+msgid "Zipping XML database... (this can take a few minutes)"
+msgstr "Zipovanje XML baze podataka... (ovo može potrajati nekoliko minuta)"
+
+msgid "Zip job finished"
+msgstr "Završeno zipovanje baze podataka"
+
+msgid "No database found"
+msgstr "Baza podataka nije pronađena"
+
+msgid "Check documentation"
+msgstr "Proverite dokumentaciju"
+
+msgid "Enter new name"
+msgstr "Unesi novo ime za kategoriju ili ekran"
+
+msgid "Enter category name"
+msgstr "Unesi ime nove kategorije"
+
+msgid "Please select a category before creating new screen"
+msgstr "Molimo odaberite kategoriju pre nego što napravite novi ekran"
+
+msgid "Enter screen name"
+msgstr "Unesite ime prikaza"
+
+msgid "Scanning CAN"
+msgstr "Skeniranje CAN"
+
+msgid "Scanning KWP"
+msgstr "Skeniranje KWP"
+
+msgid "Scanning DoIP"
+msgstr "Skeniranje DoIP"
+
+msgid "Scan options"
+msgstr "Opcije skeniranja"
+
+msgid "EDITION MODE"
+msgstr "MOD IZMENA"
+
+msgid "CONNECTED"
+msgstr "POVEZAN"
+
+msgid "DISCONNECTED"
+msgstr "PREKINUTA VEZA"
+
+msgid "Save vehicule (keep '.ecu' extension)"
+msgstr "Sačuvaj vozilo (zadrži '.ecu' ekstenziju)"
+
+msgid "Save ECU (keep '.json' extension)"
+msgstr "Sačuvaj ECU (zadrži '.json' ekstenziju)"
+
+msgid "Save record (keep '.txt' extension)"
+msgstr "Sačuvaj zapis (zadrži '.txt' ekstenziju)"
+
+msgid "Recorded "
+msgstr "Snimljeno "
+
+msgid " entries"
+msgstr " unosa"
+
+#, python-format
+msgid "Invalid DoIP ECU address: %s"
+msgstr "Nevažeća DoIP ECU adresa: %s"
+
+msgid "No"
+msgstr "Ne"
+
+msgid "ELM port selection"
+msgstr "Izbor ELM porta"
+
+msgid "USB"
+msgstr "USB veza"
+
+msgid "WiFi"
+msgstr "Wi-Fi"
+
+msgid "Bluetooth"
+msgstr "Bluetooth veza"
+
+msgid "OBDLINK SX/EX"
+msgstr "Adapter OBDLINK SX/EX"
+
+msgid "ELS27/ELS27 V5 - May appear as FTDI/CH340/CP210x device"
+msgstr "ELS27/ELS27 V5 - Može se pojaviti kao FTDI/CH340/CP210x uređaj"
+
+msgid "Vlinker FS/MC"
+msgstr "Adapter Vlinker FS/MC"
+
+msgid "DERLEK USB-DIAG2/3"
+msgstr "Adapter DERLEK USB-DIAG2/3"
+
+msgid "VGate (High-Speed)"
+msgstr "VGate (Visoka brzina)"
+
+msgid "DoIP (Diagnostics over IP)"
+msgstr "DoIP (Dijagnostika preko IP)"
+
+msgid "Interface language"
+msgstr "Jezik interfejsa"
+
+msgid "Port speed"
+msgstr "Brzina porta"
+
+msgid "Connected mode"
+msgstr "Povezani režim"
+
+msgid "Edition mode"
+msgstr "Mod izmena"
+
+msgid "ELM benchmark"
+msgstr "ELM rezultati testa"
+
+msgid "WiFi port : "
+msgstr "WiFi port: "
+
+msgid "I acknowledge that improper use may cause damage to my vehicle."
+msgstr "Upozoren sam da mogu oštetiti moje vozilo ako pogrešno koristim"
+
+msgid "Enable CAN2"
+msgstr "Omogući CAN2"
+
+msgid "Dark style"
+msgstr "Tamni stil"
+
+msgid "WiFi Socket-TimeOut"
+msgstr "Timeout WiFi soketa"
+
+msgid "Enable DoIP Scan"
+msgstr "Omogući DoIP skeniranje"
+
+msgid "DoIP (Diagnostics over IP) Configuration (Experimental)"
+msgstr "DoIP (Dijagnostika preko IP) Konfiguracija (Eksperimentalno)"
+
+msgid "Device Preset : "
+msgstr "Podešavanje uređaja : "
+
+msgid "Custom"
+msgstr "Prilagođeno"
+
+msgid "Bosch MTS"
+msgstr "Uređaj Bosch MTS"
+
+msgid "VXDIAG VCX Nano"
+msgstr "Uređaj VXDIAG VCX Nano"
+
+msgid "VAG ODIS"
+msgstr "Interfejs VAG ODIS"
+
+msgid "JLR DoIP VCI"
+msgstr "Interfejs JLR DoIP VCI"
+
+msgid "Generic DoIP"
+msgstr "Generički DoIP"
+
+msgid "DoIP Target IP : "
+msgstr "DoIP ciljna IP : "
+
+msgid "DoIP Port : "
+msgstr "DoIP port: "
+
+msgid "DoIP Timeout (seconds) : "
+msgstr "DoIP timeout (sekunde) : "
+
+msgid "Enable Vehicle Announcement Discovery"
+msgstr "Omogući otkrivanje najave vozila"
+
+msgid "Auto-reconnect on connection loss"
+msgstr "Automatsko ponovno povezivanje pri gubitku veze"
+
+msgid "Change UART speed"
+msgstr "Promena UART brzine"
+
+#, python-format
+msgid "DoIP device added to list: %(ip)s:%(port)s"
+msgstr "DoIP uređaj dodat na listu: %(ip)s:%(port)s"
+
+#, python-format
+msgid "Error adding DoIP device to list: %s"
+msgstr "Greška pri dodavanju DoIP uređaja na listu: %s"
+
+msgid "DoIP device removed from list"
+msgstr "DoIP uređaj uklonjen sa liste"
+
+#, python-format
+msgid "Error removing DoIP device from list: %s"
+msgstr "Greška pri uklanjanju DoIP uređaja sa liste: %s"
+
+msgid "Checking..."
+msgstr "Proveravanje..."
+
+msgid "Please enter WiFi adapter IP address"
+msgstr "Molim unesite IP adresu WiFi adaptera"
+
+msgid "Invalid WiFi format. Use IP:PORT (e.g., 192.168.0.10:35000)"
+msgstr "Neispravan WiFi format. Koristite IP:PORT (npr. 192.168.0.10:35000)"
+
+msgid "Please select a serial port"
+msgstr "Molim izaberite serijski port"
+
+msgid "Selected port is no longer available"
+msgstr "Izabrani port više nije dostupan"
+
+msgid "Attempting connection..."
+msgstr "Pokušaj povezivanja..."
+
+msgid "Port: "
+msgstr "Komunikacioni port: "
+
+msgid "Speed: "
+msgstr "Brzina: "
+
+msgid "Connection test failed"
+msgstr "Test veze nije uspeo"
+
+msgid "Troubleshooting suggestions:"
+msgstr "Predlozi za rešavanje problema:"
+
+msgid "1. Check device is properly connected"
+msgstr "1. Proverite da je uređaj pravilno povezan"
+
+msgid "2. Try different baud rates"
+msgstr "2. Pokušajte različite baud brzine"
+
+msgid "3. Ensure device drivers are installed"
+msgstr "3. Osigurajte da su drajveri uređaja instalirani"
+
+msgid "4. Check port permissions (Linux/macOS)"
+msgstr "4. Proverite dozvole za port (Linux/macOS)"
+
+msgid "Connection test successful!"
+msgstr "Test veze je uspeo!"
+
+msgid "Error during connection test: "
+msgstr "Greška tokom testa veze: "
+
+msgid "Reset and Recheck"
+msgstr "Resetuj i proveri ponovo"
+
+#, python-format
+msgid "Error updating port list: %s"
+msgstr "Greška ažuriranja liste portova: %s"
+
+msgid "VGate iCar Pro selected - Enhanced STN/STPX support enabled"
+msgstr "VGate iCar Pro izabran - Poboljšana STN/STPX podrška omogućena"
+
+msgid "Long command support and high-speed communication available"
+msgstr "Podrška za duge komande i komunikacija visoke brzine dostupna"
+
+#, python-format
+msgid "DoIP preset applied: %(name)s -> %(ip)s"
+msgstr "Primenjena DoIP postavka: %(name)s -> %(ip)s"
+
+#, python-format
+msgid "DoIP preset applied: %(name)s (IP unchanged)"
+msgstr "Primenjena DoIP postavka: %(name)s (IP nepromenjen)"
+
+#, python-format
+msgid "Error preparing DoIP update: %s"
+msgstr "Greška pri pripremi DoIP ažuriranja: %s"
+
+#, python-format
+msgid "Applied %s preset:"
+msgstr "Primenjena %s postavka:"
+
+#, python-format
+msgid "  IP: %s"
+msgstr "  IP adresa: %s"
+
+#, python-format
+msgid "  Port: %s"
+msgstr "  Komunikacioni port: %s"
+
+#, python-format
+msgid "  Timeout: %ss"
+msgstr "  Istek vremena: %ss"
+
+msgid "  Configuration saved and device list reloaded"
+msgstr "  Konfiguracija sačuvana i lista uređaja ponovo učitana"
+
+#, python-format
+msgid "Error in force DoIP update: %s"
+msgstr "Greška u forsiranom DoIP ažuriranju: %s"
+
+#, python-format
+msgid "Error in delayed DoIP update: %s"
+msgstr "Greška u odloženom DoIP ažuriranju: %s"
+
+#, python-format
+msgid "DoIP device updated: %(ip)s:%(port)s"
+msgstr "DoIP uređaj ažuriran: %(ip)s:%(port)s"
+
+msgid "DoIP device removed from list (scan disabled)"
+msgstr "DoIP uređaj uklonjen sa liste (skeniranje onemogućeno)"
+
+#, python-format
+msgid "Error in targeted DoIP update: %s"
+msgstr "Greška u ciljanom DoIP ažuriranju: %s"
+
+msgid "N/A"
+msgstr "N/D"
+
+msgid "DoIP (Diagnostics over IP) selected"
+msgstr "DoIP (Dijagnostika preko IP) izabran"
+
+msgid "Ethernet-based diagnostic communication"
+msgstr "Dijagnostična komunikacija bazirana na Ethernetu"
+
+msgid "Select an ISO 13400 DoIP entity by its IP address"
+msgstr "Izaberite ISO 13400 DoIP entitet po njegovoj IP adresi"
+
+msgid "You must check the recommandations"
+msgstr "Morate proveriti preporuke"
+
+msgid "Please select a communication port"
+msgstr "Molim izaberite port za komunikaciju"
+
+msgid "ECU Command"
+msgstr "ECU komanda"
+
+msgid "Start diagnostic session"
+msgstr "Pokreni dijagnostičku sesiju"
+
+msgid "Request"
+msgstr "Zahtev"
+
+msgid "Data to send"
+msgstr "Podaci za slanje"
+
+msgid "Computed ISOTP Frame"
+msgstr "Izračunat ISOTP okvir"
+
+msgid "Compute frame"
+msgstr "Izračunaj okvir"
+
+msgid "Data received"
+msgstr "Podaci primljeni"
+
+msgid "Execute"
+msgstr "Izvrši"
+
+msgid ""
+"<center>This feature is experimental</center>\n"
+"<center>Use it at your own risk</center>\n"
+"<center>and if you know exactely what you do</center>\n"
+msgstr ""
+"<center>Ova funkcija je eksperimentalna</center>\n"
+"<center>Koristite na sopstveni rizik</center>\n"
+"<center>i ako tačno znate šta radite</center>\n"
+
+msgid "Err, cannot rename "
+msgstr "Greška, ne može se preimenovati "
+
+msgid "To be able to edit your screen, first export it in JSON format"
+msgstr "Da bi mogli da izmenite svoj prikaz, isti prvo izvezite u JSON formatu"
+
+msgid "Enter label name"
+msgstr "Unesite ime oznake"
+
+msgid "Add button"
+msgstr "Dodaj dugme"
+
+msgid "Add label"
+msgstr "Dodaj oznaku"
+
+msgid "Rename label"
+msgstr "Preimenuj oznaku"
+
+msgid "Change color"
+msgstr "Promeni boju"
+
+msgid "Remove element"
+msgstr "Ukloni element"
+
+msgid "Diagnotic session"
+msgstr "Dijagnostička sesija"
+
+msgid "Input"
+msgstr "Ulazni"
+
+msgid "Output"
+msgstr "Izlazni"
+
+msgid "Protocol not supported"
+msgstr "Protokol nije podržan"
+
+msgid "Protocol not supported: "
+msgstr "Protokol nije podržan: "
+
+msgid "XML file not found : "
+msgstr "XML fajl nije pronađen: "
+
+msgid "Invalid DDT file"
+msgstr "Pogresan DDT fajl"
+
+msgid "Connection to ELM lost, trying to reconnect..."
+msgstr "Veza sa ELM izgubljena, pokušaj ponovnog povezivanja..."
+
+msgid "Cannot reconnect..."
+msgstr "Ne može se ponovo povezati..."
+
+msgid "Switching to session mode"
+msgstr "Prebacivanje u mod sesije"
+
+msgid "Sending ELM request :"
+msgstr "Slanje ELM zahteva:"
+
+msgid "Blocked ELM request :"
+msgstr "Blokiran ELM zahtev:"
+
+msgid "Sending ELM request:"
+msgstr "Slanje ELM zahteva:"
+
+msgid "Sending simulated ELM request :"
+msgstr "Slanje simuliranog ELM zahteva:"
+
+msgid "Bad ELM response :"
+msgstr "Loš ELM odgovor :"
+
+msgid "ELM response : "
+msgstr "ELM odgovor: "
+
+msgid "Button request not found : "
+msgstr "Zahtev dugmeta nije pronađen: "
+
+msgid "Sending request :"
+msgstr "Slanje zahteva:"
+
+msgid "Unknown request "
+msgstr "Nepoznat zahtev "
+
+msgid "Command aborted "
+msgstr "Komanda prekinuta "
+
+msgid "Value error of this stuff need a bypass gateway maybe."
+msgstr "Greška vrednosti: možda je potreban bypass gateway."
+
+msgid "Request aborted (look at red paramters entries): "
+msgstr "Zahtev prekinut (pogledajte parametre označene crvenom bojom): "
+
+msgid "Delay"
+msgstr "Kašnjenje"
+
+msgid "For your safety"
+msgstr "Za vašu bezbednost"
+
+msgid ""
+"<center>BLOCKED COMMAND</center>\n"
+"Activate expert mode to unlock"
+msgstr ""
+"<center>BLOKIRANA NAREDBA</center>\n"
+"Aktivirajte ekspertni režim za otključavanje"
+
+msgid "Writing parameter"
+msgstr "ECU parametri"
+
+msgid "Blocked writing parameter"
+msgstr "Blokiran parametar pisanja"
+
+msgid "Invalid"
+msgstr "Nevažeći"
+
+msgid "ECU uses SDS "
+msgstr "ECU koristi SDS "
+
+msgid "Cannot call request "
+msgstr "Nije moguće pozvati zahtev "
+
+msgid "Update time"
+msgstr "Vreme ažuriranja"
+
+msgid "Clearing DTC information"
+msgstr "Brisanje DTC informacija"
+
+msgid "No ClearDTC request for that ECU, will send default 14FF00"
+msgstr "Nema zahteva ClearDTC za taj ECU, poslaće uobičajeni 14FF00"
+
+msgid "<center>You are about to clear diagnostic troubles codes</center>"
+msgstr "<center>Ovim brišete dijagnostičke kodove grešaka</center>"
+
+msgid "<center>Ae you sure this is what you want.</center>"
+msgstr "<center>Da li ste sigurni da to želite.</center>"
+
+msgid "Clear DTC failed"
+msgstr "Brisanje DTC neuspelo"
+
+msgid "Clear DTC successfully done"
+msgstr "Brisanje DTC uspešno završeno"
+
+msgid "No ReadDTC request for that ECU"
+msgstr "Nema zahteva ReadDTC za taj ECU"
+
+msgid "Invalid response for ReadDTC command"
+msgstr "Pogrešan odgovor na komandu ReadDTC"
+
+msgid "Read DTC returned an error"
+msgstr "Čitanje DTC vratilo grešku"
+
+msgid "No DTC"
+msgstr "Nema DTC"
+
+msgid "Invalid DTC response: "
+msgstr "Neispravan DTC odgovor: "
+
+msgid "DTC parsing error - response: "
+msgstr "Greška analize DTC - odgovor: "
+
+msgid "Diagnostic Trouble Codes"
+msgstr "Dijagnostički kodovi grešaka"
+
+msgid "Clear ALL DTC"
+msgstr "Obrisi SVE DTC"
+
+msgid "ECU trouble codes"
+msgstr "ECU kodovi grešaka"
+
+msgid "Parsing screen "
+msgstr "Analiza ekrana "
+
+msgid "found request in input "
+msgstr "zahtev pronađen na ulazu "
+
+msgid "found in display "
+msgstr "pronađeno u prikazu "
+
+msgid "found in button "
+msgstr "pronađeno u dugmetu "
+
+msgid "found in presend "
+msgstr "pronađeno u presend-u "
+
+msgid "found data in input "
+msgstr "podaci pronađeni u ulazu "
+
+msgid "found data in display "
+msgstr "podaci pronađeni u prikazu "
+
+msgid "Waiting..."
+msgstr "Čekanje..."
+
+msgid "Frame length error: "
+msgstr "Greška dužine okvira: "
+
+msgid "Frame hex error: "
+msgstr "Hex greška okvira: "

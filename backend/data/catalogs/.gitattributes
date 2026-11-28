@@ -1,0 +1,4 @@
+# Preserve exact bytes of versioned data and license notices on all OSes.
+*.dbc -text
+*.json -text
+*.txt -text

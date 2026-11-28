@@ -8,6 +8,7 @@
 ## 1. Princípios e limites
 
 - Manter Rust, Tauri 2, SQLite, suporte Windows/macOS/Linux, VIN offline, PIDs personalizados, modo demo e licença GPL-3.0. Preservar autoria e histórico do upstream; cumprir licenças de dependências e dados distribuídos.
+- Todas as novas funcionalidades de diagnóstico, comunicação, importação, simulador, CLI e extensões serão implementadas nativamente em Rust. Não introduzir Python, PyQt, pyserial, pyusb, polib, interpretadores, bridges, subprocessos ou dependências importadas do projeto de referência. Reutilizar crates existentes ou avaliar individualmente novas crates Rust estritamente necessárias; não copiar a árvore de dependências externa. Manter a UI Tauri/HTML/CSS/JS e SQLite existentes. As ferramentas de CI já existentes não são dependências do produto; a sua eventual migração é uma tarefa separada. Fixtures XML/JSON são dados, nunca código executável.
 - Melhorar incrementalmente, sem reescrita total. TypeScript/Vite e React são propostas a validar por decisão arquitetural, não pré-requisitos para corrigir o motor.
 - Offline por defeito; sem conta, telemetria obrigatória, IA obrigatória ou subscrição. Dados pertencem ao utilizador. Sem ativação de serviços pagos sem autorização explícita.
 - Separar capacidades OBD genéricas de funções OEM/UDS. Disponibilidade depende do veículo, ECU, protocolo, adaptador e plataforma. Nunca apresentar um PID/ECU como suportado sem evidência.
@@ -121,6 +122,8 @@ Todos abertos. **C** = confirmado por inspeção do código; **R** = risco a rep
 
 ## 5. Arquitetura-alvo (incremental)
 
+Referência técnica complementar: [arquitetura, adaptadores, dados, segurança e testes](references/DDT4ALL.md). Implementação nativa Rust, sem copiar bases proprietárias. F14–F21 complementam F01–F13; não substituem os gates existentes.
+
 ```text
 Desktop Tauri 2 (UI tipada, i18n, gráficos)
   -> API interna tipada (comandos/respostas/eventos com session_id)
@@ -200,6 +203,7 @@ Dependências: nenhuma. Erros 008,011–013,017,026,029.
 - [ ] F07.02 Migrar JS incrementalmente para TypeScript e Vite; decidir React ou alternativa por ADR, sem reescrever tudo. IPC tipado e testes de contrato.
 - [ ] F07.03 Layout responsivo desktop, temas claro/escuro, teclado, foco visível, labels e contrastes; reduzir largura mínima atual; sem cor como único indicador de estado.
 - [ ] F07.04 i18n PT-PT e inglês primeiro, unidades métricas/imperiais por categoria, formatos de data/número locais; outras traduções comunitárias.
+  - Recursos de referência importados: 15 catálogos PO e um modelo POT inglês, com hashes e licença preservados. Adaptar apenas mensagens aplicáveis ao OBDium para chaves estáveis e recursos JSON UTF-8 próprios; PT-PT/EN primeiro e restantes idiomas progressivamente. Rever variantes regionais, plurais, placeholders, unidades, acessibilidade e mensagens de segurança. Não introduzir Python, gettext/Polib como dependências, nem executar expressões de plural ou HTML importados. Fallback EN, validação de chaves e placeholders e testes Rust de recursos; interface Tauri consome traduções próprias. Importação de catálogos não encerra F07.04.
 - [ ] F07.05 Dashboard editável: cards, indicadores digitais/analógicos, seleção de PID por ECU, perfis guardados, full screen; distinguir qualidade e dados desatualizados.
 - [ ] F07.06 Testes E2E em simulador: ligar, navegar, desconectar, DTC/readiness/exportação, acessibilidade e screenshots.
 **Aceitação:** fluxos críticos funcionam sem rato, sem perda de funcionalidades existentes, 1024x768 alvo a validar, dados simulados claramente rotulados; revisão visual e testes E2E.
@@ -254,6 +258,56 @@ Dependências: nenhuma. Erros 008,011–013,017,026,029.
 - [ ] F13.03 Validação física, requisitos de lojas, assinatura e distribuição; não contratar contas pagas nem publicar automaticamente sem aprovação.
 **Aceitação:** apps testadas em dispositivos reais e transportes suportados, limitações explícitas. Não bloquear objetivo de paridade desktop por mobile.
 
+### F14 — Identificação e descoberta avançada de ECUs (P2; F03/F06/F10)
+- [ ] F14.01 Modelo de endereços CAN/K-line/DoIP e identidade ECU com fabricante, hardware, software e versão de diagnóstico; evidência e qualidade por campo.
+- [ ] F14.02 Scanner read-only guiado pelo perfil do veículo, cancelável e limitado; distinguir identificação exata, ambígua, desconhecida, ausência de resposta e não suportada.
+- [ ] F14.03 UI de módulos com identidade, parâmetros e DTC por ECU, sem inferir módulos não testados; preservar distinção OBD genérico/OEM.
+**Aceitação:** testes sintéticos de respostas fragmentadas, conflito de identidades, timeout e cancelamento; evidência física antes de anunciar cada modelo.
+
+### F15 — Importação de definições DDT/XML/JSON/ZIP (P2; F10.01/F14.01)
+- [ ] F15.01 ADR e esquema versionado do perfil ECU; campos byte/bit, endian, signed, escala, enum, unidade, identidade e proveniência; motor de leitura com limites verificáveis.
+- [ ] F15.02 Importador local com parsing seguro (sem DTD/entidades externas), limites de arquivo, tamanho/profundidade/contagem, prevenção de traversal e duplicados; rejeitar escrita, macros e código.
+- [ ] F15.03 Pré-visualização e relatório de campos não suportados, licença explícita, hash, staging transacional e rollback; exportação em formato próprio.
+- [ ] F15.04 Editor de definições de leitura e fixtures sintéticas com casos positivos/negativos; não redistribuir bases OEM sem autorização.
+**Aceitação:** importação determinística, falhas sem alteração da base ativa, nenhum comando importado contorna política Rust; testes adversariais e regressão.
+
+### F16 — Monitor CAN passivo (P2; F03/F06/F08)
+- [ ] F16.01 Contrato CaptureFrame com timestamp, interface, ID 11/29 bits, bytes e qualidade; captura passiva só com capacidade comprovada.
+- [ ] F16.02 Worker cancelável, filas limitadas, métricas de perda e backpressure; UI com filtros, pesquisa, diferenças de bytes e estatísticas.
+- [ ] F16.03 Exportação e replay exclusivamente offline, anonimização, quotas e testes de saturação; sem injeção de frames no veículo.
+**Aceitação:** teste de carga, desconexão e perdas explícitas, nenhuma transmissão em modo passivo; validar adaptador físico.
+
+### F17 — DoIP nativo Rust (P2; F03/F06/F14)
+- [ ] F17.01 ADR ISO 13400, transporte separado de ELM e J2534, gateway/interface escolhidos explicitamente e descoberta limitada.
+- [ ] F17.02 Framing TCP, validação de cabeçalho/versão/comprimento, fragmentação, deadline, routing activation e alive check; erros tipados e cancelamento.
+- [ ] F17.03 Identificação e serviços de leitura UDS por endereço lógico autorizado; integrar gestor de sessão, scanner e auditoria sem bypass.
+- [ ] F17.04 Peers simulados, payloads inválidos, mensagens parciais, rejeição de routing, desconexão; ensaios físicos opt-in.
+**Aceitação:** testes negativos e integração determinística; hardware/veículo ainda não testados = experimental, não suporte confirmado.
+
+### F18 — Perfis por fabricante (P2; F10/F14/F15)
+- [ ] F18.01 Piloto Renault/Dacia com dados legalmente obtidos e fixtures anonimizadas; identificação e leitura verificadas por ECU/versão.
+- [ ] F18.02 Expandir VAG, Stellantis, BMW/MINI, Mercedes-Benz, Ford, Toyota/Lexus, Hyundai/Kia, Nissan, Volvo e restantes conforme evidências, não por contagem.
+- [ ] F18.03 Matriz pública por modelo/ano/motor/ECU/firmware/adaptador com nível de evidência e limitações; desconhecido continua desconhecido.
+**Aceitação:** cada perfil tem origem, licença, versão, regressão e evidência; não anunciar cobertura de marca inteira.
+
+### F19 — CAN FD, USB-CAN e J2534 (P2 investigação; F03/F06/F16)
+- [ ] F19.01 ADR por tecnologia e plataforma: capacidades de hardware, drivers, licenças, dependências e limitações.
+- [ ] F19.02 CAN FD e ISO-TP aplicável em módulo separado; fixtures e simulação antes de integração; não forçar frame clássico para FD.
+- [ ] F19.03 Interface J2534 experimental com isolamento, driver legítimo, read-only inicial e falhas tipadas; separar DoIP e USB-CAN.
+**Aceitação:** testes mock e validação física por combinação driver/OS/dispositivo, sem afirmar suporte universal.
+
+### F20 — Biblioteca comunitária de definições (P2; F10.02/F15/F18)
+- [ ] F20.01 Catálogo local de packs versionados, hash e proveniência, licença por pack, compatibilidade e validação de schema.
+- [ ] F20.02 Importação, revisão, ativação explícita, atualização opt-in e rollback offline; nenhum código arbitrário ou acesso privilegiado.
+- [ ] F20.03 Processo de contribuição com fixtures, revisão e remoção de dados não autorizados; partilha sem VIN ou identificadores pessoais.
+**Aceitação:** packs inválidos/não autorizados recusados, versões reproduzíveis e nenhuma dependência obrigatória de cloud.
+
+### F21 — Validação física e regressões avançadas (P2 transversal; F02/F12.04 e fases relevantes)
+- [ ] F21.01 Bancada simulada e HIL opt-in: ELM/STN, legados, CAN clássico, BLE/SPP/TCP, USB-CAN/DoIP e novas interfaces quando disponíveis.
+- [ ] F21.02 Matriz de evidência com SHA, firmware, sistema operativo, veículo anonimizado, esperado/observado e limitações; resultados de mocks separados de físicos.
+- [ ] F21.03 Procedimentos ativos apenas no escopo F11, individualmente autorizados, precondições conhecidas, teste físico e revisão independente; nenhuma operação em circulação.
+**Aceitação:** CI e bancada com resultados rastreáveis; ausência de hardware mantém validação BLOCKED; não relaxar gates.
+
 ## 7. Entregas e gates
 
 | Marco | Escopo | Condição de aprovação |
@@ -264,6 +318,9 @@ Dependências: nenhuma. Erros 008,011–013,017,026,029.
 | M3 modo oficina | F09 | Histórico, PDF, backup, sessões e privacidade |
 | M4 extensões | F10/F11/F12 | Perfis OEM e operações ativas aprovados individualmente; releases verificadas |
 | M5 mobile opcional | F13 | Compatibilidade por plataforma demonstrada |
+| M6 diagnóstico OEM declarativo | F14/F15/F18/F20 | Perfis lícitos, leitura por ECU e validação de dados |
+| M7 comunicações avançadas | F16/F17/F19 | Captura passiva, DoIP e interfaces com evidência |
+| M8 validação avançada | F21 | Matriz HIL rastreável; operações F11 aprovadas individualmente |
 
 Paridade Premium integral só pode ser declarada quando todas as linhas de referência aplicáveis estiverem implementadas, incluindo Mode 08 com segurança, ou quando as exclusões forem declaradas. Não confundir contagem de funcionalidades com equivalência técnica. Sem prazos ou percentagens inventados.
 
@@ -311,3 +368,62 @@ A auditoria foi estática, sobre árvore do repositório, ficheiros selecionados
 - PR #3 integrada: main `d12f46336fbfb782fb78be873c77880f4bb123b6`, CI pré-merge [45890495779](https://github.com/croquete1/obdium/actions/runs/45890495779), preview 45890495686 e House Rules 45890495638 aprovados. CI pós-merge 45892953641 pendente à data deste registo.
 - PR #2: a primeira atualização de base (`47cd042`) aparentava não ter conflitos, mas a comparação com main revelou remoção dos workflows e reversões Rust da PR #3. Corrigida por construção a partir da árvore exata da main, preservando apenas os cinco caminhos próprios da PR #2, incluindo a remoção do lockfile de raiz obsoleto. Validar novamente o diff final e todos os workflows; não considerar mergeable=true prova de preservação de alterações.
 - Candidato integrado #9 `8365da146e0f389a9ad851cc0a4d7e3fede0af0f`: CI [45889596251](https://github.com/croquete1/obdium/actions/runs/45889596251), preview 45889596216 e House Rules 45889596213 aprovados. 68+3 Rust, 40 Node, 9 Python = 120 testes distintos. Validação conjunta, não merge. Ensaios físicos e WebView ainda pendentes.
+
+### Programa de diagnóstico avançado — 26/11/2026
+
+- Baseline main `314fa378b4de35cd9c44a6bc2df2aab9dddefa11`; fontes e revisões registadas na documentação técnica. Consulta de árvore, README e módulos selecionados, não auditoria integral nem validação física. F14–F21 TODO. Nenhuma implementação marcada concluída.
+- F03/F06: ampliar perfis de adaptador e negociação, incluindo diferenças entre baud do host e bitrate do veículo; reconciliar com #11/#12 antes de alterar o motor. F07/F08: editor de painéis e análise de captura; F10/F12: definições, CLI e plugins declarativos. Detalhes e agrupamento em [referência técnica](references/DDT4ALL.md).
+- Ordem: fechar regressões/integrações #4–#12 e contratos F03 antes de abrir novas frentes do motor; máximo três frentes independentes, serializar alterações partilhadas. Roadmap em PR própria, reconciliar mudanças da #11 sem perder os nove protocolos. Sem importar bases OEM, macros executáveis ou funções proibidas em F11/AGENTS.md.
+
+- Decisão do mantenedor: integração exclusivamente nativa Rust; removidos os sete módulos Python de referência da árvore proposta. Mantidos apenas os dados sintéticos, licença e documentação de proveniência. Nenhuma dependência Python ou do projeto de referência será introduzida no build, runtime, testes ou distribuição das novas funcionalidades. F14–F21 continuam TODO.
+
+### Auditoria preventiva de diagnóstico avançado — 26/11/2026
+
+- [18 critérios preventivos ADV-01–ADV-18](references/ADVANCED_DIAGNOSTICS_AUDIT.md) complementam F02/F03/F06–F21, com fontes, prioridades e regressões. Destacam-se inicialização K-line, estado pós-reset, baud vs bitrate, little-endian, cache por sessão/ECU, flow control, identificação ambígua, erro de layout/status DoIP e política de operações. Todos TODO; evidência estática e relatos externos não confirmam defeitos no OBDium. Não duplicar PRs #4–#12; implementação e testes Rust, sem hardware executado nesta auditoria.
+
+### Auditoria complementar de ecossistema automóvel — 26/11/2026
+
+- [15 critérios CROSS-01–CROSS-15](references/AUTOMOTIVE_ECOSYSTEM_AUDIT.md) complementam F02/F03/F05/F06/F08/F10/F14–F21 e ADV-01–18. Incluem DBC de leitura passiva, qualidade e validade de sinais, interoperabilidade de capturas, timing UDS P2/P2*, DIDs múltiplos, DoIP/TLS, SocketCAN e CAN FD. Seis repositórios com fontes fixadas, PyRen identificado no GitLab (auditoria profunda pendente). Sem novas dependências ou código importado; todos TODO. Não duplicar alterações do motor em curso.
+
+### Consolidação inicial de dados — 26/11/2026
+
+- F10/F15/F16/F20 **REVIEW (dados de referência apenas)**: [catálogo consolidado](../backend/data/catalogs/README.md), manifest e licenças. 19 DBC autónomos selecionados, uma fixture DBC, 198 registos de leitura OBD2 e 65 grupos NRC UDS. Hashes dos DBC comparados com a origem, chaves OBD2 únicas; catálogo não ligado ao motor. Bases SQLite/VIN/requests.json intactas; restante cobertura, dados OEM, licenças específicas, descodificadores e validação Rust pendentes. Sem dependências novas, CI/hardware não executados. Não marcar fases DONE.
+
+- Expansão do catálogo: 58/58 DBC autónomos da revisão fixada, todos com Git blob SHA idêntico; 2066 grupos DTC de referência normalizados, sem substituir SQLite. Fragmentos de geradores excluídos. Validação Rust de estrutura e invariantes proposta nesta PR; não é descodificador DBC completo nem integração de produção. Direitos de dados específicos e validação por veículo pendentes.
+
+- F10/F15/F16 — **REVIEW (isolated offline consumer)**: native Rust reference lookup with bounded typed JSON loading, passive DBC bit extraction (Intel/Motorola, signed, finite scaling), offline CLI example and four consumer tests. No transport dispatch, no shared lib.rs changes while protocol PRs are active; UI, production SQLite reconciliation, complete DBC parser, DID/XML/ZIP and translation activation remain pending. CI for previous HEAD pending; new SHA requires fresh validation.
+
+- F07.04 **REVIEW (preview only)**: 16 draft JSON locales × 12 keys (192 messages), PT-PT terminology adapted, explicit EN fallback through the offline Rust example and a consumer test. No fuzzy strings, Python, gettext or additional dependencies. Full UI mapping, plural/placeholder support, independent linguistic review, CI and merge remain pending.
+
+### Regressões CI — 26/11/2026
+
+- PR #12: CI 45906963093 falhou apenas Rustfmt Linux; aplicado o diff oficial em 56d5e11b94e263be7d04d321b8d38437aef127cf. Novo SHA requer validação.
+- PR #10: CI 45907001796 falhou antes da compilação Linux, HTTP 403 no repositório Microsoft apt; rerun isolado do job 140206018111 solicitado, sem alterar confiança/assinaturas apt. Não assumir defeito de código nem sucesso antes do rerun.
+- PR #13: artefactos 15160027155 (rustfmt) e 15159724462 (clippy) do CI 45910257800 confirmam formatação e match_like_matches_macro; corrigidos sem suprimir lint. Falha Windows de testes reportada, logs ainda indisponíveis (404); hipótese de conversão CRLF prevenida com atributos Git restritos ao catálogo versionado para preservar bytes, sem relaxar a comparação do manifesto. Acrescentados erros com caminhos, validação de duplicações no consumidor e chaves excessivas, e rejeição de texto de tradução não simples. Nenhuma afirmação de GREEN antes de CI do SHA final. Não há threads de revisão na PR #13 no momento da consulta.
+
+### CI evidence and next data slice — 26/11/2026
+
+- Baseline PR #13 `8d05c56` CI [45912140248](https://github.com/croquete1/obdium/actions/runs/45912140248) passed Rustfmt, Clippy, tests, release builds on Linux/Windows/macOS and frontend syntax; Linux logs show 5 catalog + 6 lookup tests passed. House Rules 45912140188 passed. PR #12 CI 45911331023 and PR #7 rerun 45828522089 passed; all ten open PRs have a successful run on their respective HEAD. No independent approval or merge claimed. CRLF failure reproduced exactly (5237 + 185 LF = 5422 bytes); byte-preserving attributes validated by Windows CI.
+- F16/CROSS-04 **REVIEW**: limited offline DBC signal selection and decoding with explicit standard-ID selection, exact frame length, strict integer signal subset and rejection of duplicate/unsupported layouts. Two tests exercise synthetic fixture and invalid cases. Uses existing regex crate; no new dependencies, no live dispatch. New SHA CI not yet verified. Full parser, extended IDs, multiplex/metadata/checksum handling and GUI integration remain TODO.
+
+- DBC preview CI [45913496653](https://github.com/croquete1/obdium/actions/runs/45913496653) at `c34d5f8`: Windows/macOS/frontend passed; Linux Clippy, tests and release build passed, only Rustfmt failed. Linux log confirms 5 catalog tests + 8 lookup tests, including both new DBC regressions. Applied the three exact official log hunks (two source, one import), no behavior change. House Rules 45913496654 passed. Final SHA still needs CI and independent review. Lesson: run exact toolchain formatting before pushing; when no local Rust toolchain, use the official diff and avoid unnecessary changes until validated.
+
+- CI [45914425886](https://github.com/croquete1/obdium/actions/runs/45914425886) and House Rules 45914425876 passed at `663aa73` (three OS + frontend). All ten open PRs had a successful CI run at their then-current heads; no independent approval or merge. New F16/CROSS-04 slice: explicit encoded extended CAN ID selection (bit 31, 29-bit payload, reserved bits rejected), exact standard/extended identity, whitespace-aware rejection of unsupported signal metadata. Verified 365 flagged IDs in the staged GM low-speed DBC, without claiming vehicle support. Two additional offline regression tests. No dependency or transport changes. New SHA CI pending; full multiplexing, CAN FD format policy and GUI remain open.
+
+- Extended-ID baseline `e8b454f`: CI 45915296651 (Linux, Windows, macOS, frontend) and House Rules 45915296645 passed. F16/CROSS-04 **REVIEW**: offline single-selector DBC multiplexing, raw-value branch activation and distinct inactive result. Existing VW MQB DBC contains simple M/m markers; synthetic tests cover active zero, inactive branch, scaling, common signal, missing/duplicate/signed selectors, out-of-range branch and unsupported nested/extended metadata. No hardware activation or dependencies. New SHA requires CI; general DBC parser, overlap validation, extended multiplexing and production integration pending.
+
+- Multiplex baseline `f6d6848`: CI [45917291374](https://github.com/croquete1/obdium/actions/runs/45917291374) passed Windows/macOS/frontend; Linux Clippy, tests and release build passed, only Rustfmt failed. Linux logs show 5 catalog + 12 lookup tests passed (including both multiplex regressions). House Rules 45917291303 passed. Applied three exact Rustfmt hunks without functional changes. Revalidate the final SHA before advancing. No independent review yet. Follow-up: check bit ownership and finite scaling for all signals in selected frames; preserve mutually exclusive branch overlap while rejecting simultaneous overlap. Do not assume full DBC compatibility.
+
+- Multiplex baseline `b8d6bd1`: [CI 45918587972](https://github.com/croquete1/obdium/actions/runs/45918587972) and House Rules 45918587952 passed. All ten open PR heads had successful CI evidence. F16/CROSS-04 **REVIEW**: added bounded bit ownership validation for every signal in selected messages (including inactive branches), finite scaling checks, explicit simultaneous-overlap error, common/branch masks and shared Intel/Motorola bit traversal. Three tests cover mutually exclusive reuse, overlapping common/selector/same-branch signals in both declaration orders, invalid inactive layout/scaling, cross-byte and 64-byte boundaries. No dependency or transport changes; new SHA requires CI. Conservative overlap policy may reject legitimate aliases, which require explicit future modeling; no universal DBC support claimed. Independent approval still absent.
+
+- Signal-ownership baseline `5b42c68`: [CI 45921681871](https://github.com/croquete1/obdium/actions/runs/45921681871) and House Rules 45921681821 passed on all three operating systems and frontend. All ten open PR heads had successful CI evidence at inspection. F16/CROSS-04 **REVIEW**: separated selected-message parsing from immutable reusable decoding, bounded signal count/name length, retained exact-length and per-observation multiplex checks, corrected contradictory README limitations. Two regression tests cover reuse across different payloads, zero, inactive/unknown/truncated responses, invalid definitions before observation and long names. New SHA requires CI and independent review. No benchmark, full DBC import, SQLite reconciliation or live integration claimed.
+
+- Reusable DBC baseline `b09bece`: [CI 45970878643](https://github.com/croquete1/obdium/actions/runs/45970878643) passed Windows/macOS/frontend; Linux Clippy, tests and release build passed, only Rustfmt failed in `reference_data_lookup.rs`. Linux logs confirm 5 catalog + 17 lookup tests, including both reusable-definition regressions, and 2 existing library tests. House Rules 45970878660 passed. Applied exact official Rustfmt hunks (import order, assertion and format expression), no functional changes. Final SHA requires CI. Remaining priority: separate fast format preflight from expensive matrix compilation, investigate tooling availability; do not disable any gates. Independent review absent.
+
+- F16/CROSS-04 **REVIEW**: baseline `cc3046a` CI 45972903586 and House Rules 45972903417 passed. While Slint PR #15 is blocked by repeated macOS cancellations with unavailable logs, isolated catalog work continued in its existing PR #13 (issues disabled). Reproduced by inspection of staged ESR, VW MQB and Acura headers: bare `SIG_VALTYPE_` and `SG_MUL_VAL_` names within `NS_` were treated as metadata records without IDs. Recognize known bare symbols only in a single pre-message namespace declaration list; retain fail-closed actual selected metadata and malformed keyword handling. Two tests cover declarations, misplaced/malformed/actual records and a staged Acura frame definition with a synthetic payload. Nineteen lookup tests in source, five catalog tests unchanged; new SHA CI pending. No live transport, new dependencies, data imports or merge. Multiline quoted comments and general DBC grammar remain open limitations.
+
+- F16/CROSS-04 **REVIEW**: `5bced4f` CI 46029787911 passed Linux (19 lookup, 5 catalog, 2 library tests) and Windows, but macOS cancelled twice with unavailable logs; House Rules 46029787966 passed. PR #10 exact 4fe8060 CI 46032580118 passed all three OS; Slint 1c4217e native CI 46033394017 (20 tests on Linux) and headless core 46033394036 passed all three OS, legacy CI 46033394070 cancelled only macOS, targeted rerun accepted. Isolated DBC fix: scan quoted CM_ comment bodies before interpreting lines as definitions or metadata; preserve escaped quotes and semicolons in comment text; reject ambiguous/truncated comments and trailing statements rather than silently swallowing metadata. Three additional synthetic tests, 22 lookup tests in source; new SHA CI pending. No general DBC lexer, no live CAN, dependencies, new imported data or merge. Multiline non-comment strings remain outside supported subset; independent review pending.
+
+- F16/CROSS-04 **REVIEW**: `7dead6e` CI 46036239402 Linux Rustfmt failed on a single `concat!` layout in the missing-definition test. Linux logs confirm 22 lookup + 5 catalog + 2 library tests passed; Windows and macOS jobs running at inspection. Applied exact Rustfmt log hunk without changing behavior. House Rules 46036239529 passed. PR #15 `1c4217e` now has all four workflows green, including legacy CI 46033394070 after targeted macOS retry; PR #10 `4fe8060` remains green. The formatting-only correction requires final SHA CI; no independent approval or merge. Learning: formatter output governs short macro layout too; isolate format corrections, preserve test coverage, and do not conflate a format failure with a runtime defect.
+
+- F16/CROSS-04 **REVIEW**: baseline `760420b` CI 46037579508 and House Rules 46037579512 passed on Linux/Windows/macOS and frontend; Linux confirms 22 lookup + 5 catalog + 2 library tests. Slint `57ed7ae` native CI 46037699848 passed all three OS (23 tests on Linux); House Rules 46037699831 passed; core 46037699863 and legacy 46037699868 only macOS cancelled with unavailable logs, targeted reruns accepted without changing that SHA. PR #10 remains green. Closed a further quoted-record ambiguity: reject unbalanced non-comment quotes before consuming subsequent lines, including in unselected signal definitions, while retaining escaped quotes and backslashes in balanced strings. Two additional synthetic regressions, 24 lookup tests in source; new SHA CI pending. No full grammar support, live transport, new data/dependencies or merge. Independent review absent for #13. Local Rust toolchain unavailable; exact formatter and compilation still required. Learning: an ignored record can still alter lexical context; validate it before treating following lines as definitions.

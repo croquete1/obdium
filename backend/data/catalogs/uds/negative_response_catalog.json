@@ -1,0 +1,606 @@
+{
+  "schema_version": 1,
+  "status": "reference_only",
+  "license": "MIT",
+  "source_revision": "07d7be1fcfd17e41af9a30f1c5573774e45bcdbd",
+  "note": "Adapted 2026-11-26. Codes are labels only; context-dependent aliases retained, 0 excluded (not a negative code); never infer permissions or retry policy. Unknown code preserved by future decoder.",
+  "entries": [
+    {
+      "code_hex": "10",
+      "labels": [
+        {
+          "name": "GeneralReject",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "11",
+      "labels": [
+        {
+          "name": "ServiceNotSupported",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "12",
+      "labels": [
+        {
+          "name": "SubFunctionNotSupported",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "13",
+      "labels": [
+        {
+          "name": "IncorrectMessageLengthOrInvalidFormat",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "14",
+      "labels": [
+        {
+          "name": "ResponseTooLong",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "21",
+      "labels": [
+        {
+          "name": "BusyRepeatRequest",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "22",
+      "labels": [
+        {
+          "name": "ConditionsNotCorrect",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "24",
+      "labels": [
+        {
+          "name": "RequestSequenceError",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "25",
+      "labels": [
+        {
+          "name": "NoResponseFromSubnetComponent",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "26",
+      "labels": [
+        {
+          "name": "FailurePreventsExecutionOfRequestedAction",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "31",
+      "labels": [
+        {
+          "name": "RequestOutOfRange",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "33",
+      "labels": [
+        {
+          "name": "SecurityAccessDenied",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "34",
+      "labels": [
+        {
+          "name": "AuthenticationRequired",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "35",
+      "labels": [
+        {
+          "name": "InvalidKey",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "36",
+      "labels": [
+        {
+          "name": "ExceedNumberOfAttempts",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "37",
+      "labels": [
+        {
+          "name": "RequiredTimeDelayNotExpired",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "38",
+      "labels": [
+        {
+          "name": "SecureDataTransmissionRequired",
+          "context": "uds_reference"
+        },
+        {
+          "name": "GeneralSecurityViolation",
+          "context": "security_transport_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "39",
+      "labels": [
+        {
+          "name": "SecureDataTransmissionNotAllowed",
+          "context": "uds_reference"
+        },
+        {
+          "name": "SecuredModeRequested",
+          "context": "security_transport_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "3A",
+      "labels": [
+        {
+          "name": "SecureDataVerificationFailed",
+          "context": "uds_reference"
+        },
+        {
+          "name": "InsufficientProtection",
+          "context": "security_transport_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "3B",
+      "labels": [
+        {
+          "name": "TerminationWithSignatureRequested",
+          "context": "security_transport_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "3C",
+      "labels": [
+        {
+          "name": "AccessDenied",
+          "context": "security_transport_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "3D",
+      "labels": [
+        {
+          "name": "VersionNotSupported",
+          "context": "security_transport_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "3E",
+      "labels": [
+        {
+          "name": "SecuredLinkNotSupported",
+          "context": "security_transport_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "3F",
+      "labels": [
+        {
+          "name": "CertificateNotAvailable",
+          "context": "security_transport_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "40",
+      "labels": [
+        {
+          "name": "AuditTrailInformationNotAvailable",
+          "context": "security_transport_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "50",
+      "labels": [
+        {
+          "name": "CertificateVerificationFailed_InvalidTimePeriod",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "51",
+      "labels": [
+        {
+          "name": "CertificateVerificationFailed_InvalidSignature",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "52",
+      "labels": [
+        {
+          "name": "CertificateVerificationFailed_InvalidChainOfTrust",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "53",
+      "labels": [
+        {
+          "name": "CertificateVerificationFailed_InvalidType",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "54",
+      "labels": [
+        {
+          "name": "CertificateVerificationFailed_InvalidFormat",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "55",
+      "labels": [
+        {
+          "name": "CertificateVerificationFailed_InvalidContent",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "56",
+      "labels": [
+        {
+          "name": "CertificateVerificationFailed_InvalidScope",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "57",
+      "labels": [
+        {
+          "name": "CertificateVerificationFailed_InvalidCertificate",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "58",
+      "labels": [
+        {
+          "name": "OwnershipVerificationFailed",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "59",
+      "labels": [
+        {
+          "name": "ChallengeCalculationFailed",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "5A",
+      "labels": [
+        {
+          "name": "SettingAccessRightsFailed",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "5B",
+      "labels": [
+        {
+          "name": "SessionKeyCreationDerivationFailed",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "5C",
+      "labels": [
+        {
+          "name": "ConfigurationDataUsageFailed",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "5D",
+      "labels": [
+        {
+          "name": "DeAuthenticationFailed",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "70",
+      "labels": [
+        {
+          "name": "UploadDownloadNotAccepted",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "71",
+      "labels": [
+        {
+          "name": "TransferDataSuspended",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "72",
+      "labels": [
+        {
+          "name": "GeneralProgrammingFailure",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "73",
+      "labels": [
+        {
+          "name": "WrongBlockSequenceCounter",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "78",
+      "labels": [
+        {
+          "name": "RequestCorrectlyReceived_ResponsePending",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "7E",
+      "labels": [
+        {
+          "name": "SubFunctionNotSupportedInActiveSession",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "7F",
+      "labels": [
+        {
+          "name": "ServiceNotSupportedInActiveSession",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "81",
+      "labels": [
+        {
+          "name": "RpmTooHigh",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "82",
+      "labels": [
+        {
+          "name": "RpmTooLow",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "83",
+      "labels": [
+        {
+          "name": "EngineIsRunning",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "84",
+      "labels": [
+        {
+          "name": "EngineIsNotRunning",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "85",
+      "labels": [
+        {
+          "name": "EngineRunTimeTooLow",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "86",
+      "labels": [
+        {
+          "name": "TemperatureTooHigh",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "87",
+      "labels": [
+        {
+          "name": "TemperatureTooLow",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "88",
+      "labels": [
+        {
+          "name": "VehicleSpeedTooHigh",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "89",
+      "labels": [
+        {
+          "name": "VehicleSpeedTooLow",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "8A",
+      "labels": [
+        {
+          "name": "ThrottlePedalTooHigh",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "8B",
+      "labels": [
+        {
+          "name": "ThrottlePedalTooLow",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "8C",
+      "labels": [
+        {
+          "name": "TransmissionRangeNotInNeutral",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "8D",
+      "labels": [
+        {
+          "name": "TransmissionRangeNotInGear",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "8F",
+      "labels": [
+        {
+          "name": "BrakeSwitchNotClosed",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "90",
+      "labels": [
+        {
+          "name": "ShifterLeverNotInPark",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "91",
+      "labels": [
+        {
+          "name": "TorqueConverterClutchLocked",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "92",
+      "labels": [
+        {
+          "name": "VoltageTooHigh",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "93",
+      "labels": [
+        {
+          "name": "VoltageTooLow",
+          "context": "uds_reference"
+        }
+      ]
+    },
+    {
+      "code_hex": "94",
+      "labels": [
+        {
+          "name": "ResourceTemporarilyNotAvailable",
+          "context": "uds_reference"
+        }
+      ]
+    }
+  ]
+}

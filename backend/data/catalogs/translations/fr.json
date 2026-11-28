@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "status": "draft_reference",
+  "locale": "fr",
+  "source_blob_sha": "a03c83c9556fbbc9cae2236d81284633b6946db9",
+  "messages": {
+    "confirm": "Confirmer",
+    "cancel": "ANNULER",
+    "error": "Erreur",
+    "refresh": "Rafraîchir",
+    "stop": "Arrêter",
+    "close": "Fermer",
+    "file": "Fichier",
+    "exit": "Sortie",
+    "help": "Aide",
+    "about": "À propos",
+    "no": "Non",
+    "timeout": "DÉLAI DÉPASSÉ"
+  }
+}

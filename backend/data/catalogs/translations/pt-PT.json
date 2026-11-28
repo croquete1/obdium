@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "status": "draft_reference",
+  "locale": "pt-PT",
+  "source_blob_sha": "38750767aa74173db59baa71f0792dc2560ca3d6",
+  "note": "Adapted to European Portuguese; independent linguistic review pending.",
+  "messages": {
+    "confirm": "Confirmar",
+    "cancel": "Cancelar",
+    "error": "Erro",
+    "refresh": "Atualizar",
+    "stop": "Parar",
+    "close": "Fechar",
+    "file": "Ficheiro",
+    "exit": "Sair",
+    "help": "Ajuda",
+    "about": "Acerca de",
+    "no": "Não",
+    "timeout": "Tempo limite excedido"
+  }
+}

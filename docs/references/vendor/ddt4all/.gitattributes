@@ -1,0 +1,6 @@
+# Preserve the exact bytes of the pinned reference snapshot.
+*.po -text
+*.pot -text
+*.xml -text
+*.json -text
+*.txt -text

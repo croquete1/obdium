@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "status": "draft_reference",
+  "locale": "es",
+  "source_blob_sha": "8f3435fc9cc7050f2e131e89ca2f9ef44868dad7",
+  "messages": {
+    "confirm": "Aceptar",
+    "cancel": "CANCELAR",
+    "error": "Error",
+    "refresh": "Refrescar",
+    "stop": "Detener",
+    "close": "Cerrar",
+    "file": "Archivo",
+    "exit": "Salir",
+    "help": "Ayuda",
+    "about": "Acerca de",
+    "no": "No",
+    "timeout": "TIEMPO AGOTADO"
+  }
+}
