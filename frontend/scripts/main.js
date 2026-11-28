@@ -6,6 +6,7 @@ import { getReadinessSnapshot, getReadinessSnapshotGuard } from "./readiness-sta
 
 import {
   exportDtcs,
+  requestDtcScan,
   connectElm,
   disconnectElm,
   clearObdView,
@@ -127,24 +128,7 @@ connectButton.addEventListener("click", async () => {
 disconnectButton.addEventListener("click", disconnectElm);
 
 const dtcScanButton = document.getElementById("dtc-scan-button");
-dtcScanButton.addEventListener("click", async () => {
-  if (!window.connected) {
-    addNotification("SCAN UNAVAILABLE", "Connect to the adapter before requesting diagnostic trouble codes.");
-    return;
-  }
-
-  // Old rows must not be exported as the result of a new request.
-  document.getElementById("dtc-list").replaceChildren();
-  document.getElementById("dtc-header").textContent = "DIAGNOSTIC TROUBLE CODES (UNAVAILABLE)";
-
-  try {
-    await emit("get-dtcs");
-    // IPC acceptance is not a diagnostic result. Only update-dtcs renders results.
-  } catch (error) {
-    addNotification("SCAN REQUEST FAILED", "Could not send the diagnostic trouble code request.");
-    console.error("DTC scan request dispatch failed", error);
-  }
-});
+dtcScanButton.addEventListener("click", () => requestDtcScan());
 
 const dtcLogButton = document.getElementById("dtc-log-file");
 const dtcList = document.getElementById("dtc-list");

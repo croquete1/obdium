@@ -7,6 +7,7 @@ const read = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
 const html = read("../index.html");
 const main = read("../scripts/main.js");
 const features = read("../scripts/features.js");
+const eventSource = read("../scripts/events.js");
 const bridge = read("../../backend/src/bridge/events.rs");
 
 test("DTC clear is a native disabled control with a visible explanation", () => {
@@ -49,7 +50,10 @@ function scanFixture({ connected = true, emit = async () => {} } = {}) {
     "dtc-list": { replaceChildren() { rows.length = 0; } },
     "dtc-header": header,
   };
-  runInNewContext(main.slice(start, end), {
+  const helperStart = features.indexOf("export async function requestDtcScan");
+  const helperEnd = features.indexOf("export async function exportDtcs", helperStart);
+  assert.ok(helperStart >= 0 && helperEnd > helperStart);
+  const context = {
     window: { connected },
     document: { getElementById: (id) => elements[id] },
     emit: async (name) => {
@@ -58,9 +62,14 @@ function scanFixture({ connected = true, emit = async () => {} } = {}) {
     },
     addNotification: (...args) => notices.push(args),
     console: { error: (...args) => errors.push(args) },
-  });
+  };
+  runInNewContext(
+    features.slice(helperStart, helperEnd).replace("export async function", "async function") +
+      "\n" + main.slice(start, end) + "\nthis.scan = requestDtcScan;",
+    context,
+  );
   assert.equal(typeof click, "function");
-  return { click, notices, events, errors, rows, header };
+  return { click, scan: context.scan, window: context.window, notices, events, errors, rows, header };
 }
 
 test("manual DTC scan refuses disconnected requests without claiming success", async () => {
@@ -108,4 +117,56 @@ test("manual DTC scan does not overwrite results arriving before IPC acceptance"
   assert.deepEqual(fixture.rows, ["new diagnostic result"]);
   assert.equal(fixture.header.textContent, "DIAGNOSTIC TROUBLE CODES (1)");
   assert.deepEqual(fixture.notices, []);
+});
+
+test("automatic DTC scan uses the same request function with a session guard", async () => {
+  const start = eventSource.indexOf("    if (window.autoCheckCodes) {");
+  const end = eventSource.indexOf("    if (window.unitPreferences)", start);
+  assert.ok(start >= 0 && end > start);
+  const calls = [];
+  const context = {
+    window: { connected: true, autoCheckCodes: true },
+    connectionGeneration: 3,
+    generation: 3,
+    requestDtcScan(options) { calls.push(options); },
+  };
+  runInNewContext(eventSource.slice(start, end), context);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].isCurrent(), true);
+  context.connectionGeneration++;
+  assert.equal(calls[0].isCurrent(), false);
+  context.window.autoCheckCodes = false;
+  runInNewContext(eventSource.slice(start, end), context);
+  assert.equal(calls.length, 1);
+});
+
+test("shared DTC scan refuses an invalidated session before dispatch", async () => {
+  const fixture = scanFixture();
+  await fixture.scan({ isCurrent: () => false });
+  assert.deepEqual(fixture.events, []);
+  assert.deepEqual(fixture.notices, []);
+  assert.deepEqual(fixture.rows, ["old diagnostic result"]);
+});
+
+test("late automatic DTC dispatch rejection does not notify a replacement session", async () => {
+  let rejectDispatch;
+  let current = true;
+  const fixture = scanFixture({ emit: () => new Promise((_, reject) => { rejectDispatch = reject; }) });
+  const pending = fixture.scan({ isCurrent: () => current });
+  current = false;
+  rejectDispatch(new Error("old session"));
+  await pending;
+  assert.deepEqual(fixture.notices, []);
+  assert.equal(fixture.errors.length, 1);
+});
+
+test("late manual DTC dispatch rejection after disconnect does not notify", async () => {
+  let rejectDispatch;
+  const fixture = scanFixture({ emit: () => new Promise((_, reject) => { rejectDispatch = reject; }) });
+  const pending = fixture.click();
+  fixture.window.connected = false;
+  rejectDispatch(new Error("disconnected"));
+  await pending;
+  assert.deepEqual(fixture.notices, []);
+  assert.equal(fixture.errors.length, 1);
 });

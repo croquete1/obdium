@@ -13,6 +13,29 @@ const dtcList = document.getElementById("dtc-list");
 const obdGrid = document.getElementById("dashboard-cards");
 const terminalOutput = document.getElementById("terminal-output");
 
+export async function requestDtcScan({ isCurrent = () => true } = {}) {
+  if (!window.connected) {
+    addNotification("SCAN UNAVAILABLE", "Connect to the adapter before requesting diagnostic trouble codes.");
+    return;
+  }
+
+  if (!isCurrent()) return;
+
+  // Old rows must not be exported as the result of a new request.
+  document.getElementById("dtc-list").replaceChildren();
+  document.getElementById("dtc-header").textContent = "DIAGNOSTIC TROUBLE CODES (UNAVAILABLE)";
+
+  try {
+    await emit("get-dtcs");
+    // IPC acceptance is not a diagnostic result. Only update-dtcs renders results.
+  } catch (error) {
+    if (window.connected && isCurrent()) {
+      addNotification("SCAN REQUEST FAILED", "Could not send the diagnostic trouble code request.");
+    }
+    console.error("DTC scan request dispatch failed", error);
+  }
+}
+
 export async function exportDtcs(autoSave) {
   if (!window.connected) {
     if (!autoSave) addNotification("EXPORT UNAVAILABLE", "Connect and scan for diagnostic trouble codes first.");

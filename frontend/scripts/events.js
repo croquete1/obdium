@@ -2,6 +2,7 @@ const { listen, emit } = window.__TAURI__.event;
 import { replaceReadinessSnapshot, readinessLabels } from "./readiness-state.mjs";
 import {
   exportDtcs,
+  requestDtcScan,
   addGraphDropdownOption,
   appendTerminalOutput,
   addNotification,
@@ -188,7 +189,9 @@ listen("connection-status", async (event) => {
     saveConnectionConfig();
 
     if (window.autoCheckCodes) {
-      emit("get-dtcs");
+      void requestDtcScan({
+        isCurrent: () => window.connected && connectionGeneration === generation,
+      });
     }
 
     if (window.unitPreferences) {
