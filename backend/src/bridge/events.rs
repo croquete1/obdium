@@ -140,7 +140,10 @@ pub fn listen_decode_vin(window: &WebviewWindow) {
             return;
         };
         if request.request_id.len() != 32
-            || !request.request_id.bytes().all(|byte| byte.is_ascii_hexdigit())
+            || !request
+                .request_id
+                .bytes()
+                .all(|byte| byte.is_ascii_hexdigit())
         {
             return;
         }
