@@ -136,24 +136,101 @@ fn request_demo_sample(
     }
 }
 
-// This explicit offline smoke mode exercises the actual window and event loop.
-// An external CI timeout also bounds platform startup or shutdown failures.
+#[derive(Clone, Copy, Debug)]
+enum SmokePhase {
+    Startup,
+    FirstSample,
+    RepeatSample,
+    Stopped(Instant),
+}
+
+fn smoke_idle(ui: &PreviewWindow) -> bool {
+    !ui.get_demo_active()
+        && !ui.get_sample_available()
+        && ui.get_rpm_text().as_str() == "Unavailable"
+}
+
+fn smoke_pending(ui: &PreviewWindow) -> bool {
+    ui.get_demo_active()
+        && !ui.get_sample_available()
+        && ui.get_rpm_text().as_str() == "Waiting for sample"
+}
+
+fn smoke_sample(ui: &PreviewWindow) -> bool {
+    ui.get_demo_active()
+        && ui.get_sample_available()
+        && ui.get_rpm_text().as_str() == "1726 rpm (synthetic)"
+}
+
+// Exercise the actual generated callbacks and worker using the real event loop.
+// This is synthetic-only and does not simulate physical keyboard/mouse input.
 fn start_window_smoke(ui: &PreviewWindow, timer: &Timer, passed: Rc<Cell<bool>>) {
     let weak = ui.as_weak();
-    let deadline = Instant::now() + Duration::from_secs(5);
+    let deadline = Instant::now() + Duration::from_secs(10);
+    let phase = Cell::new(SmokePhase::Startup);
     timer.start(TimerMode::Repeated, Duration::from_millis(50), move || {
-        if let Some(ui) = weak.upgrade() {
-            if !ui.window().is_visible() && Instant::now() < deadline {
-                return;
+        let now = Instant::now();
+        let current = phase.replace(SmokePhase::Startup);
+        let mut next = None;
+        if let Some(ui) = weak.upgrade().filter(|ui| {
+            now < deadline
+                && ui.get_demo_available()
+                && ui.get_core_status().as_str() == "Core: initialized, disconnected"
+        }) {
+            match current {
+                SmokePhase::Startup if !ui.window().is_visible() => {
+                    next = Some(SmokePhase::Startup);
+                }
+                SmokePhase::Startup if smoke_idle(&ui) => {
+                    ui.invoke_toggle_demo();
+                    if smoke_pending(&ui) {
+                        next = Some(SmokePhase::FirstSample);
+                    }
+                }
+                SmokePhase::FirstSample if ui.window().is_visible() && smoke_pending(&ui) => {
+                    next = Some(SmokePhase::FirstSample);
+                }
+                SmokePhase::FirstSample if ui.window().is_visible() && smoke_sample(&ui) => {
+                    ui.invoke_request_sample();
+                    if smoke_pending(&ui) {
+                        next = Some(SmokePhase::RepeatSample);
+                    }
+                }
+                SmokePhase::RepeatSample if ui.window().is_visible() && smoke_pending(&ui) => {
+                    next = Some(SmokePhase::RepeatSample);
+                }
+                SmokePhase::RepeatSample if ui.window().is_visible() && smoke_sample(&ui) => {
+                    ui.invoke_request_sample();
+                    if smoke_pending(&ui) {
+                        ui.invoke_toggle_demo();
+                        if smoke_idle(&ui) {
+                            next = Some(SmokePhase::Stopped(now));
+                        }
+                    }
+                }
+                SmokePhase::Stopped(stopped)
+                    if ui.window().is_visible()
+                        && smoke_idle(&ui)
+                        && ui.get_demo_status().as_str() == "Demo stopped" =>
+                {
+                    if now
+                        .checked_duration_since(stopped)
+                        .is_some_and(|age| age >= Duration::from_millis(250))
+                    {
+                        passed.set(true);
+                    } else {
+                        next = Some(SmokePhase::Stopped(stopped));
+                    }
+                }
+                _ => {}
             }
-            passed.set(
-                ui.window().is_visible()
-                    && !ui.get_demo_active()
-                    && ui.get_demo_available()
-                    && !ui.get_sample_available()
-                    && ui.get_rpm_text().as_str() == "Unavailable"
-                    && ui.get_core_status().as_str() == "Core: initialized, disconnected",
-            );
+        }
+        if let Some(next) = next {
+            phase.set(next);
+            return;
+        }
+        if !passed.get() {
+            eprintln!("Native window smoke failed in phase {current:?}");
         }
         if let Err(error) = slint::quit_event_loop() {
             passed.set(false);
@@ -259,7 +336,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         if !smoke_passed.get() {
             return Err(std::io::Error::other("Native window smoke check failed").into());
         }
-        println!("Native window smoke check passed: disconnected and no sample");
+        println!("Native window smoke passed: startup, two samples, cancellation and shutdown");
     }
     Ok(())
 }
