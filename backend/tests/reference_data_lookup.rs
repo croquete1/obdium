@@ -569,7 +569,11 @@ fn reference_catalog_rejects_wrong_metadata_type_and_duplicate_fields() {
     let nrc = include_str!("../data/catalogs/uds/negative_response_catalog.json");
     for changed in [
         obd.replacen("\"license\": \"GPL-2.0-or-later\"", "\"license\": true", 1),
-        obd.replacen("\"request_hex\":", "\"request_hex\":\"0100\",\"request_hex\":", 1),
+        obd.replacen(
+            "\"request_hex\":",
+            "\"request_hex\":\"0100\",\"request_hex\":",
+            1,
+        ),
     ] {
         assert_ne!(changed, obd);
         assert!(matches!(
