@@ -1,17 +1,17 @@
 const { listen, emit } = window.__TAURI__.event;
 const { save } = window.__TAURI__.dialog;
-const { writeFile, removeFile } = window.__TAURI__.fs;
-const { appWindow } = window.__TAURI__.window;
+const { writeTextFile } = window.__TAURI__.fs;
+import { saveJsonExport } from "./json-export.mjs";
+import { getReadinessSnapshot, getReadinessSnapshotGuard } from "./readiness-state.mjs";
 
 import {
-  clearDtcs,
   exportDtcs,
+  requestDtcScan,
   connectElm,
   disconnectElm,
   clearObdView,
   appendTerminalOutput,
   addNotification,
-  btnHoldToActivate,
   addCustomPIDRow,
 } from "./features.js";
 
@@ -40,7 +40,6 @@ const connectButton = document.getElementById("btn-connect");
 const disconnectButton = document.getElementById("btn-disconnect");
 const clearObdButton = document.getElementById("obd-clear");
 const pauseObdButton = document.getElementById("obd-pause");
-const dtcClearButton = document.getElementById("dtc-clear-button");
 
 // When frontend gets loaded
 // alert the backend with an event.
@@ -129,16 +128,7 @@ connectButton.addEventListener("click", async () => {
 disconnectButton.addEventListener("click", disconnectElm);
 
 const dtcScanButton = document.getElementById("dtc-scan-button");
-dtcScanButton.addEventListener("click", async () => {
-  await new Promise((r) => setTimeout(r, 500));
-
-  addNotification("TROUBLE CODES", "Scanned for diagnostic trouble codes.");
-
-  emit("get-dtcs");
-});
-
-const fill = document.getElementById("btn-hold-fill");
-btnHoldToActivate(dtcClearButton, fill, clearDtcs);
+dtcScanButton.addEventListener("click", () => requestDtcScan());
 
 const dtcLogButton = document.getElementById("dtc-log-file");
 const dtcList = document.getElementById("dtc-list");
@@ -163,94 +153,66 @@ logFileButton.addEventListener("click", async () => {
 
 const imTestRefreshButton = document.getElementById("readiness-test-refresh");
 const imTestExportButton = document.getElementById("readiness-test-export");
-const imTestList = document.getElementById("readiness-tests-list");
 
 imTestRefreshButton.addEventListener("click", () => {
   emit("get-readiness-tests");
 });
 
 imTestExportButton.addEventListener("click", async () => {
-  let totalJSON = [];
-  imTestList.childNodes.forEach((testRow) => {
-    if (testRow.nodeType == 1) {
-      const available =
-        testRow.querySelector("#test-availability").textContent.trim() ==
-        "AVAILABLE"
-          ? true
-          : false;
-      const complete =
-        testRow.querySelector("#test-completeness").textContent.trim() ==
-        "COMPLETE"
-          ? true
-          : false;
-
-      const testJSON = {
-        name: testRow
-          .querySelector("#test-name")
-          .textContent.replace("TEST: ", "")
-          .trim(),
-        available: available,
-        complete: complete,
-      };
-
-      totalJSON.push(testJSON);
-    }
-  });
-
-  const path = await save({
-    title: "Save as JSON",
-    defaultPath: "readiness_tests.json",
-    filters: [{ name: "JSON", extensions: ["json"] }],
-  });
-
-  if (!path) {
+  const isSnapshotCurrent = getReadinessSnapshotGuard();
+  const totalJSON = getReadinessSnapshot();
+  if (!window.connected || totalJSON.length === 0) {
+    addNotification("EXPORT UNAVAILABLE", "Readiness information is not available for the current connection.");
     return;
   }
 
-  await writeFile({ path, contents: JSON.stringify(totalJSON, null, 2) });
+  try {
+    await saveJsonExport({
+      data: totalJSON,
+      defaultPath: "readiness_tests.json",
+      save,
+      writeTextFile,
+      isCurrent: () => window.connected && isSnapshotCurrent(),
+    });
+  } catch (error) {
+    addNotification("EXPORT FAILED", "Could not save readiness tests.");
+    console.error("JSON export failed", error);
+  }
 });
 
 const vinExportButton = document.getElementById("vin-export");
 const vinDetails = document.getElementById("vin-container");
 
 vinExportButton.addEventListener("click", async () => {
-  let vinObj = {};
-  vinDetails.childNodes.forEach((card) => {
-    if (card.nodeType == 1) {
-      const key = card
-        .querySelector("h3")
-        .textContent.replaceAll(" ", "_")
-        .toLowerCase();
-      const value = card.querySelector(".value").textContent.trim();
-      vinObj[key] = value;
-    }
-  });
-
-  const path = await save({
-    title: "Save as JSON",
-    defaultPath: "vin_details.json",
-    filters: [{ name: "JSON", extensions: ["json"] }],
-  });
-
-  if (!path) {
-    return;
+  const rows = Array.from(vinDetails.childNodes).filter((card) => card.nodeType === 1);
+  if (vinExportButton.disabled || rows.length === 0) return;
+  const isCurrent = () => {
+    const current = Array.from(vinDetails.childNodes).filter((card) => card.nodeType === 1);
+    return !vinExportButton.disabled && current.length === rows.length &&
+      current.every((card, index) => card === rows[index]);
+  };
+  const vinObj = Object.create(null);
+  for (const card of rows) {
+    const key = card.querySelector("h3")?.textContent.replaceAll(" ", "_").toLowerCase();
+    const value = card.querySelector(".value")?.textContent.trim();
+    if (!key || !value) return;
+    vinObj[key] = value;
   }
+  if (!vinObj.vin) return;
 
-  await writeFile({ path, contents: JSON.stringify(vinObj, null, 2) });
+  try {
+    await saveJsonExport({
+      data: vinObj,
+      defaultPath: "vin_details.json",
+      save,
+      writeTextFile,
+      isCurrent,
+    });
+  } catch (error) {
+    addNotification("EXPORT FAILED", "Could not save VIN details.");
+    console.error("JSON export failed", error);
+  }
 });
-
-// appWindow.listen("tauri://close-requested", async () => {
-//   // check if delete logs on exit setting is set
-//   if (window.deleteLogsOnExit && window.logFilePath) {
-//     try {
-//       removeFile(window.logFilePath);
-//     } catch (err) {
-//       console.error("Error when trying to delete log:", err);
-//     }
-//   }
-
-//   await appWindow.close();
-// });
 
 const input = document.getElementById("terminal-input");
 

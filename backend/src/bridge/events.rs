@@ -8,8 +8,8 @@ use super::{
     ConnectPaylod, ConnectionStatus, Dtc, Setting, VehicleInfo, VehicleInfoExtended, ACTIVE_OBD,
 };
 use crate::bridge::{
-    unlisten_events, CustomPid, CUSTOM_PIDS_TRACKED, READINESS_TESTS_LISTENER,
-    USER_COMMAND_LISTENER,
+    is_current_session, take_current_session, unlisten_events, CustomPid, CUSTOM_PIDS_TRACKED,
+    SESSION_LISTENERS, SESSION_TRANSITION,
 };
 use crate::{connect_obd, track_data, OBD};
 use obdium::dicts::PID_INFOS;
@@ -20,7 +20,7 @@ use std::sync::atomic::Ordering;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tauri::{async_runtime::spawn, WebviewWindow};
-use tauri::{Emitter, Listener};
+use tauri::{Emitter, EventId, Listener};
 use tokio::time::sleep;
 
 // "Listen" events
@@ -28,7 +28,7 @@ use tokio::time::sleep;
 // Where the backend "listens" for events from the frontend
 // All listen events are prefixed with 'listen'
 
-pub fn listen_send_pids(window: &Arc<WebviewWindow>, obd: &Arc<Mutex<OBD>>) {
+pub fn listen_send_pids(window: &Arc<WebviewWindow>, obd: &Arc<Mutex<OBD>>) -> EventId {
     PAUSE_OBD_COUNT.fetch_add(1, Ordering::Relaxed);
     std::thread::sleep(Duration::from_millis(50));
 
@@ -55,9 +55,12 @@ pub fn listen_send_pids(window: &Arc<WebviewWindow>, obd: &Arc<Mutex<OBD>>) {
     PAUSE_OBD_COUNT.fetch_sub(1, Ordering::Relaxed);
     println!("Supported pids: {supported_pids_info:?}");
 
+    let obd_arc = Arc::clone(obd);
     window.listen("get-pids", move |_| {
-        let _ = window_arc.emit("update-pids", &supported_pids_info);
-    });
+        if is_current_session(&obd_arc) {
+            let _ = window_arc.emit("update-pids", &supported_pids_info);
+        }
+    })
 }
 
 pub fn listen_track_custom_pid(window: &Arc<WebviewWindow>) {
@@ -87,30 +90,30 @@ pub fn listen_track_custom_pid(window: &Arc<WebviewWindow>) {
     });
 }
 
-pub fn listen_send_readiness_test(window: &Arc<WebviewWindow>, obd: &Arc<Mutex<OBD>>) {
+pub fn listen_send_readiness_test(window: &Arc<WebviewWindow>, obd: &Arc<Mutex<OBD>>) -> EventId {
     let window_arc = Arc::new(window.clone());
     let obd_arc = Arc::clone(obd);
     let window_clone = Arc::clone(&window_arc);
-    let readiness_test_event = window_clone.listen("get-readiness-tests", move |_| {
+    window_clone.listen("get-readiness-tests", move |_| {
+        if !is_current_session(&obd_arc) {
+            return;
+        }
         PAUSE_OBD_COUNT.fetch_add(1, Ordering::Relaxed);
         std::thread::sleep(Duration::from_millis(50));
 
         let mut obd = obd_arc.lock().unwrap();
-        let tests = [
-            obd.get_common_tests_status().to_vec(),
-            obd.get_advanced_tests_status().to_vec(),
-        ]
-        .concat();
+        if !is_current_session(&obd_arc) || !obd.is_connected() {
+            PAUSE_OBD_COUNT.fetch_sub(1, Ordering::Relaxed);
+            return;
+        }
+        let tests = obd.get_readiness_status();
 
         PAUSE_OBD_COUNT.fetch_sub(1, Ordering::Relaxed);
 
-        let _ = window_arc.emit("update-readiness-tests", tests);
-    });
-
-    {
-        let mut handler = READINESS_TESTS_LISTENER.lock().unwrap();
-        *handler = Some(readiness_test_event);
-    }
+        if is_current_session(&obd_arc) {
+            let _ = window_arc.emit("update-readiness-tests", tests);
+        }
+    })
 }
 
 pub fn listen_send_ports(window: &Arc<WebviewWindow>) {
@@ -127,11 +130,30 @@ pub fn listen_decode_vin(window: &WebviewWindow) {
     let window_arc = Arc::new(window.clone());
     let window_clone = Arc::clone(&window_arc);
     window_clone.listen("decode-vin", move |event| {
-        let vin = match VIN::new(event.payload().replace("\"", "")) {
+        #[derive(serde::Deserialize)]
+        struct VinRequest {
+            request_id: String,
+            vin: String,
+        }
+
+        let Ok(request) = serde_json::from_str::<VinRequest>(event.payload()) else {
+            return;
+        };
+        if request.request_id.len() != 32
+            || !request
+                .request_id
+                .bytes()
+                .all(|byte| byte.is_ascii_hexdigit())
+        {
+            return;
+        }
+
+        let vin = match VIN::new(request.vin) {
             Ok(vin) => vin,
             Err(err) => {
                 // emit error
                 let v_info = VehicleInfoExtended {
+                    request_id: request.request_id,
                     error_msg: format!("{}", err),
                     ..Default::default()
                 };
@@ -150,6 +172,7 @@ pub fn listen_decode_vin(window: &WebviewWindow) {
         };
 
         let v_info = VehicleInfoExtended {
+            request_id: request.request_id,
             error_msg: error_message,
             vin: vin.get_vin().to_string(),
             make: vin.get_vehicle_make().unwrap_or("N/A".into()),
@@ -204,6 +227,8 @@ pub fn listen_decode_vin(window: &WebviewWindow) {
 }
 
 pub fn listen_connect_elm(window: &Arc<WebviewWindow>) {
+    // The disconnect handler is application-scoped, not installed on every connection.
+    listen_disconnect_elm(window);
     let window_arc = Arc::new(window.clone());
     let window_clone = Arc::clone(&window_arc);
 
@@ -216,6 +241,11 @@ pub fn listen_connect_elm(window: &Arc<WebviewWindow>) {
                 return;
             }
         };
+
+        let _transition = SESSION_TRANSITION.lock().unwrap();
+        if ACTIVE_OBD.lock().unwrap().is_some() {
+            return;
+        }
 
         let obd = connect_obd(
             &window_arc,
@@ -232,45 +262,58 @@ pub fn listen_connect_elm(window: &Arc<WebviewWindow>) {
                 *active = Some(Arc::clone(&obd));
             }
 
-            // Usually called once
-            do_send_vehicle_details(&window_arc, &obd);
+            // Install all session listeners before announcing a ready connection.
+            let listeners = vec![
+                listen_set_unit_preferences(&window_arc, &obd),
+                listen_send_connection_status(&window_arc, &obd),
+                listen_change_obd_settings(&window_arc, &obd),
+                listen_send_pids(&window_arc, &obd),
+                listen_send_readiness_test(&window_arc, &obd),
+                listen_send_dtcs(&window_arc, &obd),
+                listen_run_user_command(&window_arc, &obd),
+            ];
+            *SESSION_LISTENERS.lock().unwrap() = listeners;
 
-            // Live tracking data
+            {
+                let connection = obd.lock().unwrap();
+                let baud = connection.serial_port_baud_rate().unwrap_or_default();
+                let port = connection.serial_port_name().unwrap_or_default();
+                do_send_connection_status(
+                    &window_arc,
+                    &connection,
+                    format!("Connected to port {port} on {baud} baud"),
+                    connection.is_connected(),
+                );
+            }
+
+            do_send_vehicle_details(&window_arc, &obd);
             track_data(&window_arc, &obd);
 
-            // spawn thread to keep checking if obd disconnects
             let window_arc_clone = Arc::clone(&window_arc);
             let obd_clone = Arc::clone(&obd);
             spawn(async move {
                 loop {
                     sleep(Duration::from_secs(1)).await;
-                    let obd = obd_clone.lock().unwrap();
-                    if !obd.is_connected() {
+                    if !is_current_session(&obd_clone) {
+                        break;
+                    }
+                    if obd_clone.lock().unwrap().is_connected() {
+                        continue;
+                    }
+                    let _transition = SESSION_TRANSITION.lock().unwrap();
+                    if take_current_session(&obd_clone).is_some() {
+                        unlisten_events(&window_arc_clone);
+                        let connection = obd_clone.lock().unwrap();
                         do_send_connection_status(
                             &window_arc_clone,
-                            &obd,
+                            &connection,
                             "Connection dropped".to_string(),
                             false,
                         );
-                        let mut active = ACTIVE_OBD.lock().unwrap();
-                        *active = None;
-                        break;
                     }
+                    break;
                 }
             });
-
-            listen_disconnect_elm(&window_arc);
-
-            listen_set_unit_preferences(&window_arc, &obd);
-            listen_send_connection_status(&window_arc, &obd);
-            listen_change_obd_settings(&window_arc, &obd);
-
-            listen_send_pids(&window_arc, &obd);
-            listen_send_readiness_test(&window_arc, &obd);
-            listen_send_dtcs(&window_arc, &obd);
-            listen_clear_dtcs(&window_arc, &obd);
-
-            listen_run_user_command(&window_arc);
         }
     });
 }
@@ -280,6 +323,7 @@ pub fn listen_disconnect_elm(window: &Arc<WebviewWindow>) {
     window_arc_for_listen.listen("disconnect-elm", {
         let window_arc_for_listen = Arc::clone(&window_arc_for_listen);
         move |_| {
+            let _transition = SESSION_TRANSITION.lock().unwrap();
             PAUSE_OBD_COUNT.fetch_add(1, Ordering::Relaxed);
             std::thread::sleep(Duration::from_millis(50));
 
@@ -289,17 +333,16 @@ pub fn listen_disconnect_elm(window: &Arc<WebviewWindow>) {
             };
 
             if let Some(obd_arc) = maybe_obd {
+                unlisten_events(&window_arc_for_listen);
                 if let Ok(mut obd) = obd_arc.lock() {
+                    obd.disconnect();
                     do_send_connection_status(
                         &window_arc_for_listen,
                         &obd,
                         "Connection dropped".to_string(),
                         false,
                     );
-                    obd.disconnect();
                 }
-
-                unlisten_events(&window_arc_for_listen);
             }
 
             PAUSE_OBD_COUNT.fetch_sub(1, Ordering::Relaxed);
@@ -307,7 +350,7 @@ pub fn listen_disconnect_elm(window: &Arc<WebviewWindow>) {
     });
 }
 
-pub fn listen_change_obd_settings(window: &Arc<WebviewWindow>, obd: &Arc<Mutex<OBD>>) {
+pub fn listen_change_obd_settings(window: &Arc<WebviewWindow>, obd: &Arc<Mutex<OBD>>) -> EventId {
     let obd_arc = Arc::clone(obd);
     window.listen("settings-changed", move |event| {
         let payload = event.payload();
@@ -320,6 +363,9 @@ pub fn listen_change_obd_settings(window: &Arc<WebviewWindow>, obd: &Arc<Mutex<O
         };
 
         let mut obd = obd_arc.lock().unwrap();
+        if !is_current_session(&obd_arc) || !obd.is_connected() {
+            return;
+        }
         match setting.t_id.as_str() {
             "record-responses" => {
                 if let Some(path) = setting.data {
@@ -330,18 +376,24 @@ pub fn listen_change_obd_settings(window: &Arc<WebviewWindow>, obd: &Arc<Mutex<O
                 }
             }
             "replay-responses" => obd.replay_requests(setting.checked),
-            "use-freeze-fram" => obd.query_freeze_frame(setting.checked),
+            // Freeze-frame selection is unavailable until snapshot identity is validated.
             _ => (),
         }
-    });
+    })
 }
 
-pub fn listen_send_dtcs(window: &Arc<WebviewWindow>, obd: &Arc<Mutex<OBD>>) {
+pub fn listen_send_dtcs(window: &Arc<WebviewWindow>, obd: &Arc<Mutex<OBD>>) -> EventId {
     let obd_arc = Arc::clone(obd);
     let window_arc = Arc::clone(window);
     window.listen("get-dtcs", move |_| {
         let mut obd = obd_arc.lock().unwrap();
+        if !is_current_session(&obd_arc) || !obd.is_connected() {
+            return;
+        }
         std::thread::sleep(Duration::from_secs(1));
+        if !is_current_session(&obd_arc) {
+            return;
+        }
 
         let codes = [obd.get_trouble_codes(), obd.get_permanant_trouble_codes()].concat();
         println!("codes: {:?}", codes);
@@ -358,44 +410,48 @@ pub fn listen_send_dtcs(window: &Arc<WebviewWindow>, obd: &Arc<Mutex<OBD>>) {
             })
             .collect();
 
-        let _ = window_arc.emit("update-dtcs", serialized);
-    });
+        if is_current_session(&obd_arc) {
+            let _ = window_arc.emit("update-dtcs", serialized);
+        }
+    })
 }
 
-pub fn listen_clear_dtcs(window: &Arc<WebviewWindow>, obd: &Arc<Mutex<OBD>>) {
-    let obd_arc = Arc::clone(obd);
-    window.listen("clear-dtcs", move |_| {
-        let mut obd = obd_arc.lock().unwrap();
-        let _ = obd.clear_trouble_codes();
-    });
-}
+// Intentionally no clear-dtcs event handler until Mode 04 acknowledgement,
+// current-session authorization and reconciliation are implemented (F04.04).
 
-pub fn listen_send_connection_status(window: &Arc<WebviewWindow>, obd: &Arc<Mutex<OBD>>) {
+pub fn listen_send_connection_status(
+    window: &Arc<WebviewWindow>,
+    obd: &Arc<Mutex<OBD>>,
+) -> EventId {
     let obd_arc = Arc::clone(obd);
     let window_arc = Arc::clone(window);
     window.listen("get-connection-status", move |_| {
         let obd = obd_arc.lock().unwrap();
-        do_send_connection_status(&window_arc, &obd, "".into(), obd.is_connected());
-    });
+        if is_current_session(&obd_arc) {
+            do_send_connection_status(&window_arc, &obd, "".into(), obd.is_connected());
+        }
+    })
 }
 
-pub fn listen_run_user_command(window: &Arc<WebviewWindow>) {
+pub fn listen_run_user_command(window: &Arc<WebviewWindow>, obd: &Arc<Mutex<OBD>>) -> EventId {
     let window_arc = Arc::clone(window);
-    let user_command_event = window.listen("terminal-command", move |event| {
+    let obd_arc = Arc::clone(obd);
+    window.listen("terminal-command", move |event| {
         PAUSE_OBD_COUNT.fetch_add(1, Ordering::Relaxed);
         std::thread::sleep(Duration::from_millis(50));
 
         let command = event.payload();
 
-        let obd_arc = {
-            let active = ACTIVE_OBD.lock().unwrap();
-            active.clone()
-        };
-
-        if let Some(obd_arc) = obd_arc {
+        {
             let mut obd = obd_arc.lock().unwrap();
+            if !is_current_session(&obd_arc) || !obd.is_connected() {
+                PAUSE_OBD_COUNT.fetch_sub(1, Ordering::Relaxed);
+                return;
+            }
             if let Err(err) = obd.send_command(&mut Command::new_arb(command)) {
                 do_send_command_output(&window_arc, format!("Response: {}", err));
+                PAUSE_OBD_COUNT.fetch_sub(1, Ordering::Relaxed);
+                return;
             }
 
             match obd.get_pid_response() {
@@ -418,21 +474,19 @@ pub fn listen_run_user_command(window: &Arc<WebviewWindow>) {
         }
 
         PAUSE_OBD_COUNT.fetch_sub(1, Ordering::Relaxed);
-    });
-
-    {
-        let mut handler = USER_COMMAND_LISTENER.lock().unwrap();
-        *handler = Some(user_command_event);
-    }
+    })
 }
 
-pub fn listen_set_unit_preferences(window: &Arc<WebviewWindow>, obd: &Arc<Mutex<OBD>>) {
+pub fn listen_set_unit_preferences(window: &Arc<WebviewWindow>, obd: &Arc<Mutex<OBD>>) -> EventId {
     let obd_arc = Arc::clone(obd);
     window.listen("set-unit-preferences", move |event| {
         let payload = event.payload();
         println!("Setting unit preference to {}", payload);
 
         let mut obd = obd_arc.lock().unwrap();
+        if !is_current_session(&obd_arc) || !obd.is_connected() {
+            return;
+        }
         let unit_preferences: UnitPreferences = match serde_json::from_str(payload) {
             Ok(unit_preferences) => unit_preferences,
             Err(err) => {
@@ -442,7 +496,7 @@ pub fn listen_set_unit_preferences(window: &Arc<WebviewWindow>, obd: &Arc<Mutex<
         };
 
         obd.set_unit_preferences(unit_preferences);
-    });
+    })
 }
 
 // Calls to the frontend from the backend

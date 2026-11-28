@@ -1,42 +1,55 @@
 const { emit, listen } = window.__TAURI__.event;
 const { save } = window.__TAURI__.dialog;
-const { writeFile } = window.__TAURI__.fs;
+const { writeTextFile } = window.__TAURI__.fs;
+import { saveJsonExport } from "./json-export.mjs";
 const invoke = window.__TAURI__.invoke;
 import { saveConnectionConfig } from "./settings.js";
+import { createGraphSampler } from "./graph-samples.mjs";
+import { createTrackerRegistry } from "./connection-lifecycle.mjs";
 
 const connectButton = document.getElementById("btn-connect");
 const disconnectButton = document.getElementById("btn-disconnect");
 const dtcList = document.getElementById("dtc-list");
-const dtcHeader = document.getElementById("dtc-header");
-const freezeFrameBar = document.getElementById("freeze-frame-status");
 const obdGrid = document.getElementById("dashboard-cards");
 const terminalOutput = document.getElementById("terminal-output");
 
-export function clearDtcs() {
-  addNotification(
-    "TROUBLE CODES",
-    "Cleared all pending diagnostic trouble codes.",
-  );
-
-  if (dtcList.innerHTML.trim() == "") {
+export async function requestDtcScan({ isCurrent = () => true } = {}) {
+  if (!window.connected) {
+    addNotification("SCAN UNAVAILABLE", "Connect to the adapter before requesting diagnostic trouble codes.");
     return;
   }
 
-  // clear codes
-  emit("clear-dtcs");
-  dtcHeader.textContent = "DIAGNOSTIC TROUBLE CODES (0)";
-  dtcList.innerHTML = ``;
+  if (!isCurrent()) return;
 
-  // get permanant codes
-  // (codes that remain even after being cleared)
-  emit("get-dtcs");
+  // Old rows must not be exported as the result of a new request.
+  document.getElementById("dtc-list").replaceChildren();
+  document.getElementById("dtc-header").textContent = "DIAGNOSTIC TROUBLE CODES (UNAVAILABLE)";
+
+  try {
+    await emit("get-dtcs");
+    // IPC acceptance is not a diagnostic result. Only update-dtcs renders results.
+  } catch (error) {
+    if (window.connected && isCurrent()) {
+      addNotification("SCAN REQUEST FAILED", "Could not send the diagnostic trouble code request.");
+    }
+    console.error("DTC scan request dispatch failed", error);
+  }
 }
 
 export async function exportDtcs(autoSave) {
+  if (!window.connected) {
+    if (!autoSave) addNotification("EXPORT UNAVAILABLE", "Connect and scan for diagnostic trouble codes first.");
+    return;
+  }
 
+  const rows = Array.from(dtcList.childNodes).filter((row) => row.nodeType === 1);
+  const isCurrent = () => {
+    const current = Array.from(dtcList.childNodes).filter((row) => row.nodeType === 1);
+    return window.connected && current.length === rows.length &&
+      current.every((row, index) => row === rows[index]);
+  };
   let totalJSON = [];
-  let path = "./dtc_log.json";
-  dtcList.childNodes.forEach((dtcRow) => {
+  rows.forEach((dtcRow) => {
     if (dtcRow.nodeType == 1) {
       const dtcJSON = {
         category: dtcRow.querySelector("#dtc-category").textContent.trim(),
@@ -51,43 +64,68 @@ export async function exportDtcs(autoSave) {
     }
   });
 
-  if (!autoSave) {
-    path = await save({
-      title: "Save as JSON",
-      defaultPath: "dtc_log.json",
-      filters: [{ name: "JSON", extensions: ["json"] }],
-    });
-
-    if (!path) {
-      return;
-    }
+  if (totalJSON.length === 0) {
+    if (!autoSave) addNotification("EXPORT UNAVAILABLE", "No verified non-empty DTC list is available.");
+    return;
   }
 
-  await writeFile({ path, contents: JSON.stringify(totalJSON, null, 2) });
+  try {
+    await saveJsonExport({
+      data: totalJSON,
+      defaultPath: "dtc_log.json",
+      save,
+      writeTextFile,
+      automatic: autoSave,
+      appDataBaseDir: window.__TAURI__.path.BaseDirectory.AppData,
+      isCurrent,
+    });
+  } catch (error) {
+    addNotification("EXPORT FAILED", "Could not save diagnostic trouble codes.");
+    console.error("DTC export failed", error);
+  }
 }
+
+let connectionAttempt = 0;
 
 export async function connectElm(baudRate, serialPort, protocol) {
   if (window.connected) {
     return;
   }
 
-  const status = document.getElementById("connection-details");
-
+  const attempt = ++connectionAttempt;
   connectButton.disabled = true;
-  emit("connect-elm", {
-    serialPort: serialPort,
-    baudRate: parseInt(baudRate),
-    protocol: parseInt(protocol),
-  });
+  try {
+    await emit("connect-elm", {
+      serialPort: serialPort,
+      baudRate: parseInt(baudRate),
+      protocol: parseInt(protocol),
+    });
+  } catch (error) {
+    // Dispatch failure is not a backend connection result. Never let an old
+    // rejection overwrite a newer attempt or an established connection.
+    if (attempt === connectionAttempt && !window.connected) {
+      connectButton.disabled = false;
+      addNotification("CONNECTION REQUEST FAILED", "Could not send the connection request.");
+    }
+    console.error("Connection request dispatch failed", error);
+  }
 }
 
 export async function disconnectElm() {
-  connectButton.disabled = true;
-  emit("disconnect-elm");
-}
+  if (!window.connected || disconnectButton.disabled) return;
 
-export function freezeFrameDisclaimer(show) {
-  freezeFrameBar.style.display = show ? "flex" : "none";
+  const attempt = connectionAttempt;
+  disconnectButton.disabled = true;
+  try {
+    await emit("disconnect-elm");
+    // Only the backend connection-status event can confirm disconnection.
+  } catch (error) {
+    if (attempt === connectionAttempt && window.connected) {
+      disconnectButton.disabled = false;
+      addNotification("DISCONNECTION REQUEST FAILED", "Could not send the disconnection request.");
+    }
+    console.error("Disconnection request dispatch failed", error);
+  }
 }
 
 export function clearObdView() {
@@ -125,16 +163,27 @@ export async function addGraphDropdownOption(pid, name, unit, equation) {
   }
 }
 
-const activeTrackers = new Map(); // graphId -> cleanupFn
+const activeTrackers = createTrackerRegistry();
+const graphSelections = new Map();
+
+export function stopGraphTracking() {
+  activeTrackers.stopAll();
+}
+
+export function resumeGraphTracking() {
+  for (const [graphId, { name, unit }] of graphSelections) {
+    void trackGraph(graphId, name, unit);
+  }
+}
 
 export async function trackGraph(graphId, name, unit) {
-  if (activeTrackers.has(graphId)) {
-    const cleanup = activeTrackers.get(graphId);
-    cleanup();
-  }
-
+  graphSelections.set(graphId, { name, unit });
+  const ticket = activeTrackers.begin(graphId);
   const graph = Chart.getChart(graphId);
-  if (!graph) return;
+  if (!graph || !window.connected) {
+    ticket.stop();
+    return;
+  }
 
   // Reset graph data
   graph.data.labels = [];
@@ -143,34 +192,39 @@ export async function trackGraph(graphId, name, unit) {
   });
 
   graph.options.scales.x.title.text = "TIME";
-  graph.startTime = Date.now();
+  graph.startTime = performance.now();
   graph.update();
 
-  let lastValue = null;
-  let lastSeenValue = null;
+  const sampler = createGraphSampler();
+  graph.data.datasets.forEach((dataset) => {
+    dataset.spanGaps = false;
+  });
   let lastElapsed = null;
   const myName = name.trim().toUpperCase();
 
   const listener = (event) => {
-    const incomingName = event.payload.name?.trim().toUpperCase();
-    if (incomingName === myName) {
-      lastValue = event.payload.value;
-
-      if (
-        graph.options.scales.y.title.text.toUpperCase() !==
-        event.payload.unit.toUpperCase()
-      ) {
-        graph.options.scales.y.title.text = event.payload.unit.toUpperCase();
-      }
+    if (!ticket.isCurrent()) return;
+    const payload = event?.payload;
+    if (typeof payload?.name !== "string") return;
+    if (payload.name.trim().toUpperCase() === myName) {
+      sampler.push(payload);
     }
   };
 
-  const unlisten = await listen("update-graphs", listener);
-  const intervalId = setInterval(() => {
-    if (!graph.config?.options) return;
+  let unlisten;
+  try {
+    unlisten = await listen("update-graphs", listener);
+  } catch (error) {
+    ticket.stop();
+    console.error("Graph listener registration failed", error);
+    return;
+  }
+  if (!ticket.attach(unlisten)) return;
 
-    const now = Date.now();
-    const elapsedMs = now - graph.startTime;
+  const intervalId = setInterval(() => {
+    if (!ticket.isCurrent() || !graph.config?.options) return;
+
+    const elapsedMs = performance.now() - graph.startTime;
     const minutes = Math.floor(elapsedMs / 60000);
     const seconds = Math.floor((elapsedMs % 60000) / 1000);
     const elapsed = `${minutes}:${seconds.toString().padStart(2, "0")}`;
@@ -183,23 +237,23 @@ export async function trackGraph(graphId, name, unit) {
       graph.data.datasets[0].data.shift();
     }
 
-    if (lastValue !== null && lastValue !== undefined) {
-      lastSeenValue = lastValue;
+    const sample = sampler.take();
+    if (sample && graph.options.scales.y.title.text.toUpperCase() !== sample.unit) {
+      // Never mix measurements expressed in different units on one axis.
+      graph.data.labels = [];
+      graph.data.datasets.forEach((dataset) => {
+        dataset.data = [];
+      });
+      graph.options.scales.y.title.text = sample.unit;
     }
 
-    graph.data.datasets[0].data.push(lastSeenValue);
+    graph.data.datasets[0].data.push(sample ? sample.value : null);
     graph.data.labels.push(elapsed);
 
     graph.update();
   }, 1000);
 
-  const cleanup = () => {
-    clearInterval(intervalId);
-    unlisten();
-    activeTrackers.delete(graphId);
-  };
-
-  activeTrackers.set(graphId, cleanup);
+  ticket.attach(() => clearInterval(intervalId));
 }
 
 export function appendTerminalOutput(msg) {
@@ -213,7 +267,7 @@ export function appendTerminalOutput(msg) {
 }
 
 export function removeNotification(el) {
-  el.style.transition = "opacity 0.2ss";
+  el.style.transition = "opacity 0.2s";
   el.style.opacity = "0";
   setTimeout(() => el.remove(), 200);
 }
@@ -235,10 +289,13 @@ export function addNotification(title, desc) {
         <path d="m6 6 12 12" />
       </svg>
     </button>
-    <div class="notification-title">${title}</div>
-    <div class="notification-desc">${desc}</div>
+    <div class="notification-title"></div>
+    <div class="notification-desc"></div>
     <div class="notification-progress"></div>
   `;
+
+  notification.querySelector(".notification-title").textContent = String(title ?? "");
+  notification.querySelector(".notification-desc").textContent = String(desc ?? "");
 
   notification
     .querySelector(".notification-close")

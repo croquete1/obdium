@@ -1,4 +1,4 @@
-import { connectElm, freezeFrameDisclaimer } from "./features.js";
+import { connectElm } from "./features.js";
 const { emit } = window.__TAURI__.event;
 
 const defaultUserSettings = {
@@ -167,10 +167,6 @@ async function settingChange(event) {
       settings.hideNotifications = checked;
       window.hideNotifications = settings.hideNotifications;
       break;
-    case "use-freeze-frame":
-      emit("settings-changed", { tId, checked });
-      freezeFrameDisclaimer(checked);
-      break;
   }
 
   localStorage.setItem("userSettings", JSON.stringify(settings));
@@ -196,9 +192,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     .addEventListener("change", settingChange);
   document
     .getElementById("auto-check-codes")
-    .addEventListener("change", settingChange);
-  document
-    .getElementById("use-freeze-frame")
     .addEventListener("change", settingChange);
   document
     .getElementById("auto-connect")

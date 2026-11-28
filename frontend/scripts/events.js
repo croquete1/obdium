@@ -1,11 +1,16 @@
 const { listen, emit } = window.__TAURI__.event;
+import { replaceReadinessSnapshot, readinessLabels } from "./readiness-state.mjs";
 import {
   exportDtcs,
+  requestDtcScan,
   addGraphDropdownOption,
   appendTerminalOutput,
   addNotification,
   listenExpandPID,
+  stopGraphTracking,
+  resumeGraphTracking,
 } from "./features.js";
+import { runConnectionQueries } from "./connection-lifecycle.mjs";
 import {
   saveConnectionConfig,
   updateUnitConversionDropdowns,
@@ -26,6 +31,13 @@ listen("update-card", (event) => {
   });
 
   if (window.obdViewPaused) return;
+
+  // update any graphs that might be using this
+  emit("update-graphs", {
+    name: event.payload.name,
+    value: event.payload.value,
+    unit: event.payload.unit,
+  });
 
   // create card if it doesnt exist
   if (!exists) {
@@ -101,12 +113,6 @@ listen("update-card", (event) => {
     }
   });
 
-  // update any graphs that might be using this
-  emit("update-graphs", {
-    name: event.payload.name,
-    value: event.payload.value,
-    unit: event.payload.unit,
-  });
 });
 
 listen("vehicle-details", (event) => {
@@ -127,6 +133,8 @@ listen("vehicle-details", (event) => {
   ).toUpperCase();
 });
 
+let connectionGeneration = 0;
+
 listen("connection-status", async (event) => {
   const protocolDropdown = document.getElementById("protocol-menu");
   const protocolSelected = document.getElementById("protocol-selected");
@@ -145,6 +153,12 @@ listen("connection-status", async (event) => {
       "CONNECTED THROUGH SERIAL PORT " + serialPort.toUpperCase();
     connectionIcon.src = "/assets/icons/connected.png";
     window.connected = true;
+    replaceReadinessSnapshot([]);
+    document.getElementById("readiness-tests-list").replaceChildren();
+    document.getElementById("dtc-list").replaceChildren();
+    document.getElementById("dtc-header").textContent = "DIAGNOSTIC TROUBLE CODES (UNAVAILABLE)";
+    const generation = ++connectionGeneration;
+    resumeGraphTracking();
 
     // Features only accessible in real mode
     if (serialPort !== "DEMO MODE") {
@@ -175,7 +189,9 @@ listen("connection-status", async (event) => {
     saveConnectionConfig();
 
     if (window.autoCheckCodes) {
-      emit("get-dtcs");
+      void requestDtcScan({
+        isCurrent: () => window.connected && connectionGeneration === generation,
+      });
     }
 
     if (window.unitPreferences) {
@@ -183,30 +199,42 @@ listen("connection-status", async (event) => {
       updateUnitConversionDropdowns();
     }
 
-    if (serialPort === "DEMO MODE") {
-      await new Promise((r) => setTimeout(r, 15000));
-      emit("get-pids");
-      await new Promise((r) => setTimeout(r, 2000));
-      emit("get-readiness-tests");
-    } else {
-      await new Promise((r) => setTimeout(r, 7000));
-      emit("get-pids");
-      await new Promise((r) => setTimeout(r, 2000));
-      emit("get-readiness-tests");
+    const isCurrent = () => window.connected && connectionGeneration === generation;
+    try {
+      await runConnectionQueries({
+        isCurrent,
+        delay: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+        emit,
+        firstDelay: serialPort === "DEMO MODE" ? 15000 : 7000,
+      });
+    } catch (error) {
+      if (isCurrent()) {
+        addNotification("DIAGNOSTIC REQUEST FAILED", "Could not initialize diagnostic readings.");
+        console.error("Connection initialization query failed", error);
+      }
     }
   } else {
-    if (!window.connected) return;
+    const wasConnected = window.connected;
 
     connectionLabel.textContent = "ELM327 NOT CONNECTED";
     status.textContent = "NO CONNECTION ESTABLISHED";
     connectionIcon.src = "/assets/icons/not-connected.png";
     window.connected = false;
+    replaceReadinessSnapshot([]);
+    document.getElementById("readiness-tests-list").replaceChildren();
+    document.getElementById("dtc-list").replaceChildren();
+    document.getElementById("dtc-header").textContent = "DIAGNOSTIC TROUBLE CODES (UNAVAILABLE)";
+    connectionGeneration++;
+    stopGraphTracking();
     recordResponses.disabled = true;
     replayResponses.disabled = true;
     connectButton.disabled = false;
     disconnectButton.disabled = true;
 
-    addNotification("DISCONNECTED FROM ELM", event.payload.message);
+    addNotification(
+      wasConnected ? "DISCONNECTED FROM ELM" : "CONNECTION NOT ESTABLISHED",
+      event.payload.message,
+    );
 
     if (demoStatus.style.display !== "none") demoStatus.style.display = "none";
   }
@@ -221,38 +249,53 @@ listen("update-pids", (event) => {
     const pidGroup = document.createElement("div");
     pidGroup.className = "pid-group";
     pidGroup.innerHTML = `
-        <div class="pid-container" ${!pidInfo.supported ? 'style="opacity: 0.15"' : ""} >
+        <div class="pid-container">
             <div class="info-row">
             <button class="arrow-icon"><img src="/assets/icons/arrow-icon.png"></button>
-            <span class="name">${pidInfo.supported ? "[SUPPORTED]" : "[UNSUPPORTED]"}  ${pidInfo.pidName.toUpperCase()}</span>
+            <span class="name"></span>
             </div>
             <div class="pid-details" style="display: none; height: 0;">
             <div class="pid-data-columns">
                 <div class="pid-column">
                 <div class="pid-label">MODE</div>
-                <div class="pid-value">$${pidInfo.mode}</div>
+                <div class="pid-value"></div>
                 </div>
                 <div class="pid-column">
                 <div class="pid-label">PID</div>
-                <div class="pid-value">${pidInfo.pid}</div>
+                <div class="pid-value"></div>
                 </div>
                 <div class="pid-column">
                 <div class="pid-label">COMMAND</div>
-                <div class="pid-value">${pidInfo.mode + pidInfo.pid}</div>
+                <div class="pid-value"></div>
                 </div>
                 <div class="pid-column">
                 <div class="pid-label">EQUATION</div>
-                <div class="pid-value">${pidInfo.formula == "" ? "??" : pidInfo.formula}</div>
+                <div class="pid-value"></div>
                 </div>
                 <div class="pid-column">
                 <div class="pid-label">UNIT</div>
-                <div class="pid-value">${pidInfo.unit == "" ? "??" : pidInfo.unit.toUpperCase()}</div>
+                <div class="pid-value"></div>
                 </div>
             </div>
             <button class="pid-button" id="remove-pid">REMOVE</button>
             </div>
         </div>
         `;
+
+    if (!pidInfo.supported) {
+      pidGroup.querySelector(".pid-container").style.opacity = "0.15";
+    }
+    pidGroup.querySelector(".info-row .name").textContent =
+      (pidInfo.supported ? "[SUPPORTED]" : "[UNSUPPORTED]") +
+      "  " + String(pidInfo.pidName ?? "").toUpperCase();
+    const values = pidGroup.querySelectorAll(".pid-value");
+    const mode = String(pidInfo.mode ?? "");
+    const pid = String(pidInfo.pid ?? "");
+    values[0].textContent = "$" + mode;
+    values[1].textContent = pid;
+    values[2].textContent = mode + pid;
+    values[3].textContent = String(pidInfo.formula || "??");
+    values[4].textContent = String(pidInfo.unit || "??").toUpperCase();
 
     pidList.appendChild(pidGroup);
 
@@ -279,33 +322,46 @@ const dtcList = document.getElementById("dtc-list");
 const dtcHeader = document.getElementById("dtc-header");
 
 listen("update-dtcs", (event) => {
-  const dtcs = event.payload;
-  if (!dtcs) {
-    dtcHeader.textContent = "DIAGNOSTIC TROUBLE CODES (0)";
+  if (!window.connected) return;
+  const dtcs = event?.payload;
+  // Reject malformed snapshots before changing the list or exporting it.
+  if (!Array.isArray(dtcs) || dtcs.some((code) =>
+    !code || typeof code.name !== "string" || !code.name.trim() ||
+    typeof code.category !== "string" ||
+    typeof code.description !== "string" ||
+    typeof code.location !== "string" ||
+    typeof code.permanant !== "boolean"
+  )) {
+    dtcList.replaceChildren();
+    dtcHeader.textContent = "DIAGNOSTIC TROUBLE CODES (UNAVAILABLE)";
     return;
   }
 
+  dtcList.replaceChildren();
+  // The legacy backend also returns an empty list on acquisition failure.
+  // Until it sends typed scan outcomes, absence of codes is unverified.
+  if (dtcs.length === 0) {
+    dtcHeader.textContent = "DIAGNOSTIC TROUBLE CODES (NONE RETURNED — UNVERIFIED)";
+    return;
+  }
   dtcHeader.textContent = "DIAGNOSTIC TROUBLE CODES (" + dtcs.length + ")";
-
-  // clear dtc list
-  dtcList.innerHTML = ``;
 
   for (const troubleCode of dtcs) {
     const description = troubleCode.permanant
-      ? troubleCode.description + " [PERMANANT CODE]"
-      : troubleCode.description + " [PENDING CODE]";
+      ? troubleCode.description + " [PERMANENT CODE]"
+      : troubleCode.description + " [NON-PERMANENT CODE]";
 
     let dtcRow = document.createElement("div");
     dtcRow.className = "info-row";
     dtcRow.style = "height: 60px; position: relative;";
     dtcRow.innerHTML = `
           <div class="category" id="dtc-category" style="font-size: 40px; font-weight: 900; margin-left: 6px; min-width: 70px; text-align: center; display: inline-block;">
-              ${troubleCode.category}
+              
           </div>
           <div class="name" style="display: inline-block; vertical-align: top;">
-              <span class="name" id="dtc-name" style="font-size: 25px; font-weight: 700;">${troubleCode.name}</span>
+              <span class="name" id="dtc-name" style="font-size: 25px; font-weight: 700;"></span>
               <div class="name" id="dtc-location" style="color: #BDBDBD; font-size: 15px; margin-top: -5px; font-weight: 600;">
-              ${troubleCode.location}
+              
               </div>
           </div>
           
@@ -318,10 +374,14 @@ listen("update-dtcs", (event) => {
           
           <div class="name" id="dtc-description"
               style="position: absolute; color: #BDBDBD; left: 240px; top: 0; bottom: 0; max-width: 600px; overflow-wrap: break-word; display: flex; align-items: center; height: 100%;">
-              ${description}
+              
           </div>
           `;
 
+    dtcRow.querySelector("#dtc-category").textContent = String(troubleCode.category ?? "");
+    dtcRow.querySelector("#dtc-name").textContent = String(troubleCode.name ?? "");
+    dtcRow.querySelector("#dtc-location").textContent = String(troubleCode.location ?? "");
+    dtcRow.querySelector("#dtc-description").textContent = description;
     dtcList.appendChild(dtcRow);
   }
 
@@ -372,22 +432,28 @@ listen("update-serial-ports", (event) => {
 
 const readinessTests = document.getElementById("readiness-tests-list");
 listen("update-readiness-tests", (event) => {
-  readinessTests.innerHTML = ``;
+  if (!window.connected) return;
+  readinessTests.replaceChildren();
 
-  addNotification("READINESS TESTS", "Updated I/M readiness test information.");
-
-  const tests = event.payload;
+  const tests = replaceReadinessSnapshot(event.payload);
+  addNotification("READINESS TESTS", tests.length
+    ? "Updated I/M readiness test information."
+    : "No I/M readiness test information is available.");
   for (const test of tests) {
     const testRow = document.createElement("div");
     testRow.className = "info-row";
     testRow.style = "justify-content: space-between;";
     testRow.innerHTML = `
-<div class="name" id="test-name" style="flex: 2; font-weight: 700; color: #f7f3ff;">TEST: ${test.name}</div>
-    <div class="name" id="test-availability" style="flex: 1; font-size: 0.97rem; font-weight: 500; text-transform: uppercase; color: #d4dadf;">${test.available ? "COMPLETE" : "NOT COMPLETE"}</div>
-      <div class="name" id="test-completeness" style="flex: 1; font-size: 0.97rem; font-weight: 500; text-transform: uppercase; color: #d4dadf;">${test.complete ? "READY" : "NOT READY"}</div>
+<div class="name" id="test-name" style="flex: 2; font-weight: 700; color: #f7f3ff;"></div>
+    <div class="name" id="test-availability" style="flex: 1; font-size: 0.97rem; font-weight: 500; text-transform: uppercase; color: #d4dadf;"></div>
+      <div class="name" id="test-completeness" style="flex: 1; font-size: 0.97rem; font-weight: 500; text-transform: uppercase; color: #d4dadf;"></div>
 
     `;
 
+    const labels = readinessLabels(test);
+    testRow.querySelector("#test-name").textContent = "TEST: " + test.name;
+    testRow.querySelector("#test-availability").textContent = labels.availability;
+    testRow.querySelector("#test-completeness").textContent = labels.completeness;
     readinessTests.appendChild(testRow);
   }
 });
@@ -400,19 +466,35 @@ const exportButton = document.getElementById("vin-export");
 
 // show vehicle info if no error
 listen("decode-vin-result", (event) => {
-  const data = event.payload;
-  addNotification("VIN DECODING", data.error_msg);
-
+  const data = event?.payload;
+  const request = window.pendingVinRequest;
+  if (!request || data?.request_id !== request.id) return;
+  window.pendingVinRequest = null;
+  clearTimeout(request.timer);
   const container = document.getElementById("vin-container");
-  if (!container) {
+  const status = document.getElementById("vin-request-status");
+  if (!container || !status) return;
+  const query = document.querySelector(".vin-input")?.value.trim().toUpperCase();
+
+  exportButton.disabled = true;
+  container.replaceChildren();
+  const now = performance.now();
+  if (!Number.isFinite(now) || now < request.started || now >= request.deadline) {
+    status.textContent = "VIN request timed out. Try again.";
     return;
   }
+  status.textContent = "No VIN details available.";
+  // Even a correlated response must match the requested VIN if present.
+  if (typeof data?.vin === "string" && data.vin.trim() &&
+      data.vin.trim().toUpperCase() !== query) return;
+  addNotification("VIN DECODING", typeof data?.error_msg === "string"
+    ? data.error_msg : "No VIN details available.");
+  if (typeof data?.vin !== "string" || !data.vin.trim()) return;
 
-  container.innerHTML = "";
-
-  // show all fields
-  for (const [key, value] of Object.entries(event.payload)) {
-    if (key === "error_msg" || value == "N/A" || value == "-1") continue;
+  // show only available string fields
+  for (const [key, value] of Object.entries(data)) {
+    if (key === "error_msg" || key === "request_id" || typeof value !== "string" ||
+        !value.trim() || value === "N/A" || value === "-1") continue;
 
     const name = key.replaceAll("_", " ").toUpperCase();
 
@@ -438,6 +520,7 @@ listen("decode-vin-result", (event) => {
   }
 
   exportButton.disabled = false;
+  status.textContent = "VIN details available.";
 });
 
 listen("display-notification", (event) => {

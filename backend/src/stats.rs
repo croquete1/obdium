@@ -558,6 +558,9 @@ pub fn custom_pid_calls(window: &Arc<WebviewWindow>, obd: &Arc<Mutex<OBD>>) {
 
             {
                 let mut obd = obd.lock().unwrap();
+                if !obd.is_connected() {
+                    break;
+                }
                 let pids = CUSTOM_PIDS_TRACKED.lock().unwrap();
                 for pid in pids.values() {
                     let response = obd.query(Command::new_arb(&pid.command));
