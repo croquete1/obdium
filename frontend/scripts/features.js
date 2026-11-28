@@ -4,6 +4,8 @@ const { writeTextFile } = window.__TAURI__.fs;
 import { saveJsonExport } from "./json-export.mjs";
 const invoke = window.__TAURI__.invoke;
 import { saveConnectionConfig } from "./settings.js";
+import { createGraphSampler } from "./graph-samples.mjs";
+import { createTrackerRegistry } from "./connection-lifecycle.mjs";
 
 const connectButton = document.getElementById("btn-connect");
 const disconnectButton = document.getElementById("btn-disconnect");
@@ -60,24 +62,47 @@ export async function exportDtcs(autoSave) {
   }
 }
 
+let connectionAttempt = 0;
+
 export async function connectElm(baudRate, serialPort, protocol) {
   if (window.connected) {
     return;
   }
 
-  const status = document.getElementById("connection-details");
-
+  const attempt = ++connectionAttempt;
   connectButton.disabled = true;
-  emit("connect-elm", {
-    serialPort: serialPort,
-    baudRate: parseInt(baudRate),
-    protocol: parseInt(protocol),
-  });
+  try {
+    await emit("connect-elm", {
+      serialPort: serialPort,
+      baudRate: parseInt(baudRate),
+      protocol: parseInt(protocol),
+    });
+  } catch (error) {
+    // Dispatch failure is not a backend connection result. Never let an old
+    // rejection overwrite a newer attempt or an established connection.
+    if (attempt === connectionAttempt && !window.connected) {
+      connectButton.disabled = false;
+      addNotification("CONNECTION REQUEST FAILED", "Could not send the connection request.");
+    }
+    console.error("Connection request dispatch failed", error);
+  }
 }
 
 export async function disconnectElm() {
-  connectButton.disabled = true;
-  emit("disconnect-elm");
+  if (!window.connected || disconnectButton.disabled) return;
+
+  const attempt = connectionAttempt;
+  disconnectButton.disabled = true;
+  try {
+    await emit("disconnect-elm");
+    // Only the backend connection-status event can confirm disconnection.
+  } catch (error) {
+    if (attempt === connectionAttempt && window.connected) {
+      disconnectButton.disabled = false;
+      addNotification("DISCONNECTION REQUEST FAILED", "Could not send the disconnection request.");
+    }
+    console.error("Disconnection request dispatch failed", error);
+  }
 }
 
 export function clearObdView() {
@@ -115,16 +140,27 @@ export async function addGraphDropdownOption(pid, name, unit, equation) {
   }
 }
 
-const activeTrackers = new Map(); // graphId -> cleanupFn
+const activeTrackers = createTrackerRegistry();
+const graphSelections = new Map();
+
+export function stopGraphTracking() {
+  activeTrackers.stopAll();
+}
+
+export function resumeGraphTracking() {
+  for (const [graphId, { name, unit }] of graphSelections) {
+    void trackGraph(graphId, name, unit);
+  }
+}
 
 export async function trackGraph(graphId, name, unit) {
-  if (activeTrackers.has(graphId)) {
-    const cleanup = activeTrackers.get(graphId);
-    cleanup();
-  }
-
+  graphSelections.set(graphId, { name, unit });
+  const ticket = activeTrackers.begin(graphId);
   const graph = Chart.getChart(graphId);
-  if (!graph) return;
+  if (!graph || !window.connected) {
+    ticket.stop();
+    return;
+  }
 
   // Reset graph data
   graph.data.labels = [];
@@ -133,34 +169,39 @@ export async function trackGraph(graphId, name, unit) {
   });
 
   graph.options.scales.x.title.text = "TIME";
-  graph.startTime = Date.now();
+  graph.startTime = performance.now();
   graph.update();
 
-  let lastValue = null;
-  let lastSeenValue = null;
+  const sampler = createGraphSampler();
+  graph.data.datasets.forEach((dataset) => {
+    dataset.spanGaps = false;
+  });
   let lastElapsed = null;
   const myName = name.trim().toUpperCase();
 
   const listener = (event) => {
-    const incomingName = event.payload.name?.trim().toUpperCase();
-    if (incomingName === myName) {
-      lastValue = event.payload.value;
-
-      if (
-        graph.options.scales.y.title.text.toUpperCase() !==
-        event.payload.unit.toUpperCase()
-      ) {
-        graph.options.scales.y.title.text = event.payload.unit.toUpperCase();
-      }
+    if (!ticket.isCurrent()) return;
+    const payload = event?.payload;
+    if (typeof payload?.name !== "string") return;
+    if (payload.name.trim().toUpperCase() === myName) {
+      sampler.push(payload);
     }
   };
 
-  const unlisten = await listen("update-graphs", listener);
-  const intervalId = setInterval(() => {
-    if (!graph.config?.options) return;
+  let unlisten;
+  try {
+    unlisten = await listen("update-graphs", listener);
+  } catch (error) {
+    ticket.stop();
+    console.error("Graph listener registration failed", error);
+    return;
+  }
+  if (!ticket.attach(unlisten)) return;
 
-    const now = Date.now();
-    const elapsedMs = now - graph.startTime;
+  const intervalId = setInterval(() => {
+    if (!ticket.isCurrent() || !graph.config?.options) return;
+
+    const elapsedMs = performance.now() - graph.startTime;
     const minutes = Math.floor(elapsedMs / 60000);
     const seconds = Math.floor((elapsedMs % 60000) / 1000);
     const elapsed = `${minutes}:${seconds.toString().padStart(2, "0")}`;
@@ -173,23 +214,23 @@ export async function trackGraph(graphId, name, unit) {
       graph.data.datasets[0].data.shift();
     }
 
-    if (lastValue !== null && lastValue !== undefined) {
-      lastSeenValue = lastValue;
+    const sample = sampler.take();
+    if (sample && graph.options.scales.y.title.text.toUpperCase() !== sample.unit) {
+      // Never mix measurements expressed in different units on one axis.
+      graph.data.labels = [];
+      graph.data.datasets.forEach((dataset) => {
+        dataset.data = [];
+      });
+      graph.options.scales.y.title.text = sample.unit;
     }
 
-    graph.data.datasets[0].data.push(lastSeenValue);
+    graph.data.datasets[0].data.push(sample ? sample.value : null);
     graph.data.labels.push(elapsed);
 
     graph.update();
   }, 1000);
 
-  const cleanup = () => {
-    clearInterval(intervalId);
-    unlisten();
-    activeTrackers.delete(graphId);
-  };
-
-  activeTrackers.set(graphId, cleanup);
+  ticket.attach(() => clearInterval(intervalId));
 }
 
 export function appendTerminalOutput(msg) {
@@ -203,7 +244,7 @@ export function appendTerminalOutput(msg) {
 }
 
 export function removeNotification(el) {
-  el.style.transition = "opacity 0.2ss";
+  el.style.transition = "opacity 0.2s";
   el.style.opacity = "0";
   setTimeout(() => el.remove(), 200);
 }

@@ -6,7 +6,10 @@ import {
   appendTerminalOutput,
   addNotification,
   listenExpandPID,
+  stopGraphTracking,
+  resumeGraphTracking,
 } from "./features.js";
+import { runConnectionQueries } from "./connection-lifecycle.mjs";
 import {
   saveConnectionConfig,
   updateUnitConversionDropdowns,
@@ -27,6 +30,13 @@ listen("update-card", (event) => {
   });
 
   if (window.obdViewPaused) return;
+
+  // update any graphs that might be using this
+  emit("update-graphs", {
+    name: event.payload.name,
+    value: event.payload.value,
+    unit: event.payload.unit,
+  });
 
   // create card if it doesnt exist
   if (!exists) {
@@ -102,12 +112,6 @@ listen("update-card", (event) => {
     }
   });
 
-  // update any graphs that might be using this
-  emit("update-graphs", {
-    name: event.payload.name,
-    value: event.payload.value,
-    unit: event.payload.unit,
-  });
 });
 
 listen("vehicle-details", (event) => {
@@ -127,6 +131,8 @@ listen("vehicle-details", (event) => {
     event.payload.model
   ).toUpperCase();
 });
+
+let connectionGeneration = 0;
 
 listen("connection-status", async (event) => {
   const protocolDropdown = document.getElementById("protocol-menu");
@@ -150,6 +156,8 @@ listen("connection-status", async (event) => {
     document.getElementById("readiness-tests-list").replaceChildren();
     document.getElementById("dtc-list").replaceChildren();
     document.getElementById("dtc-header").textContent = "DIAGNOSTIC TROUBLE CODES (UNAVAILABLE)";
+    const generation = ++connectionGeneration;
+    resumeGraphTracking();
 
     // Features only accessible in real mode
     if (serialPort !== "DEMO MODE") {
@@ -188,19 +196,22 @@ listen("connection-status", async (event) => {
       updateUnitConversionDropdowns();
     }
 
-    if (serialPort === "DEMO MODE") {
-      await new Promise((r) => setTimeout(r, 15000));
-      emit("get-pids");
-      await new Promise((r) => setTimeout(r, 2000));
-      emit("get-readiness-tests");
-    } else {
-      await new Promise((r) => setTimeout(r, 7000));
-      emit("get-pids");
-      await new Promise((r) => setTimeout(r, 2000));
-      emit("get-readiness-tests");
+    const isCurrent = () => window.connected && connectionGeneration === generation;
+    try {
+      await runConnectionQueries({
+        isCurrent,
+        delay: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+        emit,
+        firstDelay: serialPort === "DEMO MODE" ? 15000 : 7000,
+      });
+    } catch (error) {
+      if (isCurrent()) {
+        addNotification("DIAGNOSTIC REQUEST FAILED", "Could not initialize diagnostic readings.");
+        console.error("Connection initialization query failed", error);
+      }
     }
   } else {
-    if (!window.connected) return;
+    const wasConnected = window.connected;
 
     connectionLabel.textContent = "ELM327 NOT CONNECTED";
     status.textContent = "NO CONNECTION ESTABLISHED";
@@ -210,12 +221,17 @@ listen("connection-status", async (event) => {
     document.getElementById("readiness-tests-list").replaceChildren();
     document.getElementById("dtc-list").replaceChildren();
     document.getElementById("dtc-header").textContent = "DIAGNOSTIC TROUBLE CODES (UNAVAILABLE)";
+    connectionGeneration++;
+    stopGraphTracking();
     recordResponses.disabled = true;
     replayResponses.disabled = true;
     connectButton.disabled = false;
     disconnectButton.disabled = true;
 
-    addNotification("DISCONNECTED FROM ELM", event.payload.message);
+    addNotification(
+      wasConnected ? "DISCONNECTED FROM ELM" : "CONNECTION NOT ESTABLISHED",
+      event.payload.message,
+    );
 
     if (demoStatus.style.display !== "none") demoStatus.style.display = "none";
   }
