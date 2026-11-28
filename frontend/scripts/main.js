@@ -128,11 +128,22 @@ disconnectButton.addEventListener("click", disconnectElm);
 
 const dtcScanButton = document.getElementById("dtc-scan-button");
 dtcScanButton.addEventListener("click", async () => {
-  await new Promise((r) => setTimeout(r, 500));
+  if (!window.connected) {
+    addNotification("SCAN UNAVAILABLE", "Connect to the adapter before requesting diagnostic trouble codes.");
+    return;
+  }
 
-  addNotification("TROUBLE CODES", "Scanned for diagnostic trouble codes.");
+  // Old rows must not be exported as the result of a new request.
+  document.getElementById("dtc-list").replaceChildren();
+  document.getElementById("dtc-header").textContent = "DIAGNOSTIC TROUBLE CODES (UNAVAILABLE)";
 
-  emit("get-dtcs");
+  try {
+    await emit("get-dtcs");
+    // IPC acceptance is not a diagnostic result. Only update-dtcs renders results.
+  } catch (error) {
+    addNotification("SCAN REQUEST FAILED", "Could not send the diagnostic trouble code request.");
+    console.error("DTC scan request dispatch failed", error);
+  }
 });
 
 const dtcLogButton = document.getElementById("dtc-log-file");
