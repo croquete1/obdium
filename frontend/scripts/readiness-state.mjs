@@ -39,3 +39,10 @@ export function replaceReadinessSnapshot(payload) {
 export function getReadinessSnapshot() {
   return snapshot.map((test) => ({ ...test }));
 }
+
+// Every replacement (including an identical refresh or reset) revokes old exports.
+// Capture only identity, not the mutable internal array.
+export function getReadinessSnapshotGuard() {
+  const captured = snapshot;
+  return () => snapshot === captured;
+}

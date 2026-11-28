@@ -2,7 +2,7 @@ const { listen, emit } = window.__TAURI__.event;
 const { save } = window.__TAURI__.dialog;
 const { writeTextFile } = window.__TAURI__.fs;
 import { saveJsonExport } from "./json-export.mjs";
-import { getReadinessSnapshot } from "./readiness-state.mjs";
+import { getReadinessSnapshot, getReadinessSnapshotGuard } from "./readiness-state.mjs";
 
 import {
   exportDtcs,
@@ -164,6 +164,7 @@ imTestRefreshButton.addEventListener("click", () => {
 });
 
 imTestExportButton.addEventListener("click", async () => {
+  const isSnapshotCurrent = getReadinessSnapshotGuard();
   const totalJSON = getReadinessSnapshot();
   if (!window.connected || totalJSON.length === 0) {
     addNotification("EXPORT UNAVAILABLE", "Readiness information is not available for the current connection.");
@@ -176,6 +177,7 @@ imTestExportButton.addEventListener("click", async () => {
       defaultPath: "readiness_tests.json",
       save,
       writeTextFile,
+      isCurrent: () => window.connected && isSnapshotCurrent(),
     });
   } catch (error) {
     addNotification("EXPORT FAILED", "Could not save readiness tests.");
