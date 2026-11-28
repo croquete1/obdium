@@ -1,5 +1,7 @@
 mod cmd;
 pub mod dicts;
+pub mod dtc_transaction;
+pub mod isotp;
 pub mod mid;
 pub mod obd;
 mod pid;
